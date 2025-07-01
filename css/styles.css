@@ -85,7 +85,7 @@ body {
 .navbar {
   background-color: rgba(229, 231, 230, 0.5); /* verde escuro com 50% de transparência */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-  backdrop-filter: blur(6px); /* opcional: deixa o fundo levemente desfocado */
+  backdrop-filter: blur(10px); /* opcional: deixa o fundo levemente desfocado */
 }
 
 /* Marca com degradê */
@@ -111,10 +111,10 @@ body {
 }
   
 /* Botão toggler branco */
-.navbar .navbar-toggler {
+.navbar-toggler {
   border-color: #a0d9b8;
+  background-color: #315340; /* cor de fundo */
 }
-
 .navbar .navbar-toggler-icon {
   filter: invert(1); /* ícone branco */
 }
