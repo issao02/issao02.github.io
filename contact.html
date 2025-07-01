@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Eduardo Ishimine | Sistemas e Soluções</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700&display=swap" rel="stylesheet" />
+
+    <link href="css/styles.css" rel="stylesheet" />
+</head>
+<body>
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-light px-4 py-3">
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+            <li class="nav-item"><a class="nav-link" href="index.html">Home</a></li>
+            <li class="nav-item"><a class="nav-link" href="resume.html">Resumo</a></li>
+            <li class="nav-item"><a class="nav-link" href="projects.html">Portfólio</a></li>
+            <li class="nav-item"><a class="nav-link" href="contact.html">Contato</a></li>
+        </ul>
+    </div>
+    </nav>
+<!-- Formulário de Contato -->
+<section class="py-5">
+  <div class="container px-5">
+    <div class="text-center mb-4">
+      <h2 class="frase-destaque">Fale comigo</h2>
+      <p class="text-muted">Preencha o formulário abaixo e retornarei o mais breve possível.</p>
+    </div>
+    <div class="row justify-content-center">
+      <!-- Caixa de Contato -->
+      <div class="col-lg-4">
+        <div class="contact-box">
+          <h5 class="fw-bold mb-4">Informações de Contato</h5>
+          <p><i class="bi bi-whatsapp contact-icon"></i><strong>WhatsApp:</strong> (11) 98502-4525</p>
+          <p><i class="bi bi-envelope-fill contact-icon"></i><strong>E-mail:</strong> eduardo.ishimine@gmail.com</p>
+          <p><i class="bi bi-geo-alt-fill contact-icon"></i><strong>Localização:</strong> Itapecerica da Serra, SP</p>
+        </div>
+      </div>
+      <div class="col-md-8">
+        <!-- Caixa branca -->
+        <div class="bg-white shadow rounded-4 p-4">
+          <form id="contact-form" action="https://formsubmit.co/eduardo.ishimine@gmail.com" method="POST">
+            <!-- Substitua pelo seu e-mail no action acima -->
+            <input type="hidden" name="_captcha" value="false">
+            <input type="hidden" name="_redirect" value="false">
+
+            <div class="mb-3">
+              <label for="name" class="form-label">Nome</label>
+              <input type="text" name="name" id="name" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label for="email" class="form-label">E-mail</label>
+              <input type="email" name="email" id="email" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label for="subject" class="form-label">Assunto</label>
+              <input type="text" name="subject" id="subject" class="form-control" required>
+            </div>
+            <div class="mb-3">
+              <label for="message" class="form-label">Mensagem</label>
+              <textarea name="message" id="message" rows="5" class="form-control" required></textarea>
+            </div>
+            <div class="d-grid">
+              <button type="submit" class="btn btn-success fw-bold">Enviar Mensagem</button>
+            </div>
+          </form>
+
+          <!-- Mensagem de sucesso -->
+          <div id="success-message" class="alert alert-success mt-4 d-none" role="alert">
+            ✅ Mensagem enviada com sucesso! Em breve entrarei em contato.
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- Script de envio AJAX com feedback -->
+<script>
+  const form = document.getElementById('contact-form');
+  const successMessage = document.getElementById('success-message');
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault(); // Evita redirecionamento
+
+    const data = new FormData(form);
+
+    fetch(form.action, {
+      method: 'POST',
+      body: data,
+      headers: {
+        'Accept': 'application/json'
+      }
+    }).then(response => {
+      if (response.ok) {
+        form.reset(); // Limpa o formulário
+        successMessage.classList.remove('d-none'); // Mostra mensagem
+        window.scrollTo({ top: form.offsetTop, behavior: 'smooth' }); // Sobe até o topo do formulário
+      } else {
+        alert('Erro ao enviar. Tente novamente.');
+      }
+    }).catch(() => {
+      alert('Erro de conexão. Verifique sua internet.');
+    });
+  });
+</script>
+
+
+
+        <!-- Bootstrap core JS-->
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+        <!-- Core theme JS-->
+        <script src="js/scripts.js"></script>
+        <!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *-->
+        <!-- * *                               SB Forms JS                               * *-->
+        <!-- * * Activate your form at https://startbootstrap.com/solution/contact-forms * *-->
+        <!-- * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * *-->
+        <script src="https://cdn.startbootstrap.com/sb-forms-latest.js"></script>
+    </body>
+</html>
