@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Você Blindado</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  
+  <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-custom fixed-top">
+  <div class="container-fluid">
+    
+    <!-- Logo à esquerda -->
+    <a class="navbar-brand" href="#">Você Blindado</a>
+
+    <!-- Botão hamburguer -->
+    <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMenu">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <!-- Menu à direita -->
+    <div class="collapse navbar-collapse justify-content-end" id="navbarMenu">
+      <ul class="navbar-nav mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link" href="#home">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#social">Redes Sociais</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#FAQ">Perguntas Frequentes</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#contato">Contato</a>
+        </li>
+      </ul>
+    </div>
+
+  </div>
+</nav>
+
+
+<section id="home" class="py-5">
+    <div id="meuBanner" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
+      <div class="carousel-inner">
+        <div class="carousel-item active">
+          <img src="../img/Banner1.png" class="d-block w-100" alt="Banner 1">
+        </div>
+        <div class="carousel-item">
+          <img src="../img/Banner2.png" class="d-block w-100" alt="Banner 2">
+        </div>
+        <div class="carousel-item">
+          <img src="../img/Banner3.png" class="d-block w-100" alt="Banner 3">
+        </div>
+      </div>
+
+  <!-- Indicadores customizados -->
+      <div class="custom-indicators carousel-indicators ">
+        <button type="button" data-bs-target="#meuBanner" data-bs-slide-to="0" class="active" aria-current="true" aria-label="Slide 1"></button>
+        <button type="button" data-bs-target="#meuBanner" data-bs-slide-to="1" aria-label="Slide 2"></button>
+        <button type="button" data-bs-target="#meuBanner" data-bs-slide-to="2" aria-label="Slide 3"></button>
+      </div>
+    </div>
+</section>
+
+
+<section id="social" class="text-center py-5">
+  <div class="container"><div class="p-4 bg-white-transparent shadow rounded text-center mx-auto" style="max-width: 800px;">
+    <h2 class="mb-3 text-primary">
+        <i class="bi bi-share-fill me-2"></i>
+        Rede Social
+      </h2>
+
+      <p class="mb-4 text-muted">
+        Siga-nos nas redes sociais e fique por dentro de todas as novidades!
+      </p>
+    <div id="instagramCarousel" class="carousel slide mx-auto" data-bs-ride="carousel" data-bs-interval="5000" style="max-width: 540px;">
+      <div class="carousel-inner">
+
+        <!-- Post 1 -->
+        <div class="carousel-item active">
+          <blockquote class="instagram-media w-100"
+            data-instgrm-permalink="https://www.instagram.com/reel/DL7n2AkxdWz/"
+            data-instgrm-version="14"
+            style="background:#FFF; border:0; width:100%; padding:0; margin: 0 auto;">
+          </blockquote>
+        </div>
+
+        <!-- Post 2 -->
+        <div class="carousel-item">
+          <blockquote class="instagram-media w-100"
+            data-instgrm-permalink="https://www.instagram.com/reel/DL8WzcVxzEP/"
+            data-instgrm-version="14"
+            style="background:#FFF; border:0; width:100%; padding:0; margin: 0 auto;">
+          </blockquote>
+        </div>
+
+        <!-- Post 3 -->
+        <div class="carousel-item">
+          <blockquote class="instagram-media w-100"
+            data-instgrm-permalink="https://www.instagram.com/reel/DL0S_QxxpJu/"
+            data-instgrm-version="14"
+            style="background:#FFF; border:0; width:100%; padding:0; margin: 0 auto;">
+          </blockquote>
+        </div>
+
+      </div>
+
+      <!-- Botões de navegação -->
+      <button class="carousel-control-prev" type="button" data-bs-target="#instagramCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Anterior</span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#instagramCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Próximo</span>
+      </button>
+    </div>
+    </div>
+  </div>
+
+  <!-- Instagram script -->
+  <script async src="//www.instagram.com/embed.js"></script>
+</section>
+
+<section id="FAQ" class="py-5">
+  <div class="container">
+    <div class="p-4 bg-white-transparent shadow rounded mx-auto text-center" style="max-width: 800px;">
+      
+      <h2 class="mb-3 text-primary">
+        <i class="bi bi-question me-2"></i>
+        Perguntas Frequentes
+        <i class="bi bi-question me-2"></i>
+      </h2>
+      <div class="accordion" id="accordionSobre">
+
+        <!-- PERGUNTA 1 -->
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="heading1">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse1">
+              A blindagem realmente funciona?
+            </button>
+          </h2>
+          <div id="collapse1" class="accordion-collapse collapse" data-bs-parent="#accordionSobre">
+            <div class="accordion-body">
+              Sim! A blindagem com titânio líquido forma uma camada invisível que aumenta a resistência do vidro contra impactos, riscos e sujeira. É tecnologia real, com resultados comprovados.
+            </div>
+          </div>
+        </div>
+
+        <!-- PERGUNTA 2 -->
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="heading2">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse2">
+              Posso repetir os testes que vocês fazem?
+            </button>
+          </h2>
+          <div id="collapse2" class="accordion-collapse collapse" data-bs-parent="#accordionSobre">
+            <div class="accordion-body">
+              Os testes são feitos em ambiente controlado para demonstrar resistência. Não recomendamos repeti-los em casa, pois acidentes podem acontecer.
+            </div>
+          </div>
+        </div>
+
+        <!-- PERGUNTA 3 -->
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="heading3">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse3">
+              Qual é o material da blindagem?
+            </button>
+          </h2>
+          <div id="collapse3" class="accordion-collapse collapse" data-bs-parent="#accordionSobre">
+            <div class="accordion-body">
+              Utilizamos uma solução à base de titânio líquido com nanopartículas de sílica e silício. Essa combinação cria uma película invisível altamente resistente, hidrofóbica e anti-reflexo.
+            </div>
+          </div>
+        </div>
+
+        <!-- PERGUNTA 4 -->
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="heading4">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse4">
+              A blindagem tem validade?
+            </button>
+          </h2>
+          <div id="collapse4" class="accordion-collapse collapse" data-bs-parent="#accordionSobre">
+            <div class="accordion-body">
+              Sim. Recomendamos reaplicar a blindagem a cada 12 meses para garantir proteção máxima, principalmente em uso intenso ou exposição frequente a riscos e líquidos.
+            </div>
+          </div>
+        </div>
+
+        <!-- PERGUNTA 5 -->
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="heading5">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse5">
+              É preciso usar película junto?
+            </button>
+          </h2>
+          <div id="collapse5" class="accordion-collapse collapse" data-bs-parent="#accordionSobre">
+            <div class="accordion-body">
+              Não é necessário. A blindagem líquida substitui a película tradicional e protege até mesmo a lente da câmera. Ela não descasca nem acumula sujeira nas bordas.
+            </div>
+          </div>
+        </div>
+
+        <!-- PERGUNTA 6 -->
+        <div class="accordion-item">
+          <h2 class="accordion-header" id="heading6">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse6">
+              A blindagem protege contra água?
+            </button>
+          </h2>
+          <div id="collapse6" class="accordion-collapse collapse" data-bs-parent="#accordionSobre">
+            <div class="accordion-body">
+              Sim! A blindagem cria um efeito hidrofóbico que ajuda a repelir respingos, poeira e sujeira do dia a dia. Mas atenção: não transforma seu celular em à prova d’água.
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="contato" class="py-5">
+  <div class="container">
+    <div class="p-4 bg-white-transparent shadow rounded text-center mx-auto" style="max-width: 800px;">
+      <h2 class="mb-3 text-primary">
+        <i class="bi bi-calendar2-check-fill me-2"></i>
+        Agendar Visita
+      </h2>
+      <p class="mb-4 text-muted">Escolha o melhor horário para receber nossa equipe e proteger seu celular com blindagem líquida.</p>
+
+      <!-- Google Calendar Appointment Scheduling begin -->
+      <div id="google-calendar-button-container"></div>
+      <link href="https://calendar.google.com/calendar/scheduling-button-script.css" rel="stylesheet">
+      <script src="https://calendar.google.com/calendar/scheduling-button-script.js" async></script>
+      <script>
+        window.addEventListener('load', function () {
+          calendar.schedulingButton.load({
+            url: 'https://calendar.google.com/calendar/appointments/schedules/AcZssZ1aE0uEFpbO13i6NUZDzwR-8LQ249mKfDrvLwwpb7g352vPpRULTb0iZtrNhXOGLH5V1aWhvv6d?gv=true',
+            color: '#0d6efd',
+            label: 'Agendar Agora',
+            target: document.getElementById('google-calendar-button-container')
+          });
+        });
+      </script>
+      <!-- end Google Calendar Appointment Scheduling -->
+      <div><p class="mb-4 text-muted">ou</p></div>
+
+      <!-- Botão WhatsApp -->
+      <a href="https://wa.me/5511985024525" target="_blank" class="btn btn-success mt-2">
+        <i class="bi bi-whatsapp me-2"></i> Falar pelo WhatsApp
+      </a>
+    </div>
+  </div>
+</section>
+
+
+
+<footer class="footer">
+  <div class="container">
+    <div class="row g-4">
+
+      <!-- Coluna 1: Logo e texto -->
+      <div class="col-md-3">
+        <h2 class="mb-2">Você Blindado</h2>
+        <small class="d-block mb-3">Blindagem de Celulares</small>
+        <p>Especializados em blindagem de celular, oferecemos a proteção ideal para a tela do seu smartphone. Garanta mais tranquilidade e durabilidade para seu aparelho, evitando gastos inesperados com consertos.</p>
+        <div class="social-icons mt-3">
+          <a href="#"><i class="bi bi-pinterest"></i></a>
+          <a href="#"><i class="bi bi-linkedin"></i></a>
+          <a href="#"><i class="bi bi-google"></i></a>
+          <a href="#"><i class="bi bi-facebook"></i></a>
+          <a href="#"><i class="bi bi-twitter"></i></a>
+        </div>
+      </div>
+
+      <div class="col-md-3">
+        <h6 class="text-uppercase fw-bold mb-3">Explore</h6>
+        <ul class="list-unstyled">
+          <li><a href="#home" class="text-decoration-none text-reset">Home</a></li>
+          <li><a href="#FAQ" class="text-decoration-none text-reset">Perguntas Frequentes</a></li>
+          <li><a href="#contato" class="text-decoration-none text-reset">Contato</a></li>
+          <li><a href="#agenda" class="text-decoration-none text-reset">Agendar</a></li>
+        </ul>
+      </div>
+
+      <div class="col-md-3">
+        <h6 class="text-uppercase fw-bold mb-3">Contato</h6>
+        <p><i class="bi bi-geo-alt-fill me-2"></i>995, Georgia str., Washington DC, United States.</p>
+        <p><i class="bi bi-envelope-fill me-2"></i>info@yoursupport.com</p>
+        <p><i class="bi bi-telephone-fill me-2"></i>+1 747 123 4567</p>
+      </div>
+
+    </div>
+  </div>
+
+
+<a href="https://wa.me/5511985024525" target="_blank"
+   class="btn btn-success d-flex align-items-center justify-content-center shadow-lg"
+   style="position: fixed; bottom: 20px; right: 20px; width: 64px; height: 64px; border-radius: 50%; z-index: 9999;">
+  <i class="bi bi-whatsapp" style="font-size: 2rem;"></i>
+</a>
+
+
+</footer>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+window.onload = function() {
+  // Se não tiver hash na URL
+  if (!window.location.hash) {
+    const homeSection = document.getElementById('home');
+    if (homeSection) {
+      homeSection.scrollIntoView({ behavior: 'auto' });
+    }
+  }
+};
+  const sections = document.querySelectorAll("section");
+  const navLinks = document.querySelectorAll(".nav-link");
+
+  window.onscroll = () => {
+    let current = "";
+    sections.forEach((section) => {
+      const sectionTop = section.offsetTop - 80;
+      if (scrollY >= sectionTop) {
+        current = section.getAttribute("id");
+      }
+    });
+
+    navLinks.forEach((link) => {
+      link.classList.remove("active");
+      if (link.getAttribute("href") === `#${current}`) {
+        link.classList.add("active");
+      }
+    });
+  };
+
+  //instagran
+  window.addEventListener('load', function() {
+    if (window.instgrm) {
+      instgrm.Embeds.process();
+    }
+  });
+
+  // Reprocessa o embed ao trocar de slide
+  const carousel = document.getElementById('instagramCarousel');
+  carousel.addEventListener('slid.bs.carousel', function () {
+    if (window.instgrm) {
+      instgrm.Embeds.process();
+    }
+  });
+
+    // Fecha o menu após clicar em um link (modo mobile)
+  document.querySelectorAll('.navbar-collapse .nav-link').forEach(function (navLink) {
+    navLink.addEventListener('click', function () {
+      var navbarCollapse = document.querySelector('.navbar-collapse');
+      if (navbarCollapse.classList.contains('show')) {
+        new bootstrap.Collapse(navbarCollapse).hide();
+      }
+    });
+  });
+</script>
+</body>
+</html>
