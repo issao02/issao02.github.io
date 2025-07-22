@@ -4,7 +4,7 @@ html {
 
 body {
   padding-top: 70px; /* navbar fixa com mais espaço */
-  background: linear-gradient(135deg, #303030, #444444);
+  /*background: linear-gradient(135deg, #303030, #444444);*/
   min-height: 100vh;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   color: #222;
@@ -15,7 +15,8 @@ body::before {
   content: "";
   position: fixed;
   inset: 0;
-  background: url('../img/bkg2.png') no-repeat center center / cover;
+  /*background: url('../img/bkg2.png') no-repeat center center / cover;*/
+  background: #ffffff;
   opacity: 0.7;
   z-index: -1;
   pointer-events: none;
