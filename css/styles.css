@@ -133,6 +133,9 @@ footer {
     .banners {
       height: 800px;
     }
+    .banner {
+    background-size: contain; /* garante que a altura seja respeitada */
+    }
   }
   .banner.active {
     opacity: 1;
