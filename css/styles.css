@@ -1,0 +1,167 @@
+body {
+  scroll-behavior: smooth;
+  background: linear-gradient(to right, #eef2f3, #fceefc);
+}
+
+.navbar-nav .nav-link {
+  color: black;
+  text-decoration: none;
+  transition: color 0.3s ease;
+  border-bottom: 2px solid transparent; /* Espaço para o sublinhado ativo */
+}
+
+.navbar-nav .nav-link:hover {
+  color: #0d6efd; /* azul */
+}
+
+.navbar-nav .nav-link.active {
+  color: #0d6efd;
+}
+
+.hero {
+  text-align: center;
+  padding: 100px 20px;
+}
+
+h1 {
+  font-size: 3rem;
+  font-weight: bold;
+  background: linear-gradient(to right, #005dff, #d100c9);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+h2 {
+  font-size: 2rem;
+  font-weight: bold;
+  background: linear-gradient(to right, #005dff, #d100c9);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+p {
+  font-size: 1.25rem;
+  color: #555;
+  margin-bottom: 30px;
+}
+
+.hero .btn-primary {
+  background-color: #005dff;
+  border: none;
+  padding: 10px 25px;
+  border-radius: 25px;
+  box-shadow: 0 4px 10px rgba(0, 93, 255, 0.3);
+}
+
+.hero .btn-outline-secondary {
+  border-radius: 25px;
+  padding: 10px 25px;
+  margin-left: 10px;
+}
+
+/* Carousel Instagram */
+.carousel-inner iframe {
+  width: 100%;
+  border: none;
+  border-radius: 15px;
+}
+
+/* Seção social */
+#social {
+  background: linear-gradient(to right, #eef2f3, #fceefc);
+}
+
+#social .bg-white {
+  background-color: rgba(255, 255, 255, 0.75) !important;
+}
+
+#instagramCarousel {
+  max-width: 750px;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 8px 20px rgb(0 0 0 / 0.1);
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.carousel-control-prev,
+.carousel-control-next {
+  width: 50px;
+}
+
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+  filter: drop-shadow(0 0 2px rgba(0, 0, 0, 0.3));
+}
+
+
+
+.accordion-body {
+  margin-left: 2rem; /* Ajuste o valor conforme desejar */
+}
+
+
+footer {
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+  border-top: 1px solid #ddd;
+}
+
+
+
+
+
+
+
+  /* CSS do banner */
+  .banners {
+    height: 600px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .banner {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: center;
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+  }
+  @media (min-width: 1201px) {
+    .banners {
+      height: 800px;
+    }
+  }
+  .banner.active {
+    opacity: 1;
+    z-index: 1;
+  }
+
+  .dots-container {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 12px;
+    z-index: 10;
+  }
+
+  .dot {
+    width: 14px;
+    height: 14px;
+    background-color: rgba(255, 255, 255, 0.6);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+
+  .dot.active {
+    background-color: #005dff;
+  }
+
+  .dot:hover {
+    background-color: #0d6efd;
+  }
