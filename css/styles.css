@@ -26,14 +26,14 @@ body {
 h1 {
   font-size: 3rem;
   font-weight: bold;
-  background: linear-gradient(to right, #005dff, #d100c9);
+  background: linear-gradient(to right, #57126d, #f25a29);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 h2 {
   font-size: 2rem;
   font-weight: bold;
-  background: linear-gradient(to right, #005dff, #d100c9);
+  background: linear-gradient(to right, #57126d, #f25a29);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
