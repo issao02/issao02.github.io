@@ -92,7 +92,6 @@ body {
     align-items: center;
     text-align: center;
     padding: 20px;
-    overflow: hidden; /* garante que o efeito não vaze */
   }
 
   /* Iluminação de fundo */
@@ -535,9 +534,7 @@ body {
 
 
 
-/*=====CONTATO=======*//* Fundo da seção (escuro com leve gradiente azul) */
-
-
+/*=====CONTATO=======*/
 /* Card central */
 .contato-card {
   background: #1a222c; /* escuro translúcido */
@@ -569,4 +566,30 @@ body {
 .btn-whatsapp:hover {
   background: #1ebe5b;
   color: #fff;
+}
+
+
+
+.whatsapp-float {
+    position: fixed;      /* Fica fixo na tela */
+    bottom: 20px;         /* Distância do rodapé */
+    right: 20px;          /* Distância da direita */
+    background-color: #25d366;
+    color: #fff;
+    border-radius: 50%;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 28px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+    transition: 0.3s;
+    z-index: 99999;       /* Fica acima de tudo */
+}
+
+.whatsapp-float:hover {
+    background-color: #1ebe5b;
+    transform: scale(1.1);
 }
