@@ -5,7 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Você Blindado</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+
   
   <link href="css/style.css" rel="stylesheet">
 </head>
@@ -37,6 +38,9 @@
         </li>
         <li class="nav-item">
           <a class="nav-link" href="#Planos">Planos</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#social">Redes Sociais</a>
         </li>
         <li class="nav-item">
           <a class="nav-link" href="#Depoimentos">Depoimentos</a>
@@ -138,7 +142,7 @@
       <div class="col-md-3">
         <div class="caixa-funciona text-center">
           <div class="icone">
-            <i class="bi bi-shield-check-fill"></i>
+            <i class="bi bi-shield-fill-check"></i>
           </div>
           <h3>4. Proteção Ativada</h3>
           <p>Após um curto período de cura, seu celular está pronto e protegido e 20x mais resistente.</p>
@@ -234,6 +238,67 @@
 </section>
 
 
+<section id="social" class="text-center py-5">
+  <div class="container">
+    <div class="p-4 bg-white-transparent shadow rounded text-center mx-auto" style="max-width: 800px;">
+    <h2 class="mb-3">
+        Rede Social
+      </h2>
+
+      <p class="mb-4">
+        Siga-nos nas redes sociais e fique por dentro de todas as novidades!
+      </p>
+    <div id="instagramCarousel" class="carousel slide mx-auto" data-bs-ride="carousel" data-bs-interval="5000" style="max-width: 540px;">
+      <div class="carousel-inner">
+
+        <!-- Post 1 -->
+        <div class="carousel-item active">
+          <blockquote class="instagram-media w-100"
+            data-instgrm-permalink="https://www.instagram.com/reel/DL7n2AkxdWz/"
+            data-instgrm-version="14"
+            style="background:#FFF; border:0; width:100%; padding:0; margin: 0 auto;">
+          </blockquote>
+        </div>
+
+        <!-- Post 2 -->
+        <div class="carousel-item">
+          <blockquote class="instagram-media w-100"
+            data-instgrm-permalink="https://www.instagram.com/reel/DL8WzcVxzEP/"
+            data-instgrm-version="14"
+            style="background:#FFF; border:0; width:100%; padding:0; margin: 0 auto;">
+          </blockquote>
+        </div>
+
+        <!-- Post 3 -->
+        <div class="carousel-item">
+          <blockquote class="instagram-media w-100"
+            data-instgrm-permalink="https://www.instagram.com/reel/DL0S_QxxpJu/"
+            data-instgrm-version="14"
+            style="background:#FFF; border:0; width:100%; padding:0; margin: 0 auto;">
+          </blockquote>
+        </div>
+
+      </div>
+
+      <!-- Botões de navegação -->
+      <button class="carousel-control-prev" type="button" data-bs-target="#instagramCarousel" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Anterior</span>
+      </button>
+      <button class="carousel-control-next" type="button" data-bs-target="#instagramCarousel" data-bs-slide="next">
+        <span class="carousel-control-next-icon" aria-hidden="true"></span>
+        <span class="visually-hidden">Próximo</span>
+      </button>
+    </div>
+    </div>
+  </div>
+
+  <!-- Instagram script -->
+  <script async src="//www.instagram.com/embed.js"></script>
+</section>
+
+
+
 <section id="Depoimentos" class="py-5">
   <div class="container">
     <h2 class="mb-2">Depoimentos de Clientes</h2>
@@ -292,14 +357,16 @@
   </div>
 </section>
 
-<section id="contato" class="py-5">
+<section id="contato" class="py-5 contato-section">
   <div class="container">
-    <div class="p-4 bg-white-transparent shadow rounded text-center mx-auto" style="max-width: 800px;">
+    <div class="p-4 contato-card text-center mx-auto">
       <h2 class="mb-3 text-primary">
         <i class="bi bi-calendar2-check-fill me-2"></i>
         Agendar Visita
       </h2>
-      <p class="mb-4 text-muted">Escolha o melhor horário para receber nossa equipe e proteger seu celular com blindagem líquida.</p>
+      <p class="mb-4 text-light">
+        Escolha o melhor horário para receber nossa equipe e proteger seu celular com blindagem líquida.
+      </p>
 
       <!-- Google Calendar Appointment Scheduling begin -->
       <div id="google-calendar-button-container"></div>
@@ -316,16 +383,42 @@
         });
       </script>
       <!-- end Google Calendar Appointment Scheduling -->
-      <div><p class="mb-4 text-muted">ou</p></div>
+
+      <p class="mt-4 mb-2 text-light">ou</p>
 
       <!-- Botão WhatsApp -->
-      <a href="https://wa.me/5511985024525" target="_blank" class="btn btn-success mt-2">
+      <a href="https://wa.me/5511985024525" target="_blank" class="btn btn-whatsapp">
         <i class="bi bi-whatsapp me-2"></i> Falar pelo WhatsApp
       </a>
     </div>
   </div>
 </section>
 
+    <div class="collapse navbar-collapse justify-content-center" id="navbarMenu">
+      <ul class="navbar-nav mb-2 mb-lg-0">
+        <li class="nav-item">
+          <a class="nav-link" href="#OServico">O Serviço</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#ComoFunciona">Como Funciona</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#Beneficios">Benefícios</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#Planos">Planos</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#social">Redes Sociais</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#Depoimentos">Depoimentos</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#contato">Contato</a>
+        </li>
+      </ul>
+    </div>
 
 <footer class="footer">
   <div class="container">
@@ -333,8 +426,7 @@
 
       <div class="col-md-4">
         <div class="logo-info">
-          <i class="bi bi-shield-fill-check icone-logo"></i>
-          <h3>Você Blindado</h3>
+          <img src="../img/logo.png" alt="Logo Você Blindado">
         </div>
         <p>Proteção de ponta para seu dispositivo, com a conveniência que você merece. Blindagem líquida de titânio com atendimento a domicílio.</p>
       </div>
@@ -344,8 +436,11 @@
         <ul class="lista-links">
           <li><a href="#OServico">O Serviço</a></li>
           <li><a href="#ComoFunciona">Como Funciona</a></li>
+          <li><a href="#Beneficios">Benefícios</a></li>
           <li><a href="#Planos">Planos</a></li>
-          <li><a href="#Agendar">Agendar</a></li>
+          <li><a href="#social">Redes Sociais</a></li>
+          <li><a href="#Depoimentos">Depoimentos</a></li>
+          <li><a href="#contato">Contato</a></li>
         </ul>
       </div>
 
@@ -371,17 +466,53 @@
   </div>
 
   <div class="container-fluid copyright">
-    <p>&copy; 2023 TitanShield. Todos os direitos reservados.</p>
+    <p>&copy; 2025 Você Blindado. Todos os direitos reservados.</p>
   </div>
 </footer>
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script>
-  const hamburger = document.getElementById("hamburger");
-  const menu = document.getElementById("menu");
-
-  hamburger.addEventListener("click", () => {
-    menu.classList.toggle("show");
+        // Fecha o menu após clicar em um link (modo mobile)
+  document.querySelectorAll('.navbar-collapse .nav-link').forEach(function (navLink) {
+    navLink.addEventListener('click', function () {
+      var navbarCollapse = document.querySelector('.navbar-collapse');
+      if (navbarCollapse.classList.contains('show')) {
+        new bootstrap.Collapse(navbarCollapse).hide();
+      }
+    });
   });
+
+
+
+
+window.onload = function() {
+  // Se não tiver hash na URL
+  if (!window.location.hash) {
+    const homeSection = document.getElementById('home');
+    if (homeSection) {
+      homeSection.scrollIntoView({ behavior: 'auto' });
+    }
+  }
+};
+
+
+  //instagran
+  window.addEventListener('load', function() {
+    if (window.instgrm) {
+      instgrm.Embeds.process();
+    }
+  });
+
+  // Reprocessa o embed ao trocar de slide
+  const carousel = document.getElementById('instagramCarousel');
+  carousel.addEventListener('slid.bs.carousel', function () {
+    if (window.instgrm) {
+      instgrm.Embeds.process();
+    }
+  });
+
+
+
+
 </script>
 </body>
 </html>
