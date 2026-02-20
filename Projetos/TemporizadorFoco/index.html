@@ -398,6 +398,10 @@
           card.classList.add('alarmando');
           timerDisplay.classList.add('alarmando');
 
+          if ('vibrate' in navigator) {
+            navigator.vibrate([300, 150, 300, 150, 300]);
+          }
+
           enviarNotificacao(
             foco ? 'Tempo de foco acabou!' : 'Descanso acabou!',
             foco ? 'Hora de descansar. Clique para continuar.' : 'Hora de focar novamente. Clique para continuar.'
