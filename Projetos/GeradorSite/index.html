@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerador de Site | Crie seu site com IA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="app-layout">
+    <!-- Painel do formulário -->
+    <aside class="form-panel">
+      <header class="form-header">
+        <h1>Gerador de Site</h1>
+        <p class="form-subtitle">Preencha e gere seu site com IA</p>
+      </header>
+
+      <form id="siteForm" class="form-content">
+        <!-- Paleta de cores -->
+        <section class="form-section">
+          <h2>Paleta de cores</h2>
+          <div class="color-palette" id="colorPalette">
+            <div class="color-slot" data-index="0">
+              <input type="color" value="#6366f1" class="color-picker">
+              <span class="color-hex">#6366f1</span>
+              <button type="button" class="remove-color" aria-label="Remover cor">×</button>
+            </div>
+          </div>
+          <div class="color-picker-popover" id="colorPickerPopover" hidden>
+            <div class="color-presets" id="colorPresets"></div>
+            <div class="color-picker-row">
+              <input type="color" id="colorPickerInput" value="#6366f1">
+              <input type="text" id="colorHexInput" value="#6366f1" class="color-hex-input">
+              <button type="button" class="btn-confirm-color" id="btnConfirmColor">Adicionar</button>
+            </div>
+          </div>
+          <button type="button" class="btn-add-color" id="btnAddColor">+ Adicionar cor</button>
+        </section>
+
+        <!-- Título e Descrição -->
+        <section class="form-section">
+          <h2>Conteúdo</h2>
+          <label>Título do site</label>
+          <input type="text" id="siteTitle" placeholder="Ex: Minha Empresa" required>
+          <label>Descrição</label>
+          <textarea id="siteDescription" rows="3" placeholder="Descreva o site, negócio ou serviço..."></textarea>
+        </section>
+
+        <!-- Seções do site -->
+        <section class="form-section">
+          <h2>Seções do site</h2>
+          <p class="input-hint">Marque as seções que deseja incluir</p>
+          <div class="sections-checklist" id="sectionsChecklist">
+            <label class="checkbox-label">
+              <input type="checkbox" name="section" value="hero" checked>
+              <span class="checkmark"></span> Hero Section
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="section" value="sobre">
+              <span class="checkmark"></span> Sobre
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="section" value="servicos">
+              <span class="checkmark"></span> Serviços
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="section" value="galeria">
+              <span class="checkmark"></span> Galeria
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="section" value="depoimentos">
+              <span class="checkmark"></span> Depoimentos
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="section" value="faq">
+              <span class="checkmark"></span> FAQ
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="section" value="blog">
+              <span class="checkmark"></span> Blog
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="section" value="contato">
+              <span class="checkmark"></span> Contato
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="section" value="whatsapp">
+              <span class="checkmark"></span> Integração WhatsApp
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="section" value="calendar">
+              <span class="checkmark"></span> Integração Google Calendar
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="section" value="mapa">
+              <span class="checkmark"></span> Localização
+            </label>
+            <label class="checkbox-label">
+              <input type="checkbox" name="section" value="footer" checked>
+              <span class="checkmark"></span> Footer
+            </label>
+          </div>
+        </section>
+
+        <!-- Contato -->
+        <section class="form-section">
+          <h2>Contato</h2>
+          <div class="radio-group">
+            <label class="radio-label">
+              <input type="radio" name="contactType" value="email" checked>
+              <span class="radio-custom"></span> Email
+            </label>
+            <label class="radio-label">
+              <input type="radio" name="contactType" value="whatsapp">
+              <span class="radio-custom"></span> WhatsApp
+            </label>
+          </div>
+          <input type="text" id="contactValue" placeholder="email@exemplo.com ou 5511999999999">
+        </section>
+
+        <!-- Galeria (config quando Galeria estiver marcada nas seções) -->
+        <section class="form-section gallery-config-section" id="galleryConfigSection" hidden>
+          <h2>Config. Galeria</h2>
+          <div class="gallery-types-area" id="galleryTypesArea">
+            <label>Quantos tipos de galeria?</label>
+            <select id="galleryTypesCount">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+            </select>
+            <div class="gallery-types-list" id="galleryTypesList"></div>
+          </div>
+        </section>
+
+        <!-- WhatsApp fixo -->
+        <section class="form-section">
+          <label class="checkbox-label">
+            <input type="checkbox" id="wantWhatsAppBtn" checked>
+            <span class="checkmark"></span> Botão WhatsApp fixo (canto direito)
+          </label>
+          <input type="text" id="whatsAppNumber" placeholder="5511999999999 (com DDI)">
+        </section>
+
+        <!-- Redes sociais -->
+        <section class="form-section">
+          <h2>Redes sociais</h2>
+          <div class="social-inputs" id="socialInputs">
+            <div class="social-row">
+              <select class="social-select">
+                <option value="">Selecione</option>
+                <option value="instagram">Instagram</option>
+                <option value="facebook">Facebook</option>
+                <option value="twitter">X (Twitter)</option>
+                <option value="linkedin">LinkedIn</option>
+                <option value="youtube">YouTube</option>
+                <option value="tiktok">TikTok</option>
+              </select>
+              <input type="url" class="social-url" placeholder="URL">
+            </div>
+          </div>
+          <button type="button" class="btn-add-social" id="btnAddSocial">+ Rede social</button>
+        </section>
+
+        <!-- Layout -->
+        <section class="form-section">
+          <h2>Layout</h2>
+          <select id="layoutSelect">
+            <option value="scroll">Scroll (uma página)</option>
+            <option value="pages">Páginas separadas</option>
+          </select>
+        </section>
+
+        <!-- IA e Estilo -->
+        <section class="form-section">
+          <h2>IA e Estilo</h2>
+          <label>Gerar com</label>
+          <select id="aiSelect">
+            <option value="openai">ChatGPT (OpenAI)</option>
+            <option value="gemini">Gemini (Google)</option>
+            <option value="claude">Claude (Anthropic)</option>
+          </select>
+          <label>API Key</label>
+          <input type="password" id="apiKey" placeholder="sk-... ou sua chave" autocomplete="off">
+          <p class="input-hint">Chaves em: OpenAI, Google AI Studio, Anthropic</p>
+          <label>Estilo visual</label>
+          <select id="styleSelect">
+            <option value="classic">Clássico</option>
+            <option value="modern">Moderno</option>
+            <option value="minimalist">Minimalista</option>
+            <option value="brutalist">Brutalista</option>
+            <option value="elegant">Elegante</option>
+            <option value="bold">Bold / Impactante</option>
+            <option value="glassmorphism">Glassmorphism</option>
+            <option value="retro">Retrô</option>
+            <option value="corporate">Corporativo</option>
+            <option value="creative">Criativo / Artístico</option>
+          </select>
+        </section>
+
+        <!-- Observações -->
+        <section class="form-section">
+          <label>Observações</label>
+          <textarea id="observations" rows="2" placeholder="Instruções extras para a IA..."></textarea>
+        </section>
+
+        <button type="submit" class="btn-generate" id="btnGenerate">
+          Gerar site
+        </button>
+      </form>
+    </aside>
+
+    <!-- Painel de preview -->
+    <main class="preview-panel">
+      <div class="preview-toolbar">
+        <div class="view-mode-btns" role="group" aria-label="Tamanho do preview">
+          <button type="button" class="view-btn active" data-mode="mobile" title="Celular">📱</button>
+          <button type="button" class="view-btn" data-mode="tablet" title="Tablet">📲</button>
+          <button type="button" class="view-btn" data-mode="full" title="Full">🖥️</button>
+        </div>
+        <span class="view-mode-label" id="viewModeLabel">Celular</span>
+        <div class="toolbar-divider"></div>
+        <div class="edit-mode-btns" role="group" aria-label="Modo de visualização" style="visibility: hidden;">
+          <button type="button" class="edit-mode-btn active" id="btnViewScreen" data-mode="screen" title="Ver tela">🖥️ Tela</button>
+          <button type="button" class="edit-mode-btn" id="btnViewCode" data-mode="code" title="Editar código">📝 Código</button>
+        </div>
+      </div>
+
+      <div class="preview-container preview-mobile" id="previewContainer">
+        <div class="preview-inner" id="previewInner">
+        <div class="viewer-placeholder" id="viewerPlaceholder">
+          <div class="viewer-placeholder-content">
+            <span class="viewer-placeholder-icon">🖥️</span>
+            <p>Preencha o formulário e clique em <strong>Gerar site</strong></p>
+            <p class="viewer-placeholder-hint">O site será gerado pela IA e exibido aqui</p>
+          </div>
+        </div>
+        <div class="viewer-wrapper" id="viewerWrapper" hidden>
+          <div class="view-mode-screen" id="viewModeScreen">
+            <div class="device-frame" id="deviceFrame">
+              <div class="device-screen">
+                <iframe id="siteViewer" title="Preview do site"></iframe>
+              </div>
+            </div>
+            <button type="button" class="viewer-action-btn" id="btnEditCode" title="Editar código HTML">📝 Editar código</button>
+          </div>
+          <div class="view-mode-code" id="viewModeCode" hidden>
+            <textarea id="htmlEditor" placeholder="Edite o HTML aqui. Clique em 'Ver visualização' para aplicar as alterações." spellcheck="false"></textarea>
+            <button type="button" class="btn-apply-code" id="btnApplyCode">🖥️ Ver visualização</button>
+          </div>
+        </div>
+        <div class="manual-fallback" id="manualFallback" hidden>
+          <p class="manual-fallback-msg" id="manualFallbackMsg"></p>
+          <details class="manual-details">
+            <summary>Modo manual (copiar prompt e colar HTML)</summary>
+            <textarea id="promptOutput" readonly placeholder="Prompt..."></textarea>
+            <textarea id="htmlInput" placeholder="Cole o HTML da IA aqui..."></textarea>
+            <button type="button" class="btn-preview" id="btnPreview">Carregar no visualizador</button>
+          </details>
+        </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="script.js"></script>
+</body>
+</html>
