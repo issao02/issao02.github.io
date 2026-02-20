@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Temporizador Foco / Descanso</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0f0f12;
+      --bg-card: #18181d;
+      --accent-foco: #22c55e;
+      --accent-foco-glow: rgba(34, 197, 94, 0.4);
+      --accent-descanso: #3b82f6;
+      --accent-descanso-glow: rgba(59, 130, 246, 0.4);
+      --accent: #6366f1;
+      --text: #e4e4e7;
+      --text-muted: #a1a1aa;
+      --border: #27272a;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 420px;
+      padding: 2rem;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 2rem;
+      text-align: center;
+      transition: box-shadow 0.3s ease, border-color 0.3s ease;
+    }
+
+    .card.modo-foco { border-color: rgba(34, 197, 94, 0.4); }
+    .card.modo-descanso { border-color: rgba(59, 130, 246, 0.4); }
+
+    .card.alarmando {
+      animation: piscar 0.8s ease-in-out infinite;
+    }
+
+    @keyframes piscar {
+      0%, 100% { 
+        box-shadow: 0 0 0 0 transparent;
+        opacity: 1;
+      }
+      50% { 
+        box-shadow: 0 0 40px 10px var(--alarm-glow, var(--accent));
+        opacity: 0.85;
+      }
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      color: var(--text);
+    }
+
+    .inputs-row {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-bottom: 2rem;
+    }
+
+    .input-group {
+      text-align: center;
+    }
+
+    .input-group label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 0.4rem;
+    }
+
+    .input-group input {
+      width: 80px;
+      padding: 0.6rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.2rem;
+      text-align: center;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--bg-dark);
+      color: var(--text);
+    }
+
+    .input-group input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+    }
+
+    .fase-label {
+      font-size: 0.9rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.5rem;
+      transition: color 0.3s;
+    }
+
+    .fase-label.foco { color: var(--accent-foco); }
+    .fase-label.descanso { color: var(--accent-descanso); }
+
+    .timer-display {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 4rem;
+      font-weight: 500;
+      line-height: 1.2;
+      margin: 1rem 0 1.5rem;
+      color: var(--text);
+    }
+
+    .timer-display.alarmando {
+      animation: timer-pulse 0.8s ease-in-out infinite;
+    }
+
+    @keyframes timer-pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.03); }
+    }
+
+    .btn {
+      width: 100%;
+      padding: 1rem 1.5rem;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-iniciar {
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn-iniciar:hover:not(:disabled) {
+      background: #818cf8;
+      transform: translateY(-2px);
+    }
+
+    .btn-proximo {
+      background: var(--accent-foco);
+      color: white;
+    }
+
+    .btn-proximo:hover {
+      background: #16a34a;
+      transform: translateY(-2px);
+    }
+
+    .btn.descanso-proximo {
+      background: var(--accent-descanso);
+    }
+
+    .btn.descanso-proximo:hover {
+      background: #2563eb;
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .alarme-msg {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-top: 1rem;
+    }
+
+    .alarme-msg strong {
+      color: var(--accent-foco);
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="card" id="card">
+      <h1>Temporizador Foco / Descanso</h1>
+
+      <div class="inputs-row">
+        <div class="input-group">
+          <label for="focoMin">Foco (min)</label>
+          <input type="number" id="focoMin" min="1" max="120" value="25">
+        </div>
+        <div class="input-group">
+          <label for="descansoMin">Descanso (min)</label>
+          <input type="number" id="descansoMin" min="1" max="60" value="5">
+        </div>
+      </div>
+
+      <p class="fase-label" id="faseLabel">Defina os tempos e clique em Iniciar</p>
+      <div class="timer-display" id="timerDisplay">25:00</div>
+
+      <button type="button" class="btn btn-iniciar" id="btnIniciar">Iniciar foco</button>
+      <button type="button" class="btn btn-proximo hidden" id="btnProximo">
+        Iniciar descanso
+      </button>
+
+      <p class="alarme-msg hidden" id="alarmeMsg">
+        <strong>Hora de descansar!</strong> Clique no botão para iniciar o próximo período.
+      </p>
+    </div>
+  </div>
+
+  <script>
+    const card = document.getElementById('card');
+    const faseLabel = document.getElementById('faseLabel');
+    const timerDisplay = document.getElementById('timerDisplay');
+    const btnIniciar = document.getElementById('btnIniciar');
+    const btnProximo = document.getElementById('btnProximo');
+    const alarmeMsg = document.getElementById('alarmeMsg');
+    const focoInput = document.getElementById('focoMin');
+    const descansoInput = document.getElementById('descansoMin');
+
+    let intervalo = null;
+    let restanteSeg = 0;
+    let modoAtual = 'foco';
+    let alarmando = false;
+
+    function pad(n) {
+      return String(n).padStart(2, '0');
+    }
+
+    function atualizarDisplay() {
+      const min = Math.floor(restanteSeg / 60);
+      const seg = restanteSeg % 60;
+      timerDisplay.textContent = `${pad(min)}:${pad(seg)}`;
+    }
+
+    function pararAlarme() {
+      alarmando = false;
+      card.classList.remove('alarmando');
+      timerDisplay.classList.remove('alarmando');
+      card.style.setProperty('--alarm-glow', '');
+      btnProximo.classList.add('hidden');
+      alarmeMsg.classList.add('hidden');
+    }
+
+    function enviarNotificacao(titulo, corpo) {
+      if (!('Notification' in window)) return;
+      if (Notification.permission === 'granted') {
+        const n = new Notification(titulo, { body: corpo, icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2322c55e"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>' });
+        n.onclick = () => { n.close(); window.focus(); };
+      }
+    }
+
+    async function iniciarPeriodo(foco) {
+      if ('Notification' in window && Notification.permission === 'default') {
+        await Notification.requestPermission();
+      }
+      modoAtual = foco ? 'foco' : 'descanso';
+      const raw = foco ? parseInt(focoInput.value, 10) : parseInt(descansoInput.value, 10);
+      const min = isNaN(raw) ? (foco ? 25 : 5) : Math.max(1, foco ? Math.min(120, raw) : Math.min(60, raw));
+      restanteSeg = min * 60;
+
+      card.classList.remove('modo-foco', 'modo-descanso');
+      card.classList.add(foco ? 'modo-foco' : 'modo-descanso');
+
+      faseLabel.textContent = foco ? 'Foco' : 'Descanso';
+      faseLabel.className = 'fase-label ' + (foco ? 'foco' : 'descanso');
+
+      pararAlarme();
+
+      focoInput.disabled = true;
+      descansoInput.disabled = true;
+      btnIniciar.classList.add('hidden');
+      btnProximo.classList.add('hidden');
+      alarmeMsg.classList.add('hidden');
+
+      atualizarDisplay();
+
+      intervalo = setInterval(() => {
+        restanteSeg--;
+        atualizarDisplay();
+
+        if (restanteSeg <= 0) {
+          clearInterval(intervalo);
+          intervalo = null;
+
+          alarmando = true;
+          const cor = foco ? 'var(--accent-foco)' : 'var(--accent-descanso)';
+          card.style.setProperty('--alarm-glow', cor);
+          card.classList.add('alarmando');
+          timerDisplay.classList.add('alarmando');
+
+          enviarNotificacao(
+            foco ? 'Tempo de foco acabou!' : 'Descanso acabou!',
+            foco ? 'Hora de descansar. Clique para continuar.' : 'Hora de focar novamente. Clique para continuar.'
+          );
+
+          btnProximo.textContent = foco ? 'Iniciar descanso' : 'Iniciar foco';
+          btnProximo.className = 'btn btn-proximo' + (foco ? '' : ' descanso-proximo');
+          btnProximo.classList.remove('hidden');
+          alarmeMsg.classList.remove('hidden');
+          const strong = alarmeMsg.querySelector('strong');
+          if (strong) strong.textContent = foco ? 'Hora de descansar!' : 'Hora de focar!';
+        }
+      }, 1000);
+    }
+
+    btnIniciar.addEventListener('click', () => iniciarPeriodo(true));
+
+    btnProximo.addEventListener('click', () => {
+      if (!alarmando) return;
+      iniciarPeriodo(modoAtual !== 'foco');
+    });
+
+    focoInput.addEventListener('change', () => {
+      if (!intervalo && !alarmando) {
+        const v = parseInt(focoInput.value, 10);
+        restanteSeg = (isNaN(v) ? 25 : Math.min(120, Math.max(1, v))) * 60;
+        atualizarDisplay();
+      }
+    });
+
+    descansoInput.addEventListener('change', () => {
+      const v = parseInt(descansoInput.value, 10);
+      descansoInput.value = isNaN(v) ? 5 : Math.min(60, Math.max(1, v));
+    });
+
+    restanteSeg = Math.max(1, parseInt(focoInput.value, 10) || 25) * 60;
+    atualizarDisplay();
+  </script>
+</body>
+</html>

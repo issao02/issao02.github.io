@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>Lua Manicure | Unhas impecáveis</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cream: #faf8f5;
+      --blush: #e8d5d0;
+      --rose: #c9a9a0;
+      --rose-dark: #a67f78;
+      --gold: #b8860b;
+      --charcoal: #2d2a26;
+      --text-muted: #6b6560;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--cream);
+      color: var(--charcoal);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 1.25rem 2rem;
+      background: rgba(250, 248, 245, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(201, 169, 160, 0.2);
+      z-index: 100;
+      transition: padding 0.3s ease;
+    }
+
+    .header nav {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.75rem;
+      font-weight: 600;
+      color: var(--rose-dark);
+      text-decoration: none;
+      letter-spacing: 0.05em;
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--charcoal);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: color 0.3s ease;
+    }
+
+    .nav-links a:hover {
+      color: var(--rose-dark);
+    }
+
+    .menu-toggle {
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      gap: 5px;
+      width: 40px;
+      height: 40px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 8px;
+    }
+
+    .menu-toggle span {
+      display: block;
+      width: 24px;
+      height: 2px;
+      background: var(--rose-dark);
+      transition: transform 0.3s ease, opacity 0.3s ease;
+    }
+
+    .menu-toggle.active span:nth-child(1) {
+      transform: rotate(45deg) translate(5px, 5px);
+    }
+
+    .menu-toggle.active span:nth-child(2) {
+      opacity: 0;
+    }
+
+    .menu-toggle.active span:nth-child(3) {
+      transform: rotate(-45deg) translate(5px, -5px);
+    }
+
+    .mobile-menu-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.3);
+      z-index: 98;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .mobile-menu-overlay.open {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .mobile-menu {
+      display: none;
+      position: fixed;
+      top: 0;
+      right: 0;
+      width: 280px;
+      height: 100vh;
+      background: var(--cream);
+      box-shadow: -4px 0 20px rgba(0,0,0,0.1);
+      z-index: 99;
+      padding: 5rem 1.5rem 2rem;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+    }
+
+    .mobile-menu.open {
+      transform: translateX(0);
+    }
+
+    .mobile-menu .nav-links {
+      flex-direction: column;
+      gap: 0;
+      align-items: stretch;
+    }
+
+    .mobile-menu .nav-links a {
+      display: block;
+      padding: 1rem 0;
+      font-size: 1.1rem;
+      border-bottom: 1px solid rgba(201, 169, 160, 0.3);
+    }
+
+    .mobile-menu .nav-links a:last-child {
+      border-bottom: none;
+    }
+
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 6rem 2rem;
+      position: relative;
+      background: 
+        linear-gradient(rgba(250, 248, 245, 0.85) 0%, rgba(250, 248, 245, 0.75) 100%),
+        url('https://images.pexels.com/photos/3997388/pexels-photo-3997388.jpeg?auto=compress&cs=tinysrgb&w=1920') center/cover no-repeat;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    .hero h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(3rem, 8vw, 5rem);
+      font-weight: 600;
+      color: var(--charcoal);
+      letter-spacing: 0.02em;
+      line-height: 1.1;
+      margin-bottom: 1rem;
+    }
+
+    .hero h1 span {
+      color: var(--rose-dark);
+      font-style: italic;
+    }
+
+    .hero p {
+      font-size: 1.25rem;
+      color: var(--text-muted);
+      max-width: 500px;
+      margin-bottom: 2.5rem;
+      font-weight: 300;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 1rem 2rem;
+      background: var(--rose-dark);
+      color: white !important;
+      text-decoration: none;
+      font-weight: 500;
+      border-radius: 50px;
+      transition: all 0.3s ease;
+      border: none;
+      cursor: pointer;
+      font-size: 1rem;
+    }
+
+    .btn:hover {
+      background: var(--rose);
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(166, 127, 120, 0.3);
+    }
+
+    .btn-outline {
+      background: transparent;
+      color: var(--rose-dark) !important;
+      border: 2px solid var(--rose-dark);
+    }
+
+    .btn-outline:hover {
+      background: var(--rose-dark);
+      color: white !important;
+    }
+
+    section {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 5rem 2rem;
+    }
+
+    .section-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      font-weight: 600;
+      text-align: center;
+      color: var(--charcoal);
+      margin-bottom: 1rem;
+    }
+
+    .section-subtitle {
+      text-align: center;
+      color: var(--text-muted);
+      margin-bottom: 3rem;
+      font-size: 1.1rem;
+    }
+
+    /* Galeria por tipo */
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 2rem;
+    }
+
+    .gallery-type-card {
+      border-radius: 16px;
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+      background: var(--blush);
+      aspect-ratio: 1;
+      box-shadow: 0 4px 20px rgba(166, 127, 120, 0.15);
+      transition: box-shadow 0.3s ease, transform 0.3s ease;
+    }
+
+    .gallery-type-card:hover {
+      box-shadow: 0 12px 40px rgba(166, 127, 120, 0.25);
+      transform: translateY(-4px);
+    }
+
+    .gallery-type-card .carousel-slides {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .gallery-type-card .carousel-slide {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      transition: opacity 0.5s ease;
+      pointer-events: none;
+    }
+
+    .gallery-type-card .carousel-slide.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .gallery-type-card .carousel-slide img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .gallery-type-card-caption {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      padding: 0.75rem 1rem;
+      background: linear-gradient(to top, rgba(45, 42, 38, 0.95), rgba(45, 42, 38, 0.5));
+      color: white;
+      font-weight: 600;
+      font-size: 0.95rem;
+      text-align: center;
+      z-index: 2;
+    }
+
+    .gallery-type-card .carousel-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 36px;
+      height: 36px;
+      background: rgba(255,255,255,0.85);
+      border: none;
+      border-radius: 50%;
+      color: var(--rose-dark);
+      font-size: 1.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 3;
+      opacity: 0.8;
+      transition: opacity 0.3s ease, background 0.3s ease;
+    }
+
+    .gallery-type-card .carousel-arrow:hover {
+      opacity: 1;
+      background: white;
+    }
+
+    .gallery-type-card .carousel-arrow.prev { left: 8px; }
+    .gallery-type-card .carousel-arrow.next { right: 8px; }
+
+    /* Lightbox Galeria */
+    .lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.95);
+      z-index: 1000;
+      padding: 2rem;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .lightbox.active {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .lightbox-inner {
+      display: flex;
+      align-items: stretch;
+      gap: 1.5rem;
+      max-width: 95vw;
+      max-height: 90vh;
+      width: 100%;
+    }
+
+    .lightbox-thumbnails {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      overflow-y: auto;
+      padding: 0.5rem 0;
+      max-height: 80vh;
+    }
+
+    .lightbox-thumb {
+      width: 80px;
+      height: 80px;
+      object-fit: cover;
+      border-radius: 8px;
+      cursor: pointer;
+      opacity: 0.6;
+      transition: opacity 0.3s ease, border 0.3s ease;
+      border: 3px solid transparent;
+      flex-shrink: 0;
+    }
+
+    .lightbox-thumb:hover {
+      opacity: 0.9;
+    }
+
+    .lightbox-thumb.active {
+      opacity: 1;
+      border-color: var(--rose-dark);
+    }
+
+    .lightbox-main {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      min-width: 0;
+    }
+
+    .lightbox-main img {
+      max-width: 100%;
+      max-height: 80vh;
+      object-fit: contain;
+      border-radius: 12px;
+    }
+
+    .lightbox-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 56px;
+      height: 56px;
+      background: rgba(255,255,255,0.2);
+      border: none;
+      border-radius: 50%;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.3s ease;
+      z-index: 10;
+    }
+
+    .lightbox-arrow:hover {
+      background: rgba(255,255,255,0.35);
+    }
+
+    .lightbox-arrow.prev { left: -28px; }
+    .lightbox-arrow.next { right: -28px; }
+
+    .lightbox-close {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: none;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: background 0.3s ease;
+      z-index: 20;
+    }
+
+    .lightbox-close:hover {
+      background: rgba(255,255,255,0.3);
+    }
+
+    .lightbox-title {
+      color: white;
+      text-align: center;
+      margin-top: 1rem;
+      font-size: 1.1rem;
+    }
+
+    @media (max-width: 768px) {
+      .lightbox-inner {
+        flex-direction: column-reverse;
+      }
+
+      .lightbox-thumbnails {
+        flex-direction: row;
+        justify-content: center;
+        max-height: 100px;
+      }
+
+      .lightbox-arrow.prev { left: 0.5rem; }
+      .lightbox-arrow.next { right: 0.5rem; }
+    }
+
+    /* Vídeo */
+    .video-section {
+      background: linear-gradient(180deg, var(--blush) 0%, var(--cream) 100%);
+    }
+
+    .video-wrapper {
+      max-width: 800px;
+      margin: 0 auto;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 25px 50px rgba(166, 127, 120, 0.2);
+    }
+
+    .video-link-card {
+      display: block;
+      max-width: 800px;
+      margin: 0 auto;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 25px 50px rgba(166, 127, 120, 0.2);
+      text-decoration: none;
+      color: inherit;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      position: relative;
+    }
+
+    .video-link-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 30px 60px rgba(166, 127, 120, 0.35);
+    }
+
+    .video-link-card .video-thumb {
+      width: 100%;
+      aspect-ratio: 16/9;
+      object-fit: cover;
+      display: block;
+    }
+
+    .video-link-card .video-play-btn {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 80px;
+      height: 80px;
+      background: rgba(166, 127, 120, 0.9);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    .video-link-card:hover .video-play-btn {
+      background: var(--rose-dark);
+      transform: translate(-50%, -50%) scale(1.1);
+    }
+
+    .video-link-card .video-play-btn svg {
+      width: 36px;
+      height: 36px;
+      margin-left: 6px;
+    }
+
+    .video-link-card .video-label {
+      background: linear-gradient(135deg, var(--rose) 0%, var(--rose-dark) 100%);
+      padding: 1rem 1.5rem;
+      color: white;
+      font-weight: 600;
+      font-size: 1rem;
+      text-align: center;
+    }
+
+    .video-placeholder {
+      aspect-ratio: 16/9;
+      background: linear-gradient(135deg, var(--rose) 0%, var(--rose-dark) 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 1.2rem;
+      gap: 1rem;
+    }
+
+    .video-placeholder svg {
+      width: 64px;
+      height: 64px;
+      opacity: 0.8;
+    }
+
+    /* Redes Sociais */
+    .social-section {
+      text-align: center;
+      padding: 4rem 2rem;
+      background: linear-gradient(180deg, var(--blush) 0%, var(--cream) 100%);
+    }
+
+    .social-links {
+      display: flex;
+      justify-content: center;
+      gap: 2rem;
+      flex-wrap: wrap;
+      margin-top: 2rem;
+    }
+
+    .social-link {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--rose-dark);
+      color: white !important;
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+
+    .social-link:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 35px rgba(166, 127, 120, 0.4);
+      background: var(--rose);
+    }
+
+    .social-link svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    .social-link.whatsapp { background: #25d366; }
+    .social-link.whatsapp:hover { background: #20bd5a; }
+
+    .social-link.instagram { background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888); }
+    .social-link.instagram:hover { filter: brightness(1.1); }
+
+    .social-link.facebook { background: #1877f2; }
+    .social-link.facebook:hover { background: #166fe5; }
+
+    /* Footer */
+    footer {
+      background: var(--charcoal);
+      color: var(--cream);
+      text-align: center;
+      padding: 2rem;
+      font-size: 0.9rem;
+    }
+
+    footer a {
+      color: var(--blush);
+      text-decoration: none;
+    }
+
+    /* Responsivo */
+    @media (max-width: 768px) {
+      .menu-toggle {
+        display: flex;
+      }
+
+      .header .nav-links {
+        display: none;
+      }
+
+      .mobile-menu-overlay,
+      .mobile-menu {
+        display: block;
+      }
+
+      .mobile-menu .nav-links {
+        display: flex;
+      }
+
+      .gallery {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+      }
+
+      .section-title {
+        font-size: 1.75rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <nav>
+      <a href="#" class="logo">Lua Manicure</a>
+      <ul class="nav-links">
+        <li><a href="#galeria">Galeria</a></li>
+        <li><a href="#videos">Vídeos</a></li>
+        <li><a href="#contato">Contato</a></li>
+      </ul>
+      <button class="menu-toggle" id="menu-toggle" aria-label="Abrir menu" onclick="toggleMobileMenu()">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+    </nav>
+  </header>
+  <div class="mobile-menu-overlay" id="mobile-menu-overlay" onclick="closeMobileMenu()"></div>
+  <div class="mobile-menu" id="mobile-menu">
+    <ul class="nav-links">
+      <li><a href="#galeria" onclick="closeMobileMenu()">Galeria</a></li>
+      <li><a href="#videos" onclick="closeMobileMenu()">Vídeos</a></li>
+      <li><a href="#contato" onclick="closeMobileMenu()">Contato</a></li>
+    </ul>
+  </div>
+
+  <main>
+    <section class="hero">
+      <div class="hero-content">
+        <h1>Unhas <span>impecáveis</span></h1>
+        <p>Cuide das suas mãos com carinho. Alongamento, nail art e muito mais para você se sentir linda.</p>
+        <a href="#galeria" class="btn">Ver trabalhos</a>
+      </div>
+    </section>
+
+    <section id="galeria">
+      <h2 class="section-title">Galeria</h2>
+      <p class="section-subtitle">Confira alguns dos nossos trabalhos por tipo de unha</p>
+      <div class="gallery" id="gallery-container"></div>
+    </section>
+
+    <section id="videos" class="video-section">
+      <h2 class="section-title">Vídeos</h2>
+      <p class="section-subtitle">Veja o processo e inspire-se</p>
+      <div class="video-wrapper">
+        <a href="https://www.youtube.com/watch?v=oLKsM35-z94" class="video-link-card" target="_blank" rel="noopener noreferrer">
+          <img src="https://img.youtube.com/vi/oLKsM35-z94/maxresdefault.jpg" alt="Clique para assistir" class="video-thumb" onerror="this.src='https://img.youtube.com/vi/oLKsM35-z94/hqdefault.jpg'">
+          <span class="video-play-btn" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg>
+          </span>
+          <span class="video-label">Clique para assistir no YouTube</span>
+        </a>
+      </div>
+    </section>
+
+    <section id="contato" class="social-section">
+      <h2 class="section-title">Me acompanhe</h2>
+      <p class="section-subtitle">Siga nas redes sociais e agende seu horário</p>
+      <div class="social-links">
+        <a href="https://wa.me/5511999999999" class="social-link whatsapp" target="_blank" rel="noopener" title="WhatsApp" aria-label="WhatsApp">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+        </a>
+        <a href="https://instagram.com" class="social-link instagram" target="_blank" rel="noopener" title="Instagram" aria-label="Instagram">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+        </a>
+        <a href="https://facebook.com" class="social-link facebook" target="_blank" rel="noopener" title="Facebook" aria-label="Facebook">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+        </a>
+      </div>
+      <p style="margin-top: 2rem; color: var(--text-muted); font-size: 0.95rem;">
+        Agende pelo WhatsApp ou siga para ver novidades
+      </p>
+    </section>
+  </main>
+
+  <footer>
+    <p>Lua Manicure — Unhas feitas com carinho</p>
+    <p style="margin-top: 0.5rem; font-size: 0.85rem;">Atualize os links das redes sociais no código</p>
+  </footer>
+
+  <!-- Lightbox Galeria -->
+  <div class="lightbox" id="lightbox">
+    <button class="lightbox-close" onclick="closeLightbox()" aria-label="Fechar">&times;</button>
+    <div class="lightbox-inner">
+      <div class="lightbox-thumbnails" id="lightbox-thumbnails"></div>
+      <div class="lightbox-main">
+        <button class="lightbox-arrow prev" onclick="lightboxPrev(event)" aria-label="Anterior">&#10094;</button>
+        <img src="" alt="" id="lightbox-img">
+        <button class="lightbox-arrow next" onclick="lightboxNext(event)" aria-label="Próxima">&#10095;</button>
+      </div>
+    </div>
+    <p class="lightbox-title" id="lightbox-title"></p>
+  </div>
+
+  <script>
+    function toggleMobileMenu() {
+      const menu = document.getElementById('mobile-menu');
+      const overlay = document.getElementById('mobile-menu-overlay');
+      const toggle = document.getElementById('menu-toggle');
+      const isOpen = !menu.classList.contains('open');
+      menu.classList.toggle('open');
+      overlay.classList.toggle('open');
+      toggle.classList.toggle('active');
+      document.body.style.overflow = isOpen ? 'hidden' : '';
+    }
+
+    function closeMobileMenu() {
+      document.getElementById('mobile-menu').classList.remove('open');
+      document.getElementById('mobile-menu-overlay').classList.remove('open');
+      document.getElementById('menu-toggle').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    const GALLERY_DATA = [
+      {
+        type: 'Unhas em gel',
+        images: [
+          { url: 'https://images.pexels.com/photos/704815/pexels-photo-704815.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Unhas em gel 1' },
+          { url: 'https://images.pexels.com/photos/3997378/pexels-photo-3997378.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Unhas em gel 2' },
+          { url: 'https://images.pexels.com/photos/3997383/pexels-photo-3997383.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Unhas em gel 3' },
+          { url: 'https://images.pexels.com/photos/939835/pexels-photo-939835.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Unhas em gel 4' }
+        ]
+      },
+      {
+        type: 'Nail art',
+        images: [
+          { url: 'https://images.pexels.com/photos/939836/pexels-photo-939836.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Nail art 1' },
+          { url: 'https://images.pexels.com/photos/4677845/pexels-photo-4677845.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Nail art 2' },
+          { url: 'https://images.pexels.com/photos/791157/pexels-photo-791157.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Nail art 3' },
+          { url: 'https://images.pexels.com/photos/994173/pexels-photo-994173.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Nail art 4' }
+        ]
+      },
+      {
+        type: 'Francesinha',
+        images: [
+          { url: 'https://images.pexels.com/photos/998405/pexels-photo-998405.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Francesinha 1' },
+          { url: 'https://images.pexels.com/photos/1164339/pexels-photo-1164339.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Francesinha 2' },
+          { url: 'https://images.pexels.com/photos/3997384/pexels-photo-3997384.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Francesinha 3' }
+        ]
+      },
+      {
+        type: 'Unhas decoradas',
+        images: [
+          { url: 'https://images.pexels.com/photos/3997388/pexels-photo-3997388.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Unhas decoradas 1' },
+          { url: 'https://images.pexels.com/photos/887352/pexels-photo-887352.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Unhas decoradas 2' },
+          { url: 'https://images.pexels.com/photos/851219/pexels-photo-851219.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Unhas decoradas 3' }
+        ]
+      },
+      {
+        type: 'Esmaltação em gel',
+        images: [
+          { url: 'https://images.pexels.com/photos/7683058/pexels-photo-7683058.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Esmaltação em gel 1' },
+          { url: 'https://images.pexels.com/photos/3997386/pexels-photo-3997386.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Esmaltação em gel 2' },
+          { url: 'https://images.pexels.com/photos/3997381/pexels-photo-3997381.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Esmaltação em gel 3' }
+        ]
+      },
+      {
+        type: 'Alongamento',
+        images: [
+          { url: 'https://images.pexels.com/photos/3997383/pexels-photo-3997383.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Alongamento 1' },
+          { url: 'https://images.pexels.com/photos/5871923/pexels-photo-5871923.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Alongamento 2' },
+          { url: 'https://images.pexels.com/photos/7664093/pexels-photo-7664093.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Alongamento 3' }
+        ]
+      },
+      {
+        type: 'Pedicure',
+        images: [
+          { url: 'https://images.pexels.com/photos/3557600/pexels-photo-3557600.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Pedicure 1' },
+          { url: 'https://images.pexels.com/photos/1377202/pexels-photo-1377202.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Pedicure 2' },
+          { url: 'https://images.pexels.com/photos/9393756/pexels-photo-9393756.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Pedicure 3' }
+        ]
+      },
+      {
+        type: 'Unhas vermelhas',
+        images: [
+          { url: 'https://images.pexels.com/photos/851219/pexels-photo-851219.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Unhas vermelhas 1' },
+          { url: 'https://images.pexels.com/photos/3230266/pexels-photo-3230266.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Unhas vermelhas 2' },
+          { url: 'https://images.pexels.com/photos/3997388/pexels-photo-3997388.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Unhas vermelhas 3' }
+        ]
+      },
+      {
+        type: 'Unhas coloridas',
+        images: [
+          { url: 'https://images.pexels.com/photos/994173/pexels-photo-994173.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Unhas coloridas 1' },
+          { url: 'https://images.pexels.com/photos/791157/pexels-photo-791157.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Unhas coloridas 2' },
+          { url: 'https://images.pexels.com/photos/4677845/pexels-photo-4677845.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Unhas coloridas 3' }
+        ]
+      },
+      {
+        type: 'Manicure básica',
+        images: [
+          { url: 'https://images.pexels.com/photos/887352/pexels-photo-887352.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Manicure básica 1' },
+          { url: 'https://images.pexels.com/photos/7683058/pexels-photo-7683058.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Manicure básica 2' },
+          { url: 'https://images.pexels.com/photos/3997386/pexels-photo-3997386.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Manicure básica 3' }
+        ]
+      },
+      {
+        type: 'Esmaltação tradicional',
+        images: [
+          { url: 'https://images.pexels.com/photos/973405/pexels-photo-973405.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Esmaltação tradicional 1' },
+          { url: 'https://images.pexels.com/photos/704815/pexels-photo-704815.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Esmaltação tradicional 2' },
+          { url: 'https://images.pexels.com/photos/998405/pexels-photo-998405.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Esmaltação tradicional 3' }
+        ]
+      },
+      {
+        type: 'Unhas em fibra',
+        images: [
+          { url: 'https://images.pexels.com/photos/3997381/pexels-photo-3997381.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Unhas em fibra 1' },
+          { url: 'https://images.pexels.com/photos/3997378/pexels-photo-3997378.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Unhas em fibra 2' },
+          { url: 'https://images.pexels.com/photos/939836/pexels-photo-939836.jpeg?auto=compress&cs=tinysrgb&w=600', alt: 'Unhas em fibra 3' }
+        ]
+      }
+    ];
+
+    let lightboxImages = [];
+    let lightboxIndex = 0;
+    let lightboxTypeName = '';
+    let carouselIntervals = {};
+
+    function renderGallery() {
+      const container = document.getElementById('gallery-container');
+      container.innerHTML = GALLERY_DATA.map((group, groupIndex) => {
+        const slidesHtml = group.images.map((img, i) =>
+          `<div class="carousel-slide ${i === 0 ? 'active' : ''}" data-index="${i}">
+            <img src="${img.url}" alt="${img.alt}">
+          </div>`
+        ).join('');
+        const arrows = group.images.length > 1 ? `
+          <button class="carousel-arrow prev" aria-label="Foto anterior" onclick="goCarouselSlide(${groupIndex}, -1, event)">&#10094;</button>
+          <button class="carousel-arrow next" aria-label="Próxima foto" onclick="goCarouselSlide(${groupIndex}, 1, event)">&#10095;</button>
+        ` : '';
+        return `
+          <div class="gallery-type-card" data-type-index="${groupIndex}" onclick="openGalleryViewer(${groupIndex})">
+            <div class="carousel-slides">${slidesHtml}</div>
+            ${arrows}
+            <span class="gallery-type-card-caption">${group.type}</span>
+          </div>
+        `;
+      }).join('');
+
+      GALLERY_DATA.forEach((_, i) => startCarousel(i));
+    }
+
+    const carouselCurrent = {};
+
+    function startCarousel(typeIndex) {
+      clearInterval(carouselIntervals[typeIndex]);
+      const card = document.querySelector(`.gallery-type-card[data-type-index="${typeIndex}"]`);
+      if (!card) return;
+      const slides = card.querySelectorAll('.carousel-slide');
+      if (slides.length <= 1) return;
+
+      carouselCurrent[typeIndex] = 0;
+      carouselIntervals[typeIndex] = setInterval(() => {
+        goCarouselTo(typeIndex, (carouselCurrent[typeIndex] + 1) % slides.length);
+      }, 3500);
+    }
+
+    function goCarouselTo(typeIndex, newIndex) {
+      const card = document.querySelector(`.gallery-type-card[data-type-index="${typeIndex}"]`);
+      if (!card) return;
+      const slides = card.querySelectorAll('.carousel-slide');
+      if (slides.length === 0) return;
+      const current = carouselCurrent[typeIndex] ?? 0;
+      newIndex = (newIndex + slides.length) % slides.length;
+      slides[current].classList.remove('active');
+      carouselCurrent[typeIndex] = newIndex;
+      slides[carouselCurrent[typeIndex]].classList.add('active');
+      clearInterval(carouselIntervals[typeIndex]);
+      if (slides.length > 1) {
+        carouselIntervals[typeIndex] = setInterval(() => {
+          goCarouselTo(typeIndex, carouselCurrent[typeIndex] + 1);
+        }, 3500);
+      }
+    }
+
+    function goCarouselSlide(typeIndex, direction, e) {
+      e.stopPropagation();
+      const card = document.querySelector(`.gallery-type-card[data-type-index="${typeIndex}"]`);
+      if (!card) return;
+      const slides = card.querySelectorAll('.carousel-slide');
+      if (slides.length <= 1) return;
+      const current = carouselCurrent[typeIndex] !== undefined ? carouselCurrent[typeIndex] : 0;
+      goCarouselTo(typeIndex, current + direction);
+    }
+
+    function openGalleryViewer(typeIndex) {
+      const group = GALLERY_DATA[typeIndex];
+      lightboxImages = group.images;
+      lightboxIndex = 0;
+      lightboxTypeName = group.type;
+      updateLightbox();
+      document.getElementById('lightbox').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function updateLightbox() {
+      const imgEl = document.getElementById('lightbox-img');
+      const thumbEl = document.getElementById('lightbox-thumbnails');
+      const titleEl = document.getElementById('lightbox-title');
+
+      if (lightboxImages.length === 0) return;
+      const img = lightboxImages[lightboxIndex];
+      imgEl.src = img.url;
+      imgEl.alt = img.alt;
+      titleEl.textContent = `${lightboxTypeName} — ${lightboxIndex + 1} de ${lightboxImages.length}`;
+
+      thumbEl.innerHTML = lightboxImages.map((im, i) =>
+        `<img class="lightbox-thumb ${i === lightboxIndex ? 'active' : ''}" src="${im.url}" alt="${im.alt}" data-index="${i}" onclick="goToImage(${i}, event)">`
+      ).join('');
+    }
+
+    function goToImage(index, e) {
+      e.stopPropagation();
+      lightboxIndex = index;
+      updateLightbox();
+    }
+
+    function lightboxPrev(e) {
+      e.stopPropagation();
+      lightboxIndex = (lightboxIndex - 1 + lightboxImages.length) % lightboxImages.length;
+      updateLightbox();
+    }
+
+    function lightboxNext(e) {
+      e.stopPropagation();
+      lightboxIndex = (lightboxIndex + 1) % lightboxImages.length;
+      updateLightbox();
+    }
+
+    function closeLightbox() {
+      document.getElementById('lightbox').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    document.getElementById('lightbox').addEventListener('click', (e) => {
+      if (e.target === e.currentTarget) closeLightbox();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeLightbox();
+      if (document.getElementById('lightbox').classList.contains('active')) {
+        if (e.key === 'ArrowLeft') lightboxPrev(e);
+        if (e.key === 'ArrowRight') lightboxNext(e);
+      }
+    });
+
+    renderGallery();
+  </script>
+</body>
+</html>
