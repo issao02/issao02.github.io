@@ -1,496 +1,221 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Você Blindado</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meus Projetos</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0f0f12;
+      --bg-card: #18181d;
+      --accent: #6366f1;
+      --accent-hover: #818cf8;
+      --text: #e4e4e7;
+      --text-muted: #a1a1aa;
+      --border: #27272a;
+    }
 
-  
-  <link href="css/style.css" rel="stylesheet">
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Efeito de grade de fundo */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 4rem;
+      padding-top: 3rem;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 5vw, 3rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #fff 0%, var(--text-muted) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      margin-top: 0.5rem;
+      color: var(--text-muted);
+      font-weight: 400;
+      font-size: 1.1rem;
+    }
+
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .project-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      text-decoration: none;
+      color: inherit;
+      display: block;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .project-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, var(--accent), transparent);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .project-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent);
+      box-shadow: 0 20px 40px -15px rgba(99, 102, 241, 0.2);
+    }
+
+    .project-card:hover::before {
+      opacity: 1;
+    }
+
+    .project-icon {
+      font-size: 2.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .project-card h2 {
+      font-size: 1.35rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+    }
+
+    .project-card p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      line-height: 1.5;
+      margin-bottom: 1.25rem;
+    }
+
+    .project-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--accent);
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+
+    .project-card:hover .project-link {
+      color: var(--accent-hover);
+    }
+
+    .project-link svg {
+      width: 18px;
+      height: 18px;
+      transition: transform 0.3s ease;
+    }
+
+    .project-card:hover .project-link svg {
+      transform: translateX(4px);
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 4rem;
+      padding-bottom: 2rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 1rem;
+      }
+
+      header {
+        margin-bottom: 2.5rem;
+      }
+    }
+  </style>
 </head>
 <body>
-
-<nav class="navbar navbar-expand-lg navbar-custom fixed-top">
-  <div class="container-fluid">
-    
-    <a href="#home" class="logo">
-      <img src="../img/logo.png" alt="Logo Você Blindado">
-    </a>
-
-    <!-- Botão hamburguer -->
-    <button class="navbar-toggler ms-auto" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMenu">
-      <span class="navbar-toggler-icon"></span>
-    </button>
-
-    <!-- Menu à direita -->
-    <div class="collapse navbar-collapse justify-content-center" id="navbarMenu">
-      <ul class="navbar-nav mb-2 mb-lg-0">
-        <li class="nav-item">
-          <a class="nav-link" href="#OServico">O Serviço</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#ComoFunciona">Como Funciona</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#Beneficios">Benefícios</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#social">Redes Sociais</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#Depoimentos">Depoimentos</a>
-        </li>
-        <li class="nav-item">
-          <a class="nav-link" href="#contato">Contato</a>
-        </li>
-      </ul>
-    </div>
-
-  </div>
-</nav>
-
-
-
-  <section id="home" class="hero">
-    <h1>
-      Blindagem de Celular<br>
-      com <span>Titânio Líquido</span>
-    </h1>
-
-    <p>
-      Proteção invisível e ultrarresistente com nanotecnologia.<br>
-      Atendimento premium onde você estiver.
-    </p>
-    <div class="buttons">
-      <button class="btn-primary">Quero Proteger Meu Celular</button>
-      <button class="btn-secondary">Saber Mais</button>
-    </div>
-  </section>
-
-
-<section id="OServico" class="py-5">
   <div class="container">
-    <div class="row align-items-center">
-      
-      <!-- Coluna do texto -->
-      <div class="col-md-6 mb-4 mb-md-0">
-        <h2 class="mb-3">
-          A Próxima Geração de <BR><span class="text-gradient">Proteção para Telas</span>
-        </h2>
-        <p>
-          Você Blindado é mais do que uma película. É uma blindagem líquida
-          com nanotecnologia de titânio que se funde ao vidro do seu aparelho,
-          criando uma camada de proteção invisível, mas extremamente resistente
-          a riscos, impactos e arranhões.
-        </p>
-        <p>
-          Com nosso serviço exclusivo de atendimento a domicílio, levamos essa
-          tecnologia de ponta até você, aplicando o produto com precisão e
-          profissionalismo, garantindo a máxima eficácia e sua total comodidade.
-        </p>
-      </div>
+    <header>
+      <h1>Meus Projetos</h1>
+      <p class="subtitle">Clique em um projeto para abrir</p>
+    </header>
 
-      <!-- Coluna da imagem -->
-      <div class="col-md-6 text-center">
-        <img src="img/iphone.png" alt="Proteção de Tela" class="img-fluid rounded">
-      </div>
-
-    </div>
-  </div>
-</section>
-<section id="ComoFunciona" class="py-5">
-  <div class="container">
-    <h2 class="mb-2">Como Funciona</h2>
-    <p class="mb-5">Proteção de ponta com a máxima conveniência, em 4 passos simples.</p>
-    <div class="row">
-
-      <div class="col-md-3">
-        <div class="caixa-funciona text-center">
-          <div class="icone">
-            <i class="bi bi-calendar-check-fill"></i>
-          </div>
-          <h3>1. Agendamento Fácil</h3>
-          <p>Entre em contato conosco e agende um dia e horário da sua preferência.</p>
-        </div>
-      </div>
-
-      <div class="col-md-3">
-        <div class="caixa-funciona text-center">
-          <div class="icone">
-            <i class="bi bi-geo-alt-fill"></i>
-          </div>
-          <h3>2. Atendimento a Domicílio</h3>
-          <p>Nosso técnico especialista vai até você, seja em casa ou no trabalho, com todo o material necessário.</p>
-        </div>
-      </div>
-
-      <div class="col-md-3">
-        <div class="caixa-funciona text-center">
-          <div class="icone">
-            <i class="bi bi-phone"></i>
-          </div>
-          <h3>3. Aplicação Profissional</h3>
-          <p>Realizamos a limpeza e aplicação da nanotecnologia de titânio líquido, um processo rápido que leva cerca de 90 minutos.</p>
-        </div>
-      </div>
-
-      <div class="col-md-3">
-        <div class="caixa-funciona text-center">
-          <div class="icone">
-            <i class="bi bi-shield-fill-check"></i>
-          </div>
-          <h3>4. Proteção Ativada</h3>
-          <p>Após um curto período de cura, seu celular está pronto e protegido e 20x mais resistente.</p>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-
-
-<section id="Beneficios" class="py-5">
-  <div class="container">
-    <h2 class="mb-2">Benefícios da Blindagem</h2>
-    <p class="mb-5">Descubra por que a blindagem líquida é a escolha inteligente para seu aparelho.</p>
-    <div class="row">
-
-      <div class="col-lg-4 col-md-6 mb-4">
-        <div class="beneficio-box">
-          <div class="beneficio-header">
-            <div class="icone">
-              <i class="bi bi-tools"></i>
-            </div>
-            <h3>Ultra Resistência</h3>
-          </div>
-          <p>Deixa a tela 20x mais forte, protegendo contra riscos e impactos do dia a dia.</p>
-        </div>
-      </div>
-
-      <div class="col-lg-4 col-md-6 mb-4">
-        <div class="beneficio-box">
-          <div class="beneficio-header">
-            <div class="icone">
-              <i class="bi bi-shield-shaded"></i>
-            </div>
-            <h3>Proteção Invisível</h3>
-          </div>
-          <p>Totalmente transparente, não altera as cores, o brilho ou a sensibilidade do touch.</p>
-        </div>
-      </div>
-
-      <div class="col-lg-4 col-md-6 mb-4">
-        <div class="beneficio-box">
-          <div class="beneficio-header">
-            <div class="icone">
-              <i class="bi bi-droplet"></i>
-            </div>
-            <h3>Repelente a Líquidos</h3>
-          </div>
-          <p>A camada hidrofóbica facilita a limpeza de água e oleosidade.</p>
-        </div>
-      </div>
-
-      <div class="col-lg-4 col-md-6 mb-4">
-        <div class="beneficio-box">
-          <div class="beneficio-header">
-            <div class="icone">
-              <i class="bi bi-fingerprint"></i>
-            </div>
-            <h3>Menos Marcas de Dedos</h3>
-          </div>
-          <p>A superfície oleofóbica reduz significativamente as marcas de digitais na tela.</p>
-        </div>
-      </div>
-
-      <div class="col-lg-4 col-md-6 mb-4">
-        <div class="beneficio-box">
-          <div class="beneficio-header">
-            <div class="icone">
-              <i class="bi bi-eye"></i>
-            </div>
-            <h3>Clareza HD</h3>
-          </div>
-          <p>Mantém a definição e a nitidez originais da sua tela, sem distorções.</p>
-        </div>
-      </div>
-
-      <div class="col-lg-4 col-md-6 mb-4">
-        <div class="beneficio-box">
-          <div class="beneficio-header">
-            <div class="icone">
-              <i class="bi bi-star"></i>
-            </div>
-            <h3>Durabilidade Superior</h3>
-          </div>
-          <p>Proteção de longa duração, muito superior às películas convencionais.</p>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-
-<section id="social" class="text-center py-5">
-  <div class="container">
-    <div class="p-4 bg-white-transparent shadow rounded text-center mx-auto" style="max-width: 800px;">
-    <h2 class="mb-3">
-        Rede Social
-      </h2>
-
-      <p class="mb-4">
-        Siga-nos nas redes sociais e fique por dentro de todas as novidades!
-      </p>
-    <div id="instagramCarousel" class="carousel slide mx-auto" data-bs-ride="carousel" data-bs-interval="5000" style="max-width: 540px;">
-      <div class="carousel-inner">
-
-        <!-- Post 1 -->
-        <div class="carousel-item active">
-          <blockquote class="instagram-media w-100"
-            data-instgrm-permalink="https://www.instagram.com/reel/DL7n2AkxdWz/"
-            data-instgrm-version="14"
-            style="background:#FFF; border:0; width:100%; padding:0; margin: 0 auto;">
-          </blockquote>
-        </div>
-
-        <!-- Post 2 -->
-        <div class="carousel-item">
-          <blockquote class="instagram-media w-100"
-            data-instgrm-permalink="https://www.instagram.com/reel/DL8WzcVxzEP/"
-            data-instgrm-version="14"
-            style="background:#FFF; border:0; width:100%; padding:0; margin: 0 auto;">
-          </blockquote>
-        </div>
-
-        <!-- Post 3 -->
-        <div class="carousel-item">
-          <blockquote class="instagram-media w-100"
-            data-instgrm-permalink="https://www.instagram.com/reel/DL0S_QxxpJu/"
-            data-instgrm-version="14"
-            style="background:#FFF; border:0; width:100%; padding:0; margin: 0 auto;">
-          </blockquote>
-        </div>
-
-      </div>
-
-      <!-- Botões de navegação -->
-      <button class="carousel-control-prev" type="button" data-bs-target="#instagramCarousel" data-bs-slide="prev">
-        <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-        <span class="visually-hidden">Anterior</span>
-      </button>
-      <button class="carousel-control-next" type="button" data-bs-target="#instagramCarousel" data-bs-slide="next">
-        <span class="carousel-control-next-icon" aria-hidden="true"></span>
-        <span class="visually-hidden">Próximo</span>
-      </button>
-    </div>
-    </div>
-  </div>
-
-  <!-- Instagram script -->
-  <script async src="//www.instagram.com/embed.js"></script>
-</section>
-
-
-
-<section id="Depoimentos" class="py-5">
-  <div class="container">
-    <h2 class="mb-2">Depoimentos de Clientes</h2>
-    <p class="mb-5">Veja o que os nossos clientes satisfeitos estão dizendo sobre a TitanShield.</p>
-    <div class="row justify-content-center">
-
-      <div class="col-lg-4 col-md-6 mb-4">
-        <div class="depoimento-card">
-          <div class="estrelas">
-            <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-          </div>
-          <div class="aspas">“</div>
-          <p class="depoimento-texto">
-            "Serviço impecável! Meu celular parece novo, e a praticidade do atendimento em casa foi fantástica. A tela está muito mais resistente a marcas de dedo."
-          </p>
-          <div class="depoimento-autor">
-            <h4>Juliana R.</h4>
-            <span>Designer</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-lg-4 col-md-6 mb-4">
-        <div class="depoimento-card">
-          <div class="estrelas">
-            <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-          </div>
-          <div class="aspas">“</div>
-          <p class="depoimento-texto">
-            "Eu era cético, mas a tecnologia é impressionante. Meu celular já sofreu uma queda leve e a tela está intacta. Valeu cada centavo."
-          </p>
-          <div class="depoimento-autor">
-            <h4>Marcos V.</h4>
-            <span>Engenheiro</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="col-lg-4 col-md-6 mb-4">
-        <div class="depoimento-card">
-          <div class="estrelas">
-            <i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i><i class="bi bi-star-fill"></i>
-          </div>
-          <div class="aspas">“</div>
-          <p class="depoimento-texto">
-            "Atendimento super profissional e rápido. A aplicação é perfeita, sem bolhas ou qualquer imperfeição. Recomendo fortemente a TitanShield!"
-          </p>
-          <div class="depoimento-autor">
-            <h4>Carla S.</h4>
-            <span>Advogada</span>
-          </div>
-        </div>
-      </div>
-
-    </div>
-  </div>
-</section>
-
-<section id="contato" class="py-5 contato-section">
-  <div class="container">
-    <div class="p-4 contato-card text-center mx-auto">
-      <h2 class="mb-3 text-primary">
-        <i class="bi bi-calendar2-check-fill me-2"></i>
-        Agendar Visita
-      </h2>
-      <p class="mb-4 text-light">
-        Escolha o melhor horário para receber nossa equipe e proteger seu celular com blindagem líquida.
-      </p>
-
-      <!-- Google Calendar Appointment Scheduling begin -->
-      <div id="google-calendar-button-container"></div>
-      <link href="https://calendar.google.com/calendar/scheduling-button-script.css" rel="stylesheet">
-      <script src="https://calendar.google.com/calendar/scheduling-button-script.js" async></script>
-      <script>
-        window.addEventListener('load', function () {
-          calendar.schedulingButton.load({
-            url: 'https://calendar.google.com/calendar/appointments/schedules/AcZssZ1aE0uEFpbO13i6NUZDzwR-8LQ249mKfDrvLwwpb7g352vPpRULTb0iZtrNhXOGLH5V1aWhvv6d?gv=true',
-            color: '#0d6efd',
-            label: 'Agendar Agora',
-            target: document.getElementById('google-calendar-button-container')
-          });
-        });
-      </script>
-      <!-- end Google Calendar Appointment Scheduling -->
-
-      <p class="mt-4 mb-2 text-light">ou</p>
-
-      <!-- Botão WhatsApp -->
-      <a href="https://wa.me/5511985024525" target="_blank" class="btn btn-whatsapp">
-        <i class="bi bi-whatsapp me-2"></i> Falar pelo WhatsApp
+    <main class="projects-grid">
+      <a href="Projetos/SiteBlindagem/" class="project-card" target="_self">
+        <div class="project-icon">🛡️</div>
+        <h2>Você Blindado</h2>
+        <p>Site institucional sobre blindagem automotiva com design moderno e informativo.</p>
+        <span class="project-link">
+          Abrir projeto
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </span>
       </a>
-    </div>
+
+      <a href="Projetos/SitePizzaria/" class="project-card" target="_self">
+        <div class="project-icon">🍕</div>
+        <h2>Bella Napoli</h2>
+        <p>Site de pizzaria com cardápio online, carrinho de compras e localização.</p>
+        <span class="project-link">
+          Abrir projeto
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </span>
+      </a>
+    </main>
+
+    <footer>
+      <p>issao02.github.io</p>
+    </footer>
   </div>
-</section>
-
-<!-- Botão flutuante WhatsApp -->
-<a href="https://wa.me/5511985024525" target="_blank" class="whatsapp-float">
-  <i class="bi bi-whatsapp"></i>
-</a>
-
-
-<footer class="footer">
-  <div class="container">
-    <div class="row">
-
-      <div class="col-md-4">
-        <div class="logo-info">
-          <img src="../img/logo.png" alt="Logo Você Blindado">
-        </div>
-        <p>Proteção de ponta para seu dispositivo, com a conveniência que você merece. Blindagem líquida de titânio com atendimento a domicílio.</p>
-      </div>
-
-      <div class="col-md-4">
-        <h3>Links</h3>
-        <ul class="lista-links">
-          <li><a href="#OServico">O Serviço</a></li>
-          <li><a href="#ComoFunciona">Como Funciona</a></li>
-          <li><a href="#Beneficios">Benefícios</a></li>
-          <li><a href="#social">Redes Sociais</a></li>
-          <li><a href="#Depoimentos">Depoimentos</a></li>
-          <li><a href="#contato">Contato</a></li>
-        </ul>
-      </div>
-
-      <div class="col-md-4">
-        <h3>Contato</h3>
-        <ul class="lista-contato">
-          <li>
-            <i class="bi bi-envelope-fill icone"></i>
-            <a href="mailto:contato@titanshield.com">contato@titanshield.com</a>
-          </li>
-          <li>
-            <i class="bi bi-telephone-fill icone"></i>
-            <span>(11) 91558-2187</span>
-          </li>
-          <li>
-            <i class="bi bi-geo-alt-fill icone"></i>
-            <span>Atendimento Presencial | SP e Região</span>
-          </li>
-        </ul>
-      </div>
-
-    </div>
-  </div>
-
-  <div class="container-fluid copyright">
-    <p>&copy; 2025 Você Blindado. Todos os direitos reservados.</p>
-  </div>
-
-
-</footer>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-        // Fecha o menu após clicar em um link (modo mobile)
-  document.querySelectorAll('.navbar-collapse .nav-link').forEach(function (navLink) {
-    navLink.addEventListener('click', function () {
-      var navbarCollapse = document.querySelector('.navbar-collapse');
-      if (navbarCollapse.classList.contains('show')) {
-        new bootstrap.Collapse(navbarCollapse).hide();
-      }
-    });
-  });
-
-
-
-
-window.onload = function() {
-  // Se não tiver hash na URL
-  if (!window.location.hash) {
-    const homeSection = document.getElementById('home');
-    if (homeSection) {
-      homeSection.scrollIntoView({ behavior: 'auto' });
-    }
-  }
-};
-
-
-  //instagran
-  window.addEventListener('load', function() {
-    if (window.instgrm) {
-      instgrm.Embeds.process();
-    }
-  });
-
-  // Reprocessa o embed ao trocar de slide
-  const carousel = document.getElementById('instagramCarousel');
-  carousel.addEventListener('slid.bs.carousel', function () {
-    if (window.instgrm) {
-      instgrm.Embeds.process();
-    }
-  });
-
-
-
-
-</script>
 </body>
 </html>
