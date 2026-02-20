@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Mesa de Mix de Som</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0f0f12;
+      --bg-card: #18181d;
+      --border: #27272a;
+      --text: #e4e4e7;
+      --text-muted: #a1a1aa;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow: hidden;
+      overscroll-behavior: none;
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text);
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .app {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    header {
+      flex-shrink: 0;
+      padding: 1rem 1rem 0.75rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h1 {
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .content-wrapper {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 0 1rem;
+      width: 100%;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    .controls {
+      flex-shrink: 0;
+      width: 100%;
+      padding: 1rem 0;
+      margin-bottom: 0.5rem;
+    }
+
+    .combo-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 0.5rem;
+      align-items: center;
+    }
+
+    select {
+      min-width: 0;
+      padding: 0.6rem 0.75rem;
+      font-size: 0.9rem;
+      font-family: inherit;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      cursor: pointer;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: #6366f1;
+    }
+
+    .btn-add {
+      flex-shrink: 0;
+      padding: 0.6rem 1.25rem;
+      font-size: 0.9rem;
+      font-weight: 600;
+      font-family: inherit;
+      background: linear-gradient(135deg, #6366f1, #4f46e5);
+      border: none;
+      border-radius: 10px;
+      color: white;
+      cursor: pointer;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .btn-add:active {
+      transform: scale(0.97);
+    }
+
+    .btn-add:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .mesa-container {
+      flex: 1;
+      min-height: 0;
+      width: 100%;
+      padding: 0 0 1rem;
+      margin-top: 0.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .mesa {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr 1fr;
+      gap: 0.6rem;
+      width: 100%;
+      aspect-ratio: 2 / 3;
+      max-height: calc(100vh - 220px);
+    }
+
+    .slot {
+      background: var(--bg-card);
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 80px;
+      position: relative;
+    }
+
+    .slot.filled {
+      border-style: solid;
+      padding: 0.5rem;
+    }
+
+    .slot-btn {
+      width: 100%;
+      height: 100%;
+      min-height: 70px;
+      border: none;
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: clamp(0.85rem, 2.8vw, 1.15rem);
+      font-weight: 600;
+      line-height: 1.25;
+      color: white;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0.5rem 0.4rem;
+      margin: 0;
+      text-align: center;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+      white-space: normal;
+      transition: transform 0.1s, filter 0.1s;
+    }
+
+    .slot.filled .slot-btn {
+      padding: 0.35rem 1.75rem 0.5rem 0.5rem;
+    }
+
+    .slot-btn:active {
+      transform: scale(0.96);
+    }
+
+    .slot-btn.playing {
+      filter: brightness(1.2);
+      box-shadow: inset 0 0 0 3px rgba(255,255,255,0.4);
+    }
+
+    .btn-remove {
+      position: absolute;
+      top: 6px;
+      right: 6px;
+      width: 24px;
+      height: 24px;
+      border: none;
+      border-radius: 50%;
+      background: rgba(239, 68, 68, 0.9);
+      color: white;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      z-index: 2;
+      transition: transform 0.1s;
+    }
+
+    .btn-remove:active {
+      transform: scale(0.9);
+    }
+
+    .slot.empty .btn-remove {
+      display: none;
+    }
+
+    .slot.empty .slot-btn {
+      background: transparent;
+      color: var(--text-muted);
+      cursor: default;
+      font-weight: 400;
+    }
+
+    .slot.empty .slot-btn:active {
+      transform: none;
+    }
+
+    @media (max-width: 480px) {
+      .mesa {
+        max-height: calc(100dvh - 200px);
+        gap: 0.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>Mesa de Mix de Som</h1>
+    </header>
+
+    <div class="content-wrapper">
+      <div class="controls">
+        <div class="combo-row">
+          <select id="comboSom">
+            <option value="">Selecione um som...</option>
+          <option value="sons/freesound_community-horse-neigh-shortened-84724.mp3">Relincho de Cavalo</option>
+          <option value="sons/universfield-whip-02-242215.mp3">Chicote</option>
+          <option value="sons/digitalstore07-horn-430368.mp3">Buzina</option>
+          <option value="sons/phoenix_connection_brazil-surprise-sound-effect-99300.mp3">Surpresa</option>
+          <option value="sons/kevinwei93-crowd_laughing_short10-291608.mp3">Risada da Multidão</option>
+          <option value="sons/beanfrog-proud-fart-288263.mp3">Flatulência</option>
+          <option value="sons/freesound_community-pop-94319.mp3">Pop</option>
+          <option value="sons/driken5482-retro-laser-1-236669.mp3">Laser Retro</option>
+          <option value="sons/universfield-double-car-horn-352443.mp3">Buzina Dupla</option>
+          <option value="sons/dragon-studio-crowd-cheer-and-applause-406644.mp3">Aplausos</option>
+          <option value="sons/universfield-crowd-shocked-reaction-352766.mp3">Reação de Choque</option>
+          </select>
+          <button class="btn-add" id="btnAdd">Adicionar</button>
+        </div>
+      </div>
+
+      <div class="mesa-container">
+      <div class="mesa" id="mesa">
+        <div class="slot empty" data-index="0">
+          <button class="btn-remove" aria-label="Excluir">×</button>
+          <button class="slot-btn" disabled>Vazio</button>
+        </div>
+        <div class="slot empty" data-index="1">
+          <button class="btn-remove" aria-label="Excluir">×</button>
+          <button class="slot-btn" disabled>Vazio</button>
+        </div>
+        <div class="slot empty" data-index="2">
+          <button class="btn-remove" aria-label="Excluir">×</button>
+          <button class="slot-btn" disabled>Vazio</button>
+        </div>
+        <div class="slot empty" data-index="3">
+          <button class="btn-remove" aria-label="Excluir">×</button>
+          <button class="slot-btn" disabled>Vazio</button>
+        </div>
+        <div class="slot empty" data-index="4">
+          <button class="btn-remove" aria-label="Excluir">×</button>
+          <button class="slot-btn" disabled>Vazio</button>
+        </div>
+        <div class="slot empty" data-index="5">
+          <button class="btn-remove" aria-label="Excluir">×</button>
+          <button class="slot-btn" disabled>Vazio</button>
+        </div>
+      </div>
+    </div>
+    </div>
+  </div>
+
+  <script>
+    const SONS = {
+      'sons/freesound_community-horse-neigh-shortened-84724.mp3': { nome: 'Relincho de Cavalo', cor: '#8B4513' },
+      'sons/universfield-whip-02-242215.mp3': { nome: 'Chicote', cor: '#EAB308' },
+      'sons/digitalstore07-horn-430368.mp3': { nome: 'Buzina', cor: '#EA580C' },
+      'sons/phoenix_connection_brazil-surprise-sound-effect-99300.mp3': { nome: 'Surpresa', cor: '#7C3AED' },
+      'sons/kevinwei93-crowd_laughing_short10-291608.mp3': { nome: 'Risada da Multidão', cor: '#EC4899' },
+      'sons/beanfrog-proud-fart-288263.mp3': { nome: 'Flatulência', cor: '#15803D' },
+      'sons/freesound_community-pop-94319.mp3': { nome: 'Pop', cor: '#2563EB' },
+      'sons/driken5482-retro-laser-1-236669.mp3': { nome: 'Laser Retro', cor: '#0891B2' },
+      'sons/universfield-double-car-horn-352443.mp3': { nome: 'Buzina Dupla', cor: '#DC2626' },
+      'sons/dragon-studio-crowd-cheer-and-applause-406644.mp3': { nome: 'Aplausos', cor: '#CA8A04' },
+      'sons/universfield-crowd-shocked-reaction-352766.mp3': { nome: 'Reação de Choque', cor: '#BE185D' }
+    };
+
+    const mesa = document.getElementById('mesa');
+    const combo = document.getElementById('comboSom');
+    const btnAdd = document.getElementById('btnAdd');
+    const slots = [];
+
+    for (let i = 0; i < 6; i++) {
+      slots.push({ src: null, audio: null });
+    }
+
+    function getPrimeiroVazio() {
+      for (let i = 0; i < 6; i++) {
+        if (slots[i].src === null) return i;
+      }
+      return -1;
+    }
+
+    function atualizarAdd() {
+      const idx = getPrimeiroVazio();
+      btnAdd.disabled = idx < 0 || !combo.value;
+    }
+
+    combo.addEventListener('change', atualizarAdd);
+
+    btnAdd.addEventListener('click', () => {
+      const src = combo.value;
+      if (!src) return;
+      const idx = getPrimeiroVazio();
+      if (idx < 0) return;
+
+      const info = SONS[src];
+      const slotEl = mesa.querySelector(`[data-index="${idx}"]`);
+      const btnSlot = slotEl.querySelector('.slot-btn');
+
+      slots[idx] = {
+        src,
+        audio: new Audio(src)
+      };
+
+      slotEl.classList.remove('empty');
+      btnSlot.disabled = false;
+      btnSlot.textContent = info.nome;
+      btnSlot.style.background = info.cor;
+      btnSlot.dataset.src = src;
+
+      combo.value = '';
+      atualizarAdd();
+    });
+
+    mesa.addEventListener('click', (e) => {
+      const btnRemove = e.target.closest('.btn-remove');
+      if (btnRemove) {
+        const slotEl = btnRemove.closest('.slot');
+        const idx = parseInt(slotEl.dataset.index, 10);
+        const btnSlot = slotEl.querySelector('.slot-btn');
+
+        if (slots[idx].audio) {
+          slots[idx].audio.pause();
+        }
+        slots[idx] = { src: null, audio: null };
+        slotEl.classList.add('empty');
+        btnSlot.disabled = true;
+        btnSlot.textContent = 'Vazio';
+        btnSlot.style.background = '';
+        btnSlot.removeAttribute('data-src');
+        atualizarAdd();
+        return;
+      }
+
+      const btnSlot = e.target.closest('.slot-btn');
+      if (!btnSlot || btnSlot.disabled) return;
+
+      const idx = parseInt(btnSlot.closest('.slot').dataset.index, 10);
+      const a = slots[idx].audio;
+      if (!a) return;
+
+      if (a.paused) {
+        slots.forEach((s, i) => {
+          if (s.audio && !s.audio.paused) {
+            s.audio.pause();
+            s.audio.currentTime = 0;
+          }
+          mesa.querySelector(`[data-index="${i}"] .slot-btn`)?.classList.remove('playing');
+        });
+        a.currentTime = 0;
+        a.onended = () => btnSlot.classList.remove('playing');
+        a.play();
+        btnSlot.classList.add('playing');
+      } else {
+        a.pause();
+        a.currentTime = 0;
+        btnSlot.classList.remove('playing');
+      }
+    });
+
+    atualizarAdd();
+  </script>
+</body>
+</html>
