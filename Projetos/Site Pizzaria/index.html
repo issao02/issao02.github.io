@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pizzaria Bella Napoli - Peça Online</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="header">
+    <div class="container header-content">
+      <a href="#" class="logo" data-screen="inicio">
+        <span class="logo-icon">🍕</span>
+        <span class="logo-text">Bella Napoli</span>
+      </a>
+      <nav class="nav-menu">
+        <a href="#" class="nav-link active" data-screen="inicio"><span class="nav-link-icon">🏠</span> Home</a>
+        <a href="#" class="nav-link" data-screen="cardapio"><span class="nav-link-icon">🍕</span> Cardápio</a>
+        <a href="#" class="nav-link" data-screen="localizacao"><span class="nav-link-icon">📍</span> Localização</a>
+      </nav>
+      <button class="cart-toggle" id="cartToggle" aria-label="Abrir carrinho">
+        <span class="cart-icon">🛒</span>
+        <span class="cart-count" id="cartCount">0</span>
+      </button>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero-screen screen active" id="inicio" data-screen="inicio">
+      <div class="hero">
+        <div class="hero-overlay"></div>
+        <div class="container hero-content">
+          <h1 class="hero-title">Pizza feita com <em>amor</em></h1>
+          <p class="hero-subtitle">Ingredientes frescos, massa artesanal e o sabor autêntico da Itália. Peça agora e receba em casa!</p>
+        </div>
+      </div>
+      <div class="home-texto">
+        <div class="container">
+          <div class="home-texto-card">
+            <div class="home-texto-icon">🍕</div>
+            <h2 class="home-texto-titulo">Nossa história</h2>
+            <p>A Bella Napoli nasceu do sonho de oferecer pizzas autênticas feitas com ingredientes selecionados e muita paixão. Nossa massa é preparada artesanalmente todos os dias, seguindo receitas tradicionais italianas.</p>
+            <p>Com anos de experiência, levamos o sabor da Itália até você. Peça pelo site e receba em casa ou retire no local!</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="menu-section screen" id="cardapio" data-screen="cardapio">
+      <div class="container">
+        <div class="filter-buttons">
+          <button class="filter-btn active" data-filter="todas">Todas</button>
+          <button class="filter-btn" data-filter="classicas">Clássicas</button>
+          <button class="filter-btn" data-filter="salgada">Salgada</button>
+          <button class="filter-btn" data-filter="doce">Doce</button>
+        </div>
+        
+        <div class="menu-grid">
+          <article class="pizza-card" data-id="1" data-name="Margherita" data-price="38.90" data-tags="classicas salgada">
+            <div class="pizza-image"><img src="https://images.unsplash.com/photo-1574071318508-1cdbab80d002?w=400&q=80" alt="Pizza Margherita"></div>
+            <div class="pizza-info">
+              <h3>Margherita</h3>
+              <p>Molho de tomate, mussarela de búfala, manjericão fresco e azeite</p>
+              <div class="pizza-footer">
+                <span class="price">R$ 38,90</span>
+                <button class="btn-add">Adicionar</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="pizza-card" data-id="2" data-name="Pepperoni" data-price="42.90" data-tags="salgada">
+            <div class="pizza-image"><img src="https://images.unsplash.com/photo-1628840042765-356cda07504e?w=400&q=80" alt="Pizza Pepperoni"></div>
+            <div class="pizza-info">
+              <h3>Pepperoni</h3>
+              <p>Molho de tomate, mussarela e pepperoni importado crocante</p>
+              <div class="pizza-footer">
+                <span class="price">R$ 42,90</span>
+                <button class="btn-add">Adicionar</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="pizza-card" data-id="3" data-name="Quatro Queijos" data-price="44.90" data-tags="salgada">
+            <div class="pizza-image"><img src="https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&q=80" alt="Pizza Quatro Queijos"></div>
+            <div class="pizza-info">
+              <h3>Quatro Queijos</h3>
+              <p>Mussarela, gorgonzola, parmesão, provolone e catupiry</p>
+              <div class="pizza-footer">
+                <span class="price">R$ 44,90</span>
+                <button class="btn-add">Adicionar</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="pizza-card" data-id="4" data-name="Calabresa" data-price="39.90" data-tags="classicas salgada">
+            <div class="pizza-image"><img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400&q=80" alt="Pizza Calabresa"></div>
+            <div class="pizza-info">
+              <h3>Calabresa</h3>
+              <p>Molho de tomate, mussarela e calabresa fatiada com cebola</p>
+              <div class="pizza-footer">
+                <span class="price">R$ 39,90</span>
+                <button class="btn-add">Adicionar</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="pizza-card" data-id="5" data-name="Frango com Catupiry" data-price="43.90" data-tags="salgada">
+            <div class="pizza-image"><img src="https://images.unsplash.com/photo-1565299507177-b0ac66763828?w=400&q=80" alt="Pizza Frango com Catupiry"></div>
+            <div class="pizza-info">
+              <h3>Frango com Catupiry</h3>
+              <p>Frango desfiado temperado, catupiry cremoso e mussarela</p>
+              <div class="pizza-footer">
+                <span class="price">R$ 43,90</span>
+                <button class="btn-add">Adicionar</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="pizza-card" data-id="6" data-name="Portuguesa" data-price="41.90" data-tags="classicas salgada">
+            <div class="pizza-image"><img src="https://images.unsplash.com/photo-1593560708920-61dd98c46a4e?w=400&q=80" alt="Pizza Portuguesa"></div>
+            <div class="pizza-info">
+              <h3>Portuguesa</h3>
+              <p>Presunto, ovo, mussarela, cebola, azeitona e ervilha</p>
+              <div class="pizza-footer">
+                <span class="price">R$ 41,90</span>
+                <button class="btn-add">Adicionar</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="pizza-card" data-id="7" data-name="Bacon" data-price="45.90" data-tags="salgada">
+            <div class="pizza-image"><img src="https://images.unsplash.com/photo-1604382355076-af4b0eb60143?w=400&q=80" alt="Pizza Bacon"></div>
+            <div class="pizza-info">
+              <h3>Bacon</h3>
+              <p>Mussarela, bacon crocante e cebola caramelizada</p>
+              <div class="pizza-footer">
+                <span class="price">R$ 45,90</span>
+                <button class="btn-add">Adicionar</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="pizza-card" data-id="8" data-name="Vegetariana" data-price="40.90" data-tags="salgada">
+            <div class="pizza-image"><img src="https://images.unsplash.com/photo-1588315029754-2dd089d39a1a?w=400&q=80" alt="Pizza Vegetariana"></div>
+            <div class="pizza-info">
+              <h3>Vegetariana</h3>
+              <p>Mussarela, berinjela, zucchini, tomate cereja e rúcula</p>
+              <div class="pizza-footer">
+                <span class="price">R$ 40,90</span>
+                <button class="btn-add">Adicionar</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="pizza-card" data-id="9" data-name="Romeu e Julieta" data-price="36.90" data-tags="doce">
+            <div class="pizza-image"><img src="https://images.unsplash.com/photo-1593560708920-61dd98c46a4e?w=400&q=80" alt="Pizza Romeu e Julieta"></div>
+            <div class="pizza-info">
+              <h3>Romeu e Julieta</h3>
+              <p>Queijo branco cremoso com goiabada cascão</p>
+              <div class="pizza-footer">
+                <span class="price">R$ 36,90</span>
+                <button class="btn-add">Adicionar</button>
+              </div>
+            </div>
+          </article>
+
+          <article class="pizza-card" data-id="10" data-name="Chocolate" data-price="38.90" data-tags="doce">
+            <div class="pizza-image"><img src="https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=400&q=80" alt="Pizza Chocolate"></div>
+            <div class="pizza-info">
+              <h3>Chocolate</h3>
+              <p>Chocolate ao leite e morango fresco</p>
+              <div class="pizza-footer">
+                <span class="price">R$ 38,90</span>
+                <button class="btn-add">Adicionar</button>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="localizacao-section screen" id="localizacao" data-screen="localizacao">
+      <div class="localizacao-wrapper">
+        <div class="mapa-container">
+          <iframe id="mapaEmbed" src="" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade" title="Localização Bella Napoli"></iframe>
+        </div>
+        <div class="localizacao-info">
+          <h2 class="section-title">Onde estamos</h2>
+          <div class="localizacao-card">
+            <div class="localizacao-item">
+              <span class="localizacao-icone">📍</span>
+              <div>
+                <strong>Bella Napoli</strong>
+                <p>Rua das Pizzas, 123 - Centro<br>São Paulo - SP</p>
+              </div>
+            </div>
+            <div class="localizacao-item">
+              <span class="localizacao-icone">🕐</span>
+              <div>
+                <strong>Horário</strong>
+                <p>Segunda a domingo: 18h às 23h</p>
+              </div>
+            </div>
+            <a id="btnIrRota" href="#" target="_blank" rel="noopener" class="btn-mapa btn-ir">
+              <span>🚗</span> Traçar rota no Maps
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <aside class="cart-sidebar" id="cartSidebar">
+    <div class="cart-header">
+      <h2>Seu Pedido</h2>
+      <button class="cart-close" id="cartClose" aria-label="Fechar carrinho">&times;</button>
+    </div>
+    
+    <div class="cart-items" id="cartItems">
+      <p class="cart-empty" id="cartEmpty">Seu carrinho está vazio.<br>Adicione pizzas do cardápio!</p>
+    </div>
+
+    <div class="cart-footer">
+      <div class="cart-total">
+        <span>Total:</span>
+        <strong id="cartTotal">R$ 0,00</strong>
+      </div>
+
+      <button type="button" class="btn-whatsapp" id="btnWhatsApp">
+        <span class="whatsapp-icon">📱</span>
+        Enviar pedido via WhatsApp
+      </button>
+    </div>
+  </aside>
+
+  <div class="cart-overlay" id="cartOverlay"></div>
+
+  <div class="whatsapp-modal" id="whatsappModal">
+    <div class="modal-content">
+      <h3>Dados para envio do pedido</h3>
+      <p class="modal-subtitle">Preencha seus dados para enviar o pedido pelo WhatsApp</p>
+      <form id="whatsappForm" class="order-info">
+        <label for="entregaRetirar">Entrega ou retirar:</label>
+        <select id="entregaRetirar" name="entregaRetirar" required>
+          <option value="Entrega">Entrega</option>
+          <option value="Retirar no local">Retirar no local</option>
+        </select>
+        <label for="pagamento">Forma de pagamento:</label>
+        <select id="pagamento" name="pagamento" required>
+          <option value="Dinheiro">Dinheiro</option>
+          <option value="PIX">PIX</option>
+          <option value="Crédito">Crédito</option>
+          <option value="Débito">Débito</option>
+        </select>
+        <label for="customerName">Nome:</label>
+        <input type="text" id="customerName" placeholder="Seu nome" required>
+        <div id="addressField">
+          <label for="customerAddress">Endereço:</label>
+          <input type="text" id="customerAddress" placeholder="Rua, número, bairro">
+        </div>
+        <label for="customerPhone">Telefone:</label>
+        <input type="tel" id="customerPhone" placeholder="(11) 99999-9999" required>
+        <button type="submit" class="btn-whatsapp btn-whatsapp-submit">
+          <span class="whatsapp-icon">📱</span>
+          Enviar para WhatsApp
+        </button>
+      </form>
+      <button type="button" class="modal-close" id="whatsappModalClose" aria-label="Fechar">&times;</button>
+    </div>
+  </div>
+
+  <a href="#" class="whatsapp-float" id="whatsappFloat" target="_blank" rel="noopener" aria-label="Falar no WhatsApp">
+    <svg viewBox="0 0 32 32" fill="currentColor" aria-hidden="true">
+      <path d="M16 0C7.164 0 0 7.164 0 16c0 2.825.736 5.49 2.026 7.784L.052 32l8.416-2.207A15.93 15.93 0 0016 32c8.836 0 16-7.164 16-16S24.836 0 16 0zm0 29.333c-2.49 0-4.863-.648-6.984-1.784l-.5-.293-5.183 1.358 1.385-5.053-.326-.517A13.222 13.222 0 012.667 16c0-7.364 5.969-13.333 13.333-13.333S29.333 8.636 29.333 16 23.364 29.333 16 29.333zm7.318-9.897c-.394-.197-2.333-1.151-2.693-1.284-.36-.133-.622-.197-.884.197-.262.394-1.018 1.284-1.248 1.548-.23.262-.46.295-.854.098-.394-.197-1.663-.613-3.168-1.951-1.171-1.044-1.961-2.333-2.191-2.727-.23-.394-.025-.607.173-.803.177-.177.394-.46.59-.69.197-.23.262-.394.394-.656.131-.262.065-.492-.033-.689-.098-.197-.884-2.129-1.21-2.916-.319-.767-.644-.662-.884-.672l-.754-.01c-.262 0-.687.098-1.048.492-.36.394-1.377 1.345-1.377 3.283 0 1.938 1.412 3.808 1.61 4.066.197.263 2.774 4.235 6.724 5.926.937.398 1.67.636 2.24.814.943.294 1.8.253 2.477.154.756-.112 2.333-.954 2.661-1.875.328-.921.328-1.71.23-1.875-.098-.164-.36-.262-.754-.459z"/>
+    </svg>
+  </a>
+
+  <div class="pizza-size-modal" id="pizzaSizeModal">
+    <div class="modal-content">
+      <h3>Escolha o tamanho</h3>
+      <p class="modal-pizza-name" id="modalPizzaName"></p>
+      <div class="size-options">
+        <button type="button" class="size-option" data-size="inteira">
+          <span class="size-label">Pizza inteira</span>
+          <span class="size-price" id="modalPriceInteira">R$ 0,00</span>
+        </button>
+        <button type="button" class="size-option" data-size="meia">
+          <span class="size-label">Meia pizza</span>
+          <span class="size-price" id="modalPriceMeia">R$ 0,00</span>
+        </button>
+        <button type="button" class="size-option" data-size="1/4">
+          <span class="size-label">¼ da pizza</span>
+          <span class="size-price" id="modalPriceQuarto">R$ 0,00</span>
+        </button>
+      </div>
+      <button type="button" class="modal-close" id="modalClose" aria-label="Fechar">&times;</button>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
