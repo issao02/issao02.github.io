@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>Mata Mosca</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      cursor: none;
+    }
+
+    html {
+      overflow: hidden;
+      width: 100%;
+      height: 100%;
+      position: fixed;
+      overscroll-behavior: none;
+      -webkit-overflow-scrolling: auto;
+    }
+
+    body {
+      font-family: 'Fredoka', sans-serif;
+      min-height: 100%;
+      height: 100%;
+      overflow: hidden;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      width: 100%;
+      touch-action: manipulation;
+      /* Toalha de mesa - padrão xadrez vermelho/branco */
+      background-color: #fff;
+      background-image: 
+        linear-gradient(45deg, #dc2626 25%, transparent 25%),
+        linear-gradient(-45deg, #dc2626 25%, transparent 25%),
+        linear-gradient(45deg, transparent 75%, #dc2626 75%),
+        linear-gradient(-45deg, transparent 75%, #dc2626 75%);
+      background-size: 120px 120px;
+      background-position: 0 0, 0 60px, 60px -60px, -60px 0px;
+      background-color: #fef2f2;
+    }
+
+    /* Padrão floral suave sobre a toalha */
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: radial-gradient(circle at 20% 30%, rgba(220, 38, 38, 0.08) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 70%, rgba(220, 38, 38, 0.06) 0%, transparent 40%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Cursor mata-mosca - centro do círculo na posição do mouse */
+    .mata-mosca {
+      position: fixed;
+      width: 80px;
+      height: 80px;
+      pointer-events: none;
+      z-index: 9999;
+      /* Centro da raquete (ellipse em 32,20 do SVG) = 40px, 25px no div 80x80 */
+      transform: translate(-40px, -25px);
+      transition: transform 0.05s ease-out;
+    }
+
+    .mata-mosca svg {
+      width: 100%;
+      height: 100%;
+      filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.3));
+    }
+
+    /* Golpe do mata-mosca */
+    .mata-mosca.golpe {
+      animation: golpe 0.15s ease-out;
+    }
+
+    @keyframes golpe {
+      0% { transform: translate(-40px, -25px) scale(1); }
+      50% { transform: translate(-40px, -25px) scale(1.3) rotate(-15deg); }
+      100% { transform: translate(-40px, -25px) scale(1); }
+    }
+
+    /* Contador */
+    .contador {
+      position: fixed;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.95);
+      border: 4px solid #dc2626;
+      border-radius: 16px;
+      padding: 12px 32px;
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: #000;
+      z-index: 100;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+
+    .contador span {
+      margin-left: 8px;
+    }
+
+    /* Moscas - não são clicáveis diretamente, matam pela raquete */
+    .mosca {
+      position: absolute;
+      font-size: 2.5rem;
+      cursor: none;
+      user-select: none;
+      transition: none;
+      z-index: 10;
+      animation: voar 0.5s ease-in-out infinite alternate;
+      pointer-events: none;
+    }
+
+    .mosca.morta {
+      animation: splat 0.3s ease-out forwards;
+      pointer-events: none;
+    }
+
+    @keyframes voar {
+      0% { transform: translate(0, 0) rotate(-5deg); }
+      100% { transform: translate(3px, -3px) rotate(5deg); }
+    }
+
+    @keyframes splat {
+      0% { 
+        transform: scale(1);
+        opacity: 1;
+      }
+      50% {
+        transform: scale(1.5);
+        opacity: 0.8;
+      }
+      100% { 
+        transform: scale(2);
+        opacity: 0;
+      }
+    }
+
+    .titulo {
+      position: fixed;
+      top: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: #000;
+      z-index: 100;
+    }
+
+    @media (max-width: 768px) {
+      .mosca {
+        font-size: min(3.125rem, 6.9vmin);
+      }
+      .mata-mosca {
+        width: 80px;
+        height: 80px;
+        transform: translate(-40px, -25px);
+      }
+      .mata-mosca.golpe {
+        animation: golpe-mobile 0.15s ease-out;
+      }
+      .contador {
+        font-size: 1.2rem;
+        padding: 6px 15px;
+        top: 12px;
+      }
+      .titulo {
+        top: 54px;
+        font-size: 1.05rem;
+      }
+    }
+
+    @media (max-width: 768px) and (max-height: 500px) {
+      .contador {
+        font-size: 1.05rem;
+        padding: 6px 12px;
+      }
+      .titulo {
+        display: none;
+      }
+    }
+
+    @keyframes golpe-mobile {
+      0% { transform: translate(-40px, -25px) scale(1); }
+      50% { transform: translate(-40px, -25px) scale(1.3) rotate(-15deg); }
+      100% { transform: translate(-40px, -25px) scale(1); }
+    }
+  </style>
+</head>
+<body>
+  <div class="contador">
+    Moscas mortas: <span id="score">0</span>
+  </div>
+  <p class="titulo">Clique nas moscas para matá-las!</p>
+
+  <!-- Mata-mosca (cursor) -->
+  <div class="mata-mosca" id="mataMosca">
+    <svg viewBox="0 0 64 64" xmlns="http://www.w3.org/2000/svg">
+      <!-- Rede do mata-mosca -->
+      <ellipse cx="32" cy="20" rx="24" ry="18" fill="none" stroke="#333" stroke-width="3"/>
+      <line x1="8" y1="20" x2="56" y2="20" stroke="#333" stroke-width="2"/>
+      <line x1="14" y1="8" x2="50" y2="8" stroke="#333" stroke-width="2"/>
+      <line x1="14" y1="32" x2="50" y2="32" stroke="#333" stroke-width="2"/>
+      <line x1="20" y1="4" x2="20" y2="36" stroke="#333" stroke-width="2"/>
+      <line x1="32" y1="4" x2="32" y2="36" stroke="#333" stroke-width="2"/>
+      <line x1="44" y1="4" x2="44" y2="36" stroke="#333" stroke-width="2"/>
+      <!-- Cabo -->
+      <rect x="28" y="36" width="8" height="24" rx="2" fill="#8b5a2b" stroke="#5d3a1a" stroke-width="1"/>
+      <rect x="29" y="38" width="6" height="20" fill="#a0522d"/>
+    </svg>
+  </div>
+
+  <div id="areaMoscas" style="position:fixed;top:0;left:0;right:0;bottom:0;overflow:hidden;pointer-events:none"></div>
+
+  <script>
+    const areaMoscas = document.getElementById('areaMoscas');
+    const mataMosca = document.getElementById('mataMosca');
+    const scoreEl = document.getElementById('score');
+    let score = 0;
+    let moscas = [];
+
+    // Posição do mouse/touch
+    let mouseX = 0, mouseY = 0;
+    document.addEventListener('mousemove', (e) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+    });
+    document.addEventListener('touchstart', (e) => {
+      if (e.touches.length) {
+        mouseX = e.touches[0].clientX;
+        mouseY = e.touches[0].clientY;
+      }
+    });
+    document.addEventListener('touchmove', (e) => {
+      if (e.touches.length) {
+        mouseX = e.touches[0].clientX;
+        mouseY = e.touches[0].clientY;
+      }
+    }, { passive: true });
+
+    // Atualizar posição do mata-mosca
+    function atualizarMataMosca() {
+      mataMosca.style.left = mouseX + 'px';
+      mataMosca.style.top = mouseY + 'px';
+      requestAnimationFrame(atualizarMataMosca);
+    }
+    atualizarMataMosca();
+
+    function getHitArea() {
+      if (window.innerWidth <= 768) return { rx: 60, ry: 45 };
+      return { rx: 60, ry: 45 };
+    }
+
+    function dentroDaRaquete(mosca) {
+      const { rx, ry } = getHitArea();
+      const rect = mosca.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const dx = (cx - mouseX) / rx;
+      const dy = (cy - mouseY) / ry;
+      return dx * dx + dy * dy <= 1;
+    }
+
+    function aoClicar() {
+      mataMosca.classList.add('golpe');
+      setTimeout(() => mataMosca.classList.remove('golpe'), 150);
+
+      moscas.forEach(mosca => {
+        if (mosca.classList.contains('morta')) return;
+        if (dentroDaRaquete(mosca)) {
+          mosca.classList.add('morta');
+          score++;
+          scoreEl.textContent = score;
+          setTimeout(() => mosca.remove(), 300);
+          moscas = moscas.filter(m => m !== mosca);
+        }
+      });
+    }
+    document.addEventListener('click', aoClicar);
+    document.addEventListener('touchend', (e) => {
+      if (e.changedTouches.length) {
+        mouseX = e.changedTouches[0].clientX;
+        mouseY = e.changedTouches[0].clientY;
+        aoClicar();
+      }
+    });
+
+    function getFlySize() {
+      if (window.innerWidth > 768) return 40;
+      const vmin = Math.min(window.innerWidth, window.innerHeight);
+      return Math.min(50, Math.round(vmin * 0.069));
+    }
+
+    // Criar mosca
+    function criarMosca() {
+      const mosca = document.createElement('div');
+      mosca.className = 'mosca';
+      mosca.innerHTML = '🪰';
+      mosca.dataset.vx = (Math.random() - 0.5) * 4;
+      mosca.dataset.vy = (Math.random() - 0.5) * 4;
+      const flySize = getFlySize();
+      mosca.dataset.x = Math.random() * (window.innerWidth - flySize);
+      mosca.dataset.y = Math.random() * (window.innerHeight - flySize);
+      
+      mosca.style.left = mosca.dataset.x + 'px';
+      mosca.style.top = mosca.dataset.y + 'px';
+
+      areaMoscas.appendChild(mosca);
+      moscas.push(mosca);
+    }
+
+    // Mover moscas
+    function moverMoscas() {
+      const flySize = getFlySize();
+      moscas.forEach(mosca => {
+        if (mosca.classList.contains('morta')) return;
+        
+        let x = parseFloat(mosca.dataset.x);
+        let y = parseFloat(mosca.dataset.y);
+        let vx = parseFloat(mosca.dataset.vx);
+        let vy = parseFloat(mosca.dataset.vy);
+
+        x += vx;
+        y += vy;
+
+        // Bater na borda - mudar direção
+        if (x <= 0 || x >= window.innerWidth - flySize) {
+          vx *= -1;
+          mosca.dataset.vx = vx;
+        }
+        if (y <= 0 || y >= window.innerHeight - flySize) {
+          vy *= -1;
+          mosca.dataset.vy = vy;
+        }
+
+        mosca.dataset.x = x;
+        mosca.dataset.y = y;
+        mosca.style.left = x + 'px';
+        mosca.style.top = y + 'px';
+      });
+      requestAnimationFrame(moverMoscas);
+    }
+    moverMoscas();
+
+    // Spawn inicial e contínuo
+    for (let i = 0; i < 5; i++) {
+      setTimeout(criarMosca, i * 300);
+    }
+
+    setInterval(() => {
+      if (moscas.length < 12) {
+        criarMosca();
+      }
+    }, 2000);
+  </script>
+</body>
+</html>
