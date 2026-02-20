@@ -30,9 +30,11 @@ body {
 }
 
 /* Logo */
-.navbar-custom .logo img {
-  height: 40px;  /* ajuste do tamanho do logo */
+.navbar-custom .logo img,
+.navbar-custom .logo .logo-svg {
+  height: 40px;
   width: auto;
+  display: block;
 }
 
 /* Links */
