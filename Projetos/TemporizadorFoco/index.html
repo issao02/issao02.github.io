@@ -210,6 +210,38 @@
       color: var(--accent-foco);
     }
 
+    .notif-banner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 0.6rem 1rem;
+      margin-bottom: 1rem;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.3);
+      border-radius: 12px;
+      font-size: 0.9rem;
+    }
+
+    .notif-banner.ativo { color: var(--accent-foco); background: rgba(34, 197, 94, 0.15); border-color: rgba(34, 197, 94, 0.3); }
+
+    .btn-notif {
+      padding: 0.4rem 0.8rem;
+      font-size: 0.85rem;
+      font-weight: 500;
+      background: var(--accent);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .btn-notif:hover { background: #818cf8; }
+
+    .btn-notif.ativo { background: var(--accent-foco); }
+    .btn-notif.ativo:hover { background: #16a34a; }
+
     .hidden { display: none !important; }
   </style>
 </head>
@@ -227,6 +259,11 @@
           <label for="descansoMin">Descanso (min)</label>
           <input type="number" id="descansoMin" min="1" max="60" value="5">
         </div>
+      </div>
+
+      <div class="notif-banner hidden" id="notifBanner">
+        <span id="notifTexto">Notificações desativadas</span>
+        <button type="button" class="btn-notif" id="btnNotif">Habilitar</button>
       </div>
 
       <p class="fase-label" id="faseLabel">Defina os tempos e clique em Iniciar</p>
@@ -252,8 +289,12 @@
     const alarmeMsg = document.getElementById('alarmeMsg');
     const focoInput = document.getElementById('focoMin');
     const descansoInput = document.getElementById('descansoMin');
+    const notifBanner = document.getElementById('notifBanner');
+    const notifTexto = document.getElementById('notifTexto');
+    const btnNotif = document.getElementById('btnNotif');
 
     let intervalo = null;
+    let fimEm = 0;
     let restanteSeg = 0;
     let modoAtual = 'foco';
     let alarmando = false;
@@ -263,9 +304,10 @@
     }
 
     function atualizarDisplay() {
-      const min = Math.floor(restanteSeg / 60);
-      const seg = restanteSeg % 60;
-      timerDisplay.textContent = `${pad(min)}:${pad(seg)}`;
+      const seg = Math.max(0, restanteSeg);
+      const min = Math.floor(seg / 60);
+      const s = seg % 60;
+      timerDisplay.textContent = `${pad(min)}:${pad(s)}`;
     }
 
     function pararAlarme() {
@@ -280,8 +322,40 @@
     function enviarNotificacao(titulo, corpo) {
       if (!('Notification' in window)) return;
       if (Notification.permission === 'granted') {
-        const n = new Notification(titulo, { body: corpo, icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="%2322c55e"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg>' });
-        n.onclick = () => { n.close(); window.focus(); };
+        try {
+          const n = new Notification(titulo, { body: corpo });
+          n.onclick = () => { n.close(); window.focus(); };
+        } catch (e) { console.warn('Erro ao enviar notificação:', e); }
+      }
+    }
+
+    function atualizarBannerNotif() {
+      if (!('Notification' in window)) return;
+      const p = Notification.permission;
+      if (p === 'granted') {
+        notifBanner.classList.add('ativo');
+        notifTexto.textContent = 'Notificações ativadas';
+        btnNotif.textContent = 'OK';
+        btnNotif.classList.add('ativo');
+        btnNotif.onclick = () => notifBanner.classList.add('hidden');
+      } else {
+        notifBanner.classList.remove('hidden', 'ativo');
+        btnNotif.classList.remove('ativo');
+        notifTexto.textContent = p === 'denied' ? 'Notificações bloqueadas — clique no cadeado na barra de endereço para permitir' : 'Receber aviso quando o tempo acabar?';
+        btnNotif.textContent = p === 'denied' ? 'Ver como habilitar' : 'Habilitar';
+      }
+    }
+
+    async function solicitarNotificacao() {
+      if (!('Notification' in window)) return;
+      if (Notification.permission === 'granted') {
+        notifBanner.classList.add('hidden');
+        return;
+      }
+      const p = await Notification.requestPermission();
+      atualizarBannerNotif();
+      if (p === 'denied') {
+        alert('Para ativar as notificações:\n\n1. Clique no ícone de cadeado (ou site) na barra de endereço\n2. Em "Notificações" escolha "Permitir"\n3. Recarregue a página\n\nOu acesse: chrome://settings/content/notifications e permita este site.');
       }
     }
 
@@ -308,19 +382,19 @@
       btnProximo.classList.add('hidden');
       alarmeMsg.classList.add('hidden');
 
+      fimEm = Date.now() + restanteSeg * 1000;
       atualizarDisplay();
 
       intervalo = setInterval(() => {
-        restanteSeg--;
+        restanteSeg = Math.max(0, Math.floor((fimEm - Date.now()) / 1000));
         atualizarDisplay();
 
-        if (restanteSeg <= 0) {
+        if (Date.now() >= fimEm) {
           clearInterval(intervalo);
           intervalo = null;
 
           alarmando = true;
-          const cor = foco ? 'var(--accent-foco)' : 'var(--accent-descanso)';
-          card.style.setProperty('--alarm-glow', cor);
+          card.style.setProperty('--alarm-glow', 'rgba(239, 68, 68, 0.6)');
           card.classList.add('alarmando');
           timerDisplay.classList.add('alarmando');
 
@@ -361,6 +435,12 @@
 
     restanteSeg = Math.max(1, parseInt(focoInput.value, 10) || 25) * 60;
     atualizarDisplay();
+
+    if ('Notification' in window && Notification.permission !== 'granted') {
+      notifBanner.classList.remove('hidden');
+      atualizarBannerNotif();
+    }
+    btnNotif.addEventListener('click', solicitarNotificacao);
   </script>
 </body>
 </html>
