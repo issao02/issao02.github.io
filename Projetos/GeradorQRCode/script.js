@@ -60,19 +60,39 @@
     return selectedIcon ? ICONS[selectedIcon] : null;
   }
 
-  function drawIconOnCanvas(canvas, bgColor, iconUrl) {
-    if (!canvas || !iconUrl) return;
-    var ctx = canvas.getContext('2d');
-    var size = canvas.width;
-    var iconSize = size * 0.24;
-    var x = (size - iconSize) / 2;
-    ctx.fillStyle = bgColor === 'rgba(0,0,0,0)' ? '#ffffff' : bgColor;
-    ctx.fillRect(x - 2, x - 2, iconSize + 4, iconSize + 4);
-    var img = new Image();
-    img.onload = function () {
-      ctx.drawImage(img, x, x, iconSize, iconSize);
+  function drawIconOnCanvas(finalCanvas, bg, iconUrl, qrColor, container) {
+    if (!iconUrl) {
+      container.appendChild(finalCanvas);
+      return;
+    }
+    var ctx = finalCanvas.getContext('2d');
+    var size = 256;
+    var iconSize = Math.floor(size * 0.22);
+    var x = Math.floor((size - iconSize) / 2);
+    var padding = 4;
+    var bgFill = bg === 'rgba(0,0,0,0)' ? '#ffffff' : bg;
+    var iconImg = new Image();
+    iconImg.onload = function () {
+      var tmpCanvas = document.createElement('canvas');
+      tmpCanvas.width = iconSize;
+      tmpCanvas.height = iconSize;
+      var tmpCtx = tmpCanvas.getContext('2d');
+      tmpCtx.drawImage(iconImg, 0, 0, iconSize, iconSize);
+      tmpCtx.globalCompositeOperation = 'source-atop';
+      tmpCtx.fillStyle = qrColor;
+      tmpCtx.fillRect(0, 0, iconSize, iconSize);
+      tmpCtx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = bgFill;
+      ctx.fillRect(x - padding, x - padding, iconSize + padding * 2, iconSize + padding * 2);
+      ctx.drawImage(tmpCanvas, x, x, iconSize, iconSize);
+      container.appendChild(finalCanvas);
     };
-    img.src = iconUrl;
+    iconImg.onerror = function () {
+      ctx.fillStyle = bgFill;
+      ctx.fillRect(x - padding, x - padding, iconSize + padding * 2, iconSize + padding * 2);
+      container.appendChild(finalCanvas);
+    };
+    iconImg.src = iconUrl;
   }
 
   function generateQRCode() {
@@ -85,35 +105,81 @@
     hideError();
 
     qrPreview.innerHTML = '';
-    var container = document.createElement('div');
-    container.style.width = '256px';
-    container.style.height = '256px';
-    qrPreview.appendChild(container);
+    var hiddenContainer = document.createElement('div');
+    hiddenContainer.style.cssText = 'position:absolute;left:-9999px;width:256px;height:256px;';
+    document.body.appendChild(hiddenContainer);
+
+    var displayContainer = document.createElement('div');
+    displayContainer.style.cssText = 'width:256px;height:256px;display:flex;align-items:center;justify-content:center;';
+    qrPreview.appendChild(displayContainer);
 
     var qrColor = qrColorPicker.value;
     var bg = getBackgroundColor();
 
     try {
-      var qr = new QRCode(container, {
+      var qr = new QRCode(hiddenContainer, {
         text: data,
         width: 256,
         height: 256,
         colorDark: qrColor,
         colorLight: bg
       });
-      lastQRContainer = container;
 
       var iconUrl = getSelectedIconUrl();
-      if (iconUrl) {
-        setTimeout(function () {
-          var canvas = container.querySelector('canvas');
-          if (canvas) drawIconOnCanvas(canvas, bg, iconUrl);
-        }, 100);
+
+      function buildFinalCanvas(sourceCanvas, sourceImg) {
+        var finalCanvas = document.createElement('canvas');
+        finalCanvas.width = 256;
+        finalCanvas.height = 256;
+        var ctx = finalCanvas.getContext('2d');
+
+        function drawQRAndIcon() {
+          if (sourceCanvas) {
+            ctx.drawImage(sourceCanvas, 0, 0);
+          } else if (sourceImg) {
+            ctx.drawImage(sourceImg, 0, 0, 256, 256);
+          }
+          lastQRContainer = { canvas: finalCanvas };
+          drawIconOnCanvas(finalCanvas, bg, iconUrl, qrColor, displayContainer);
+        }
+
+        if (sourceCanvas) {
+          drawQRAndIcon();
+        } else if (sourceImg) {
+          if (sourceImg.complete && sourceImg.naturalWidth > 0) {
+            drawQRAndIcon();
+          } else {
+            sourceImg.onload = drawQRAndIcon;
+            sourceImg.onerror = drawQRAndIcon;
+          }
+        }
       }
 
-      qrLinkDisplay.textContent = data.length > 60 ? data.slice(0, 60) + '...' : data;
-      outputSection.hidden = false;
+      function finishBuild() {
+        var qrCanvas = hiddenContainer.querySelector('canvas');
+        var qrImg = hiddenContainer.querySelector('img');
+        if (qrCanvas || qrImg) {
+          buildFinalCanvas(qrCanvas, qrImg);
+        } else {
+          var table = hiddenContainer.querySelector('table');
+          if (table) {
+            displayContainer.innerHTML = '';
+            displayContainer.appendChild(table.cloneNode(true));
+            lastQRContainer = { img: displayContainer.querySelector('img') || displayContainer };
+          }
+        }
+        if (hiddenContainer.parentNode) {
+          document.body.removeChild(hiddenContainer);
+        }
+        qrLinkDisplay.textContent = data.length > 60 ? data.slice(0, 60) + '...' : data;
+        outputSection.hidden = false;
+      }
+
+      requestAnimationFrame(function () {
+        finishBuild();
+      });
     } catch (e) {
+      document.body.removeChild(hiddenContainer);
       showError('Erro ao gerar QR code. Tente novamente.');
     }
   }
@@ -122,26 +188,27 @@
     var data = linkInput.value.trim();
     if (!data || !lastQRContainer) return;
 
-    var canvas = lastQRContainer.querySelector('canvas');
-    if (!canvas) {
-      var img = lastQRContainer.querySelector('img');
-      if (img && img.src) {
+    var canvas = lastQRContainer.canvas || lastQRContainer.querySelector && lastQRContainer.querySelector('canvas');
+    var img = lastQRContainer.img || (lastQRContainer.querySelector && lastQRContainer.querySelector('img'));
+    var src = (img && img.src && img.src.indexOf('data:') === 0) ? img.src : null;
+
+    if (canvas) {
+      canvas.toBlob(function (blob) {
+        var url = URL.createObjectURL(blob);
         var a = document.createElement('a');
-        a.href = img.src;
+        a.href = url;
         a.download = 'qrcode-' + Date.now() + '.png';
         a.click();
-      }
+        URL.revokeObjectURL(url);
+      }, 'image/png');
       return;
     }
-
-    canvas.toBlob(function (blob) {
-      var url = URL.createObjectURL(blob);
+    if (src) {
       var a = document.createElement('a');
-      a.href = url;
+      a.href = src;
       a.download = 'qrcode-' + Date.now() + '.png';
       a.click();
-      URL.revokeObjectURL(url);
-    }, 'image/png');
+    }
   }
 
   iconGrid.querySelectorAll('.icon-btn').forEach(function (btn) {
