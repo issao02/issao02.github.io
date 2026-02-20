@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerador de Senhas</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Gerador de Senhas</h1>
+      <p class="subtitle">Crie senhas seguras com controle total sobre os caracteres</p>
+    </header>
+
+    <main>
+      <div class="password-display">
+        <input type="text" id="passwordOutput" readonly placeholder="Sua senha aparecerá aqui">
+        <button type="button" id="btnCopy" class="btn-copy" title="Copiar">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+          </svg>
+          Copiar
+        </button>
+      </div>
+
+      <div class="options-grid">
+        <div class="option-card">
+          <div class="option-header">
+            <label class="checkbox-label">
+              <input type="checkbox" id="useNumeral" checked>
+              <span class="checkmark"></span>
+              Numeral
+            </label>
+            <div class="option-actions">
+              <span class="qty-wrap">
+                <label for="qtyNumeral">Qtd:</label>
+                <input type="number" id="qtyNumeral" min="0" value="1">
+              </span>
+              <button type="button" class="btn-expand" data-target="numeralChars" aria-expanded="false">Customizar</button>
+            </div>
+          </div>
+          <div class="chars-input collapse" id="numeralChars">
+            <input type="text" id="customNumeral" data-type="numeral" value="0123456789" placeholder="Ex: 0123456789" maxlength="50" title="Apenas dígitos 0-9">
+            <span class="input-hint">Apenas numerais (0-9)</span>
+          </div>
+        </div>
+
+        <div class="option-card">
+          <div class="option-header">
+            <label class="checkbox-label">
+              <input type="checkbox" id="useMaiuscula" checked>
+              <span class="checkmark"></span>
+              Maiúscula
+            </label>
+            <div class="option-actions">
+              <span class="qty-wrap">
+                <label for="qtyMaiuscula">Qtd:</label>
+                <input type="number" id="qtyMaiuscula" min="0" value="7">
+              </span>
+              <button type="button" class="btn-expand" data-target="maiusculaChars" aria-expanded="false">Customizar</button>
+            </div>
+          </div>
+          <div class="chars-input collapse" id="maiusculaChars">
+            <input type="text" id="customMaiuscula" data-type="maiuscula" value="ABCDEFGHIJKLMNOPQRSTUVWXYZ" placeholder="Ex: ABCDEFGHIJKLMNOPQRSTUVWXYZ" maxlength="100" title="Apenas letras maiúsculas A-Z">
+            <span class="input-hint">Apenas letras maiúsculas (A-Z)</span>
+          </div>
+        </div>
+
+        <div class="option-card">
+          <div class="option-header">
+            <label class="checkbox-label">
+              <input type="checkbox" id="useMinuscula" checked>
+              <span class="checkmark"></span>
+              Minúscula
+            </label>
+            <div class="option-actions">
+              <span class="qty-wrap">
+                <label for="qtyMinuscula">Qtd:</label>
+                <input type="number" id="qtyMinuscula" min="0" value="7">
+              </span>
+              <button type="button" class="btn-expand" data-target="minusculaChars" aria-expanded="false">Customizar</button>
+            </div>
+          </div>
+          <div class="chars-input collapse" id="minusculaChars">
+            <input type="text" id="customMinuscula" data-type="minuscula" value="abcdefghijklmnopqrstuvwxyz" placeholder="Ex: abcdefghijklmnopqrstuvwxyz" maxlength="100" title="Apenas letras minúsculas a-z">
+            <span class="input-hint">Apenas letras minúsculas (a-z)</span>
+          </div>
+        </div>
+
+        <div class="option-card">
+          <div class="option-header">
+            <label class="checkbox-label">
+              <input type="checkbox" id="useEspecial" checked>
+              <span class="checkmark"></span>
+              Caractere especial
+            </label>
+            <div class="option-actions">
+              <span class="qty-wrap">
+                <label for="qtyEspecial">Qtd:</label>
+                <input type="number" id="qtyEspecial" min="0" value="1">
+              </span>
+              <button type="button" class="btn-expand" data-target="especialChars" aria-expanded="false">Customizar</button>
+            </div>
+          </div>
+          <div class="chars-input collapse" id="especialChars">
+            <input type="text" id="customEspecial" data-type="especial" value="!@#$%^&amp;*()_+-=[]{}|;:,./?~" placeholder="Ex: !@#$%^&amp;*" maxlength="80" title="Apenas caracteres especiais">
+            <span class="input-hint">Apenas caracteres especiais (!@#$%...)</span>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" id="btnGenerate" class="btn-generate">Gerar senha</button>
+    </main>
+
+  </div>
+
+  <div class="toast" id="toast">Copiado!</div>
+
+  <script src="script.js"></script>
+</body>
+</html>
