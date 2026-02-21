@@ -1,0 +1,915 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Agenda Consultório | Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0f0f12;
+      --bg-card: #18181d;
+      --bg-input: #222227;
+      --accent: #0ea5e9;
+      --accent-hover: #38bdf8;
+      --accent-secondary: #6366f1;
+      --danger: #ef4444;
+      --success: #22c55e;
+      --text: #e4e4e7;
+      --text-muted: #a1a1aa;
+      --border: #27272a;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-image:
+        linear-gradient(rgba(14, 165, 233, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(14, 165, 233, 0.03) 1px, transparent 1px);
+      background-size: 50px 50px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .demo-banner {
+      position: sticky;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 200;
+      background: linear-gradient(135deg, #0c4a6e 0%, #0f172a 100%);
+      border-bottom: 2px solid var(--accent);
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      box-shadow: 0 4px 20px rgba(14, 165, 233, 0.2);
+    }
+
+    .hidden { display: none !important; }
+    .demo-banner.hidden { display: none; }
+
+    .demo-banner p {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: #7dd3fc;
+    }
+
+    .demo-banner strong { color: #fff; }
+
+    .demo-banner .btn-fechar {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #fff;
+      padding: 0.35rem 0.75rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-family: inherit;
+      transition: background 0.2s;
+    }
+
+    .demo-banner .btn-fechar:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    header {
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    h1 {
+      font-size: clamp(1.5rem, 4vw, 2rem);
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .nav-menu {
+      display: flex;
+      gap: 0.35rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.35rem;
+    }
+
+    .nav-menu a {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      text-decoration: none;
+      color: var(--text-muted);
+      font-weight: 500;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+
+    .nav-menu a:hover { color: var(--text); background: rgba(255,255,255,0.05); }
+    .nav-menu a.active { color: var(--accent); background: rgba(14, 165, 233, 0.15); }
+
+    .pagina { display: none; }
+    .pagina.ativa { display: block; }
+
+    .secao {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .secao.hidden { display: none; }
+
+    .secao h2 {
+      font-size: 1.25rem;
+      margin-bottom: 1.25rem;
+      color: var(--accent);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    .form-group { display: flex; flex-direction: column; gap: 0.35rem; }
+    .form-group.full { grid-column: 1 / -1; }
+
+    .form-group label { font-size: 0.85rem; color: var(--text-muted); }
+
+    .form-group input,
+    .form-group select {
+      padding: 0.6rem 0.75rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-input);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.95rem;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(14, 165, 233, 0.2);
+    }
+
+    .form-actions { display: flex; gap: 0.75rem; margin-top: 1.25rem; }
+
+    .btn {
+      padding: 0.6rem 1.25rem;
+      border-radius: 8px;
+      border: none;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary { background: var(--accent); color: #0f0f12; }
+    .btn-primary:hover { background: var(--accent-hover); transform: translateY(-1px); }
+
+    .btn-secondary { background: var(--bg-input); color: var(--text); border: 1px solid var(--border); }
+    .btn-secondary:hover { border-color: var(--text-muted); }
+
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-danger:hover { opacity: 0.9; }
+
+    .btn-icon {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.35rem;
+      margin-right: 0.25rem;
+      border-radius: 6px;
+      font-size: 1rem;
+      transition: background 0.2s;
+    }
+
+    .btn-icon:hover { background: rgba(255,255,255,0.1); }
+    .btn-icon.btn-excluir:hover { background: rgba(239, 68, 68, 0.2); }
+    .btn-icon.btn-desativar:hover { background: rgba(245, 158, 11, 0.2); }
+
+    .table-wrap { overflow-x: auto; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th { text-align: left; padding: 0.75rem; color: var(--text-muted); font-weight: 500; border-bottom: 1px solid var(--border); }
+    td { padding: 0.75rem; border-bottom: 1px solid var(--border); }
+    tr:hover td { background: rgba(255,255,255,0.02); }
+    td.acoes { white-space: nowrap; }
+    tr.inativo { opacity: 0.6; }
+    tr.inativo td { color: var(--text-muted); }
+    .empty { text-align: center; color: var(--text-muted); padding: 2rem !important; }
+
+    /* Cards de médicos */
+    .medicos-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 1rem;
+    }
+
+    .medico-card {
+      background: var(--bg-input);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .medico-card:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+      box-shadow: 0 8px 24px -10px rgba(14, 165, 233, 0.3);
+    }
+
+    .medico-card.selecionado {
+      border-color: var(--accent);
+      background: rgba(14, 165, 233, 0.1);
+      box-shadow: 0 0 0 2px var(--accent);
+    }
+
+    .medico-card.inativo {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+
+    .medico-card .nome {
+      font-weight: 600;
+      font-size: 1.1rem;
+      margin-bottom: 0.35rem;
+    }
+
+    .medico-card .especialidade { color: var(--accent); font-size: 0.9rem; margin-bottom: 0.25rem; }
+    .medico-card .crm, .medico-card .telefone { color: var(--text-muted); font-size: 0.85rem; }
+
+    /* Agenda em lista/tabela */
+    .agenda-flow {
+      display: flex;
+      flex-direction: column;
+      gap: 0;
+    }
+
+    .agenda-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      padding: 1rem;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 12px 12px 0 0;
+    }
+
+    .agenda-dia-titulo {
+      font-weight: 600;
+      font-size: 1.1rem;
+      color: var(--accent);
+    }
+
+    .btn-dia-nav {
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text);
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+    }
+
+    .btn-dia-nav:hover {
+      border-color: var(--accent);
+      background: rgba(14, 165, 233, 0.15);
+      color: var(--accent);
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      align-items: center;
+    }
+
+    .toolbar input {
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-input);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.9rem;
+      min-width: 140px;
+    }
+
+    .agenda-lista {
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 12px 12px;
+      overflow: hidden;
+    }
+
+    .agenda-row {
+      display: grid;
+      grid-template-columns: 100px 1fr 100px;
+      gap: 0;
+      align-items: center;
+      min-height: 52px;
+      padding: 0 1rem;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+
+    .agenda-row:last-child { border-bottom: none; }
+
+    .agenda-header-row {
+      background: var(--bg-input) !important;
+      font-weight: 600;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      cursor: default;
+      min-height: 44px;
+    }
+
+    .agenda-header-row:hover { background: var(--bg-input) !important; }
+
+    .agenda-row.disponivel {
+      background: var(--bg-card);
+      cursor: pointer;
+    }
+
+    .agenda-row.disponivel:hover {
+      background: rgba(14, 165, 233, 0.12);
+    }
+
+    .agenda-row.ocupado {
+      background: linear-gradient(90deg, rgba(34, 197, 94, 0.2) 0%, rgba(34, 197, 94, 0.08) 100%);
+      border-left: 4px solid var(--success);
+      cursor: default;
+    }
+
+    .agenda-row.ocupado:hover {
+      background: linear-gradient(90deg, rgba(34, 197, 94, 0.25) 0%, rgba(34, 197, 94, 0.12) 100%);
+    }
+
+    .agenda-row.drag-over {
+      background: rgba(14, 165, 233, 0.25);
+      border-left: 4px solid var(--accent);
+    }
+
+    .agenda-row.ocupado.dragging-row { opacity: 0.7; }
+
+    .agenda-row .status-cell-draggable {
+      cursor: grab;
+      padding: 0.25rem 0;
+    }
+
+    .agenda-row .status-cell-draggable:hover {
+      text-decoration: underline;
+    }
+
+    .agenda-row .status-cell-draggable:active {
+      cursor: grabbing;
+    }
+
+    .agenda-row .hora-cell {
+      font-weight: 600;
+      font-size: 1rem;
+      color: var(--text-muted);
+    }
+
+    .agenda-row .status-cell {
+      font-size: 0.95rem;
+    }
+
+    .agenda-row.disponivel .status-cell {
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    .agenda-row.ocupado .status-cell {
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .agenda-row .acoes-cell {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: flex-end;
+    }
+
+    .agenda-row .btn-slot {
+      padding: 0.4rem 0.75rem;
+      border-radius: 6px;
+      border: none;
+      font-size: 0.8rem;
+      font-family: inherit;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .agenda-row .btn-slot-add {
+      background: var(--accent);
+      color: #0f0f12;
+    }
+
+    .agenda-row .btn-slot-add:hover {
+      background: var(--accent-hover);
+    }
+
+    .agenda-row .btn-slot-excluir {
+      background: rgba(239, 68, 68, 0.3);
+      color: #fca5a5;
+    }
+
+    .agenda-row .btn-slot-excluir:hover {
+      background: rgba(239, 68, 68, 0.5);
+    }
+
+    .agenda-row .btn-slot-mover {
+      background: rgba(14, 165, 233, 0.3);
+      color: #7dd3fc;
+    }
+
+    .agenda-row .btn-slot-mover:hover {
+      background: rgba(14, 165, 233, 0.5);
+    }
+
+    /* Consulta - fluxo */
+    .consulta-flow {
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+    }
+
+    .consulta-step {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+    }
+
+    .consulta-step h3 { font-size: 1rem; color: var(--text-muted); margin-bottom: 0.75rem; }
+    .consulta-step .valor { font-weight: 600; font-size: 1.1rem; color: var(--accent); }
+    .consulta-step .btn-voltar { margin-top: 0.5rem; font-size: 0.85rem; }
+
+    .param-tempo {
+      max-width: 300px;
+    }
+
+    .param-tempo select {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      font-size: 1.1rem;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--bg-input);
+      color: var(--text);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 300;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      width: 90%;
+      max-width: 420px;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal h3 { margin-bottom: 1rem; font-size: 1.15rem; }
+    .modal .form-group { margin-bottom: 1rem; }
+    .modal .form-actions { margin-top: 0; }
+
+    .select-paciente-list {
+      max-height: 200px;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      margin-top: 0.5rem;
+    }
+
+    .select-paciente-item {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .select-paciente-item:last-child { border-bottom: none; }
+    .select-paciente-item:hover { background: rgba(14, 165, 233, 0.15); }
+    .select-paciente-item.selecionado { background: rgba(14, 165, 233, 0.2); }
+    .select-paciente-item .nome { font-weight: 500; }
+    .select-paciente-item .cpf { font-size: 0.8rem; color: var(--text-muted); margin-top: 0.2rem; }
+    .agendamento-paciente-item { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+    .agendamento-paciente-item .agendamento-paciente-info { flex: 1; min-width: 0; }
+    .agendamento-paciente-item .agendamento-paciente-acoes { display: flex; gap: 0.25rem; flex-shrink: 0; }
+
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      padding: 0.75rem 1.5rem;
+      background: var(--accent);
+      color: #0f0f12;
+      border-radius: 8px;
+      font-weight: 500;
+      opacity: 0;
+      transition: all 0.3s;
+      z-index: 400;
+      pointer-events: none;
+    }
+
+    .toast.toast-visible { opacity: 1; transform: translateX(-50%) translateY(0); }
+    .toast.toast-error { background: var(--danger); color: #fff; }
+
+    .home-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .home-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      text-decoration: none;
+      color: inherit;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .home-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--accent);
+      box-shadow: 0 20px 40px -15px rgba(14, 165, 233, 0.2);
+    }
+
+    .home-card-icon { font-size: 3rem; margin-bottom: 1rem; }
+    .home-card h3 { font-size: 1.25rem; margin-bottom: 0.5rem; }
+    .home-card p { color: var(--text-muted); font-size: 0.9rem; line-height: 1.4; }
+
+    @media (max-width: 600px) {
+      .container { padding: 1rem; }
+      .medicos-grid { grid-template-columns: 1fr; }
+      .agenda-row { grid-template-columns: 80px 1fr 90px; font-size: 0.9rem; }
+      .agenda-hora-col { padding: 0.35rem; font-size: 0.7rem; }
+    }
+  </style>
+</head>
+<body>
+  <div id="demoBanner" class="demo-banner">
+    <p><strong>⚠️ Versão Demo para Teste</strong> — Este sistema é uma demonstração. Os dados são armazenados localmente no seu navegador (IndexedDB) e podem ser perdidos ao limpar o cache.</p>
+    <button type="button" id="btnFecharDemo" class="btn-fechar">Fechar</button>
+  </div>
+
+  <div class="container">
+    <header>
+      <h1>Agenda Consultório</h1>
+      <nav class="nav-menu">
+        <a href="#" data-pagina="inicio" class="active">Início</a>
+        <a href="#" data-pagina="consultas">Consultas</a>
+        <a href="#" data-pagina="pacientes">Pacientes</a>
+        <a href="#" data-pagina="medicos">Médicos</a>
+        <a href="#" data-pagina="parametros">Parâmetros</a>
+      </nav>
+    </header>
+
+    <!-- PÁGINA INICIAL -->
+    <main id="paginaInicio" class="pagina ativa">
+      <section class="secao">
+        <h2 style="margin-bottom: 1.5rem;">Bem-vindo à Agenda Consultório</h2>
+        <p style="color: var(--text-muted); margin-bottom: 2rem;">Selecione uma opção para começar:</p>
+        <div class="home-cards">
+          <a href="#" class="home-card" data-pagina="consultas">
+            <span class="home-card-icon">📅</span>
+            <h3>Consultas</h3>
+            <p>Agende consultas na agenda do médico.</p>
+          </a>
+          <a href="#" class="home-card" data-pagina="pacientes">
+            <span class="home-card-icon">👥</span>
+            <h3>Pacientes</h3>
+            <p>Cadastre pacientes com CPF, telefone e plano de saúde.</p>
+          </a>
+          <a href="#" class="home-card" data-pagina="medicos">
+            <span class="home-card-icon">👨‍⚕️</span>
+            <h3>Médicos</h3>
+            <p>Cadastre, edite e gerencie os médicos do consultório.</p>
+          </a>
+          <a href="#" class="home-card" data-pagina="parametros">
+            <span class="home-card-icon">⚙️</span>
+            <h3>Parâmetros</h3>
+            <p>Configure tempo de consulta e horário de funcionamento.</p>
+          </a>
+        </div>
+      </section>
+    </main>
+
+    <!-- MÉDICOS -->
+    <main id="paginaMedicos" class="pagina">
+      <section id="secaoFormMedico" class="secao hidden">
+        <h2 id="tituloFormMedico">Novo Médico</h2>
+        <form id="formMedico">
+          <input type="hidden" id="medicoId">
+          <div class="form-grid">
+            <div class="form-group full">
+              <label for="medicoNome">Nome</label>
+              <input type="text" id="medicoNome" required placeholder="Nome completo">
+            </div>
+            <div class="form-group">
+              <label for="medicoEspecialidade">Especialidade</label>
+              <input type="text" id="medicoEspecialidade" required placeholder="Ex: Cardiologia">
+            </div>
+            <div class="form-group">
+              <label for="medicoCrm">CRM</label>
+              <input type="text" id="medicoCrm" required placeholder="Número do CRM">
+            </div>
+            <div class="form-group">
+              <label for="medicoTelefone">Telefone</label>
+              <input type="tel" id="medicoTelefone" placeholder="(00) 00000-0000">
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Salvar</button>
+            <button type="button" id="btnCancelarMedico" class="btn btn-secondary">Cancelar</button>
+          </div>
+        </form>
+      </section>
+      <section id="secaoListaMedicos" class="secao">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h2>Médicos Cadastrados</h2>
+          <button type="button" id="btnNovoMedico" class="btn btn-primary">Novo Médico</button>
+        </div>
+        <div class="toolbar">
+          <input type="text" id="filtroMedicoNome" placeholder="Nome">
+          <input type="text" id="filtroMedicoEspecialidade" placeholder="Especialidade">
+          <input type="text" id="filtroMedicoCrm" placeholder="CRM">
+          <input type="text" id="filtroMedicoTelefone" placeholder="Telefone">
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>Especialidade</th>
+                <th>CRM</th>
+                <th>Telefone</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyMedicos"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <!-- PACIENTES -->
+    <main id="paginaPacientes" class="pagina">
+      <section id="secaoFormPaciente" class="secao hidden">
+        <h2 id="tituloFormPaciente">Novo Paciente</h2>
+        <form id="formPaciente">
+          <input type="hidden" id="pacienteId">
+          <div class="form-grid">
+            <div class="form-group full">
+              <label for="pacienteNome">Nome</label>
+              <input type="text" id="pacienteNome" required placeholder="Nome completo">
+            </div>
+            <div class="form-group">
+              <label for="pacienteCpf">CPF</label>
+              <input type="text" id="pacienteCpf" placeholder="000.000.000-00" maxlength="14">
+            </div>
+            <div class="form-group">
+              <label for="pacienteTelefone">Telefone</label>
+              <input type="tel" id="pacienteTelefone" placeholder="(00) 00000-0000">
+            </div>
+            <div class="form-group">
+              <label for="pacientePlano">Plano de Saúde</label>
+              <input type="text" id="pacientePlano" placeholder="Nome do plano">
+            </div>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn btn-primary">Salvar</button>
+            <button type="button" id="btnCancelarPaciente" class="btn btn-secondary">Cancelar</button>
+          </div>
+        </form>
+      </section>
+      <section id="secaoListaPacientes" class="secao">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+          <h2>Pacientes Cadastrados</h2>
+          <button type="button" id="btnNovoPaciente" class="btn btn-primary">Novo Paciente</button>
+        </div>
+        <div class="toolbar">
+          <input type="text" id="filtroPacienteNome" placeholder="Nome">
+          <input type="text" id="filtroPacienteCpf" placeholder="CPF">
+          <input type="text" id="filtroPacienteTelefone" placeholder="Telefone">
+          <input type="text" id="filtroPacientePlano" placeholder="Plano de Saúde">
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>CPF</th>
+                <th>Telefone</th>
+                <th>Plano de Saúde</th>
+                <th>Ações</th>
+              </tr>
+            </thead>
+            <tbody id="tbodyPacientes"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <!-- PARÂMETROS -->
+    <main id="paginaParametros" class="pagina">
+      <section class="secao">
+        <h2>Configurações</h2>
+        <p style="color: var(--text-muted); margin-bottom: 1rem;">Defina o tempo padrão de cada consulta e o horário de funcionamento do consultório.</p>
+        <div class="form-grid param-grid" style="max-width: 500px;">
+          <div class="form-group">
+            <label for="paramHoraAbertura">Horário de abertura</label>
+            <input type="time" id="paramHoraAbertura" value="08:00">
+          </div>
+          <div class="form-group">
+            <label for="paramHoraFechamento">Horário de fechamento</label>
+            <input type="time" id="paramHoraFechamento" value="18:00">
+          </div>
+        </div>
+        <div class="form-group param-tempo" style="max-width: 300px; margin-top: 1.25rem;">
+          <label for="paramTempoConsulta">Tempo de consulta (minutos)</label>
+          <select id="paramTempoConsulta">
+            <option value="5">5 minutos</option>
+            <option value="10">10 minutos</option>
+            <option value="15">15 minutos</option>
+            <option value="20">20 minutos</option>
+            <option value="30">30 minutos</option>
+            <option value="45">45 minutos</option>
+            <option value="60">60 minutos</option>
+          </select>
+        </div>
+        <div class="form-actions" style="margin-top: 1rem;">
+          <button type="button" id="btnSalvarParametros" class="btn btn-primary">Salvar</button>
+        </div>
+      </section>
+    </main>
+
+    <!-- CONSULTAS -->
+    <main id="paginaConsultas" class="pagina">
+      <section class="secao consulta-flow">
+        <div class="consulta-step" id="stepData">
+          <h3>1. Escolha o dia</h3>
+          <div class="form-group" style="max-width: 220px;">
+            <label for="inputDataConsulta">Data</label>
+            <input type="date" id="inputDataConsulta">
+          </div>
+          <button type="button" id="btnContinuarData" class="btn btn-primary" style="margin-top: 0.75rem;">Continuar</button>
+        </div>
+
+        <div class="consulta-step hidden" id="stepMedico">
+          <h3>2. Selecione o médico</h3>
+          <p class="valor" id="dataSelecionada"></p>
+          <button type="button" class="btn btn-secondary btn-voltar" id="btnVoltarMedico">Voltar</button>
+          <div class="medicos-grid" id="gridMedicos"></div>
+        </div>
+
+        <div class="consulta-step hidden" id="stepAgenda">
+          <h3>3. Agenda do médico</h3>
+          <p class="valor" id="medicoSelecionado"></p>
+          <button type="button" class="btn btn-secondary btn-voltar" id="btnVoltarAgenda">Voltar</button>
+          <p style="color: var(--text-muted); font-size: 0.9rem; margin: 0.75rem 0;">Clique em "Agendar" para horários livres. Horários com paciente (verde) podem ser arrastados para outro horário.</p>
+          <div class="agenda-flow">
+            <div class="agenda-toolbar">
+              <button type="button" class="btn-dia-nav" id="btnDiaAnterior" title="Dia anterior">◀</button>
+              <span class="agenda-dia-titulo" id="agendaDiaTitulo"></span>
+              <button type="button" class="btn-dia-nav" id="btnDiaProximo" title="Próximo dia">▶</button>
+            </div>
+            <div class="agenda-lista">
+              <div class="agenda-row agenda-header-row">
+                <div class="hora-cell">Horário</div>
+                <div class="status-cell">Paciente</div>
+                <div class="acoes-cell">Ações</div>
+              </div>
+              <div id="agendaLista"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- Modal Nova/Editar Consulta -->
+  <div id="modalConsulta" class="modal-overlay">
+    <div class="modal">
+      <h3 id="modalConsultaTitulo">Nova Consulta</h3>
+      <p style="color: var(--text-muted); margin-bottom: 0.5rem;" id="modalConsultaHorario"></p>
+      <div class="form-group">
+        <label for="modalBuscaPaciente">Buscar paciente</label>
+        <input type="text" id="modalBuscaPaciente" placeholder="Digite o nome ou CPF...">
+      </div>
+      <div class="select-paciente-list" id="modalListaPacientes"></div>
+      <div class="form-actions" style="margin-top: 1rem;">
+        <button type="button" id="btnSalvarConsulta" class="btn btn-primary">Salvar</button>
+        <button type="button" id="btnExcluirConsulta" class="btn btn-danger" style="display:none;">Excluir</button>
+        <button type="button" id="btnFecharModalConsulta" class="btn btn-secondary">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Mover Consulta -->
+  <div id="modalMoverConsulta" class="modal-overlay">
+    <div class="modal">
+      <h3>Mover consulta</h3>
+      <p style="color: var(--text-muted); margin-bottom: 0.5rem;" id="modalMoverInfo"></p>
+      <div class="form-group">
+        <label for="modalMoverNovaData">Nova data</label>
+        <input type="date" id="modalMoverNovaData">
+      </div>
+      <div class="form-group">
+        <label for="modalMoverNovoHorario">Novo horário</label>
+        <select id="modalMoverNovoHorario"></select>
+      </div>
+      <div class="form-actions" style="margin-top: 1rem;">
+        <button type="button" id="btnConfirmarMover" class="btn btn-primary">Mover</button>
+        <button type="button" id="btnFecharMover" class="btn btn-secondary">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Agendamentos do Paciente -->
+  <div id="modalAgendamentosPaciente" class="modal-overlay">
+    <div class="modal" style="max-width: 500px;">
+      <h3 id="modalAgendamentosTitulo">Agendamentos</h3>
+      <div id="modalAgendamentosLista" class="select-paciente-list" style="max-height: 350px;"></div>
+      <div class="form-actions" style="margin-top: 1rem;">
+        <button type="button" id="btnFecharAgendamentos" class="btn btn-secondary">Fechar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="db.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

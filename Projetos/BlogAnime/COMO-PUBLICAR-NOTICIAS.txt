@@ -1,0 +1,48 @@
+COMO PUBLICAR NOVAS NOTÍCIAS NO BLOG ANIME (OTAKU NEWS)
+======================================================
+
+Passo 1: CRIAR O ARQUIVO HTML DA NOTÍCIA
+----------------------------------------
+1. Copie o arquivo _template.html da pasta noticias/
+2. Renomeie para um nome único (ex: minha-noticia.html)
+3. Abra o arquivo e edite:
+
+   a) No bloco <script id="noticia-meta">, altere:
+      - "titulo": o título que aparece no card e na página
+      - "data": data de publicação no formato AAAA-MM-DD (ex: 2025-02-21)
+      - "imagem": URL completa da imagem (ex: https://exemplo.com/foto.jpg)
+
+   b) Dentro de <div id="noticia-conteudo">, escreva o conteúdo da notícia.
+      O PRIMEIRO PARÁGRAFO será usado como preview no card da home.
+
+
+Passo 2: REGISTRAR A NOTÍCIA NA LISTA
+-------------------------------------
+
+OPÇÃO A - Para GitHub Pages (site online):
+   Edite o arquivo noticias/lista.json e adicione o nome do arquivo entre aspas:
+   
+   ["arquivo1.html", "arquivo2.html", "minha-noticia.html"]
+
+
+OPÇÃO B - Para visualizar localmente (abrindo o HTML direto):
+   Edite o arquivo noticias/lista.js e adicione um objeto na lista:
+   
+   {
+     arquivo: "minha-noticia.html",
+     titulo: "Título da notícia",
+     data: "2025-02-21",
+     imagem: "https://url-da-imagem.jpg",
+     preview: "Primeiros 150 caracteres do primeiro parágrafo..."
+   }
+
+
+Resumo rápido
+-------------
+1. Copie _template.html → renomeie
+2. Edite titulo, data e imagem no topo do HTML
+3. Escreva o conteúdo (o 1º parágrafo vira preview)
+4. Adicione em lista.json (para site online) e/ou lista.js (para ver local)
+
+
+Nota: Use lista.json e lista.js se quiser que funcione nos dois casos.

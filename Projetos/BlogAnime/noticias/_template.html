@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>COLOQUE_O_TITULO_AQUI | Otaku News</title>
+  <!-- OBRIGATÓRIO: metadados no topo - edite titulo, data e imagem -->
+  <script type="application/json" id="noticia-meta">
+  {"titulo":"COLOQUE_O_TITULO_AQUI","data":"2025-02-21","imagem":"URL_DA_IMAGEM"}
+  </script>
+  <link rel="stylesheet" href="../estilo.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="../index.html" class="logo">Otaku News</a>
+    <nav><a href="../index.html">Início</a></nav>
+  </header>
+
+  <main class="noticia-page">
+    <article class="noticia-completa">
+      <h1 id="noticia-titulo-dynamic"></h1>
+      <p class="noticia-data-dynamic meta-data"></p>
+      <div class="noticia-imagem-dynamic noticia-hero"></div>
+      <div id="noticia-conteudo" class="noticia-corpo">
+        <p>O primeiro parágrafo aparece como preview no card da home. Escreva aqui o texto inicial da notícia.</p>
+        <p>Continue o restante do conteúdo da notícia...</p>
+      </div>
+    </article>
+
+    <aside class="ultimas-noticias-sidebar">
+      <h2>Últimas Notícias</h2>
+      <div class="ultimas-noticias-box">
+        <ul id="lista-ultimas"></ul>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="site-footer"><p>Otaku News &copy; 2025</p></footer>
+
+  <script src="lista.js"></script>
+  <script src="../noticia.js"></script>
+</body>
+</html>

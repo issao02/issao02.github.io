@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Otaku News | Notícias de Anime</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="estilo.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="index.html" class="logo">Otaku News</a>
+    <nav>
+      <a href="index.html">Início</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <div class="home-title">
+      <h1>Notícias de Anime</h1>
+      <p>As últimas novidades do mundo otaku</p>
+    </div>
+
+    <div id="loading">Carregando notícias...</div>
+
+    <div id="noticias-grid" class="noticias-grid"></div>
+
+    <section class="ultimas-noticias">
+      <h2>Últimas publicadas</h2>
+      <div class="ultimas-noticias-box">
+        <ul id="ultimas-lista" class="ultimas-lista"></ul>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p>Otaku News &copy; 2025</p>
+  </footer>
+
+  <script src="noticias/lista.js"></script>
+  <script src="home.js"></script>
+</body>
+</html>
