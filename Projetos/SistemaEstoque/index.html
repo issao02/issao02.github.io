@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Estoque | Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0f0f12;
+      --bg-card: #18181d;
+      --bg-input: #222227;
+      --accent: #22c55e;
+      --accent-hover: #4ade80;
+      --accent-secondary: #3b82f6;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --text: #e4e4e7;
+      --text-muted: #a1a1aa;
+      --border: #27272a;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image:
+        linear-gradient(rgba(34, 197, 94, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(34, 197, 94, 0.03) 1px, transparent 1px);
+      background-size: 50px 50px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* Demo banner */
+    .demo-banner {
+      position: sticky;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 200;
+      background: linear-gradient(135deg, #1e3a2f 0%, #0f2922 100%);
+      border-bottom: 2px solid var(--accent);
+      padding: 0.75rem 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+      box-shadow: 0 4px 20px rgba(34, 197, 94, 0.2);
+    }
+
+    .demo-banner.hidden {
+      display: none;
+    }
+
+    .demo-banner p {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: #a7f3d0;
+    }
+
+    .demo-banner strong {
+      color: #fff;
+    }
+
+    .demo-banner .btn-fechar {
+      background: rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      color: #fff;
+      padding: 0.35rem 0.75rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-family: inherit;
+      transition: background 0.2s;
+    }
+
+    .demo-banner .btn-fechar:hover {
+      background: rgba(255, 255, 255, 0.25);
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 2rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    header {
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    h1 {
+      font-size: clamp(1.5rem, 4vw, 2rem);
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .back-link {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: color 0.2s;
+    }
+
+    .back-link:hover {
+      color: var(--accent);
+    }
+
+    .secao {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .secao.hidden {
+      display: none;
+    }
+
+    .secao-form h2 {
+      font-size: 1.25rem;
+      margin-bottom: 1.25rem;
+      color: var(--accent);
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: 1rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .form-group.full {
+      grid-column: 1 / -1;
+    }
+
+    .form-group label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .form-group input,
+    .form-group select {
+      padding: 0.6rem 0.75rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-input);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.95rem;
+    }
+
+    .form-group input:focus,
+    .form-group select:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+    }
+
+    .form-actions {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1.25rem;
+    }
+
+    .btn {
+      padding: 0.6rem 1.25rem;
+      border-radius: 8px;
+      border: none;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #0f0f12;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--bg-input);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--text-muted);
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      align-items: center;
+    }
+
+    .toolbar input[type="search"],
+    .toolbar select {
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg-input);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.9rem;
+    }
+
+    .toolbar input[type="search"] {
+      min-width: 200px;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    th {
+      text-align: left;
+      padding: 0.75rem;
+      color: var(--text-muted);
+      font-weight: 500;
+      border-bottom: 1px solid var(--border);
+    }
+
+    td {
+      padding: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    tr:hover td {
+      background: rgba(255, 255, 255, 0.02);
+    }
+
+    tr.alerta td {
+      background: rgba(245, 158, 11, 0.08);
+    }
+
+    td.num {
+      font-variant-numeric: tabular-nums;
+    }
+
+    td.acoes {
+      white-space: nowrap;
+    }
+
+    .btn-icon {
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.35rem;
+      margin-right: 0.25rem;
+      border-radius: 6px;
+      font-size: 1.1rem;
+      transition: background 0.2s;
+    }
+
+    .btn-icon:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .btn-excluir:hover {
+      background: rgba(239, 68, 68, 0.2);
+    }
+
+    .empty {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 2rem !important;
+    }
+
+    #alertasBaixoEstoque {
+      margin-bottom: 1rem;
+    }
+
+    .alerta-baixo-estoque {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      border-radius: 8px;
+      padding: 1rem;
+      color: #fcd34d;
+      font-size: 0.9rem;
+    }
+
+    .alerta-baixo-estoque .alerta-item {
+      font-weight: 500;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 300;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      width: 90%;
+      max-width: 400px;
+    }
+
+    .modal h3 {
+      margin-bottom: 1rem;
+      font-size: 1.15rem;
+    }
+
+    .modal .produto-nome {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .modal .qtd-atual {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .modal-actions label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      cursor: pointer;
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      font-size: 0.9rem;
+    }
+
+    .modal-actions input:checked + span {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .modal .form-group {
+      margin-bottom: 1rem;
+    }
+
+    .modal .form-actions {
+      margin-top: 0;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(100px);
+      padding: 0.75rem 1.5rem;
+      background: var(--accent);
+      color: #0f0f12;
+      border-radius: 8px;
+      font-weight: 500;
+      opacity: 0;
+      transition: all 0.3s;
+      z-index: 400;
+      pointer-events: none;
+    }
+
+    .toast.toast-visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .toast.toast-error {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 1rem;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .toolbar input[type="search"] {
+        min-width: 100%;
+      }
+
+      table {
+        font-size: 0.8rem;
+      }
+
+      th, td {
+        padding: 0.5rem 0.35rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="demoBanner" class="demo-banner">
+    <p><strong>⚠️ Versão Demo para Teste</strong> — Este sistema é uma demonstração. Os dados são armazenados localmente no seu navegador (IndexedDB) e podem ser perdidos ao limpar o cache.</p>
+    <button type="button" id="btnFecharDemo" class="btn-fechar">Fechar</button>
+  </div>
+
+  <div class="container">
+    <header>
+      <h1>📦 Sistema de Estoque</h1>
+      <a href="../" class="back-link">← Voltar aos projetos</a>
+    </header>
+
+    <section id="secaoForm" class="secao secao-form hidden">
+      <h2 id="tituloForm">Novo Produto</h2>
+      <form id="formProduto">
+        <input type="hidden" id="produtoId" name="id">
+        <div class="form-grid">
+          <div class="form-group full">
+            <label for="nome">Nome *</label>
+            <input type="text" id="nome" name="nome" required placeholder="Ex: Produto X">
+          </div>
+          <div class="form-group">
+            <label for="codigo">Código (SKU)</label>
+            <input type="text" id="codigo" name="codigo" placeholder="Ex: PROD-001">
+          </div>
+          <div class="form-group">
+            <label for="categoria">Categoria</label>
+            <input type="text" id="categoria" name="categoria" list="listaCategorias" placeholder="Ex: Eletrônicos">
+          </div>
+          <div class="form-group">
+            <label for="quantidade">Quantidade</label>
+            <input type="number" id="quantidade" name="quantidade" min="0" value="0">
+          </div>
+          <div class="form-group">
+            <label for="quantidadeMinima">Qtd. Mínima (alerta)</label>
+            <input type="number" id="quantidadeMinima" name="quantidadeMinima" min="0" value="0">
+          </div>
+          <div class="form-group">
+            <label for="precoCusto">Preço de Custo</label>
+            <input type="number" id="precoCusto" name="precoCusto" min="0" step="0.01" placeholder="0,00">
+          </div>
+          <div class="form-group">
+            <label for="precoVenda">Preço de Venda</label>
+            <input type="number" id="precoVenda" name="precoVenda" min="0" step="0.01" placeholder="0,00">
+          </div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Salvar</button>
+          <button type="button" id="btnCancelar" class="btn btn-secondary">Cancelar</button>
+        </div>
+      </form>
+    </section>
+
+    <section id="secaoLista" class="secao">
+      <div id="alertasBaixoEstoque"></div>
+      <div class="toolbar">
+        <button type="button" id="btnNovo" class="btn btn-primary">+ Novo Produto</button>
+        <input type="search" id="inputBusca" placeholder="Buscar por nome ou código..." aria-label="Buscar">
+        <select id="filtroCategoria" aria-label="Filtrar por categoria">
+          <option value="">Todas as categorias</option>
+        </select>
+      </div>
+      <div class="table-wrap">
+        <table id="tabelaProdutos">
+          <thead>
+            <tr>
+              <th>Código</th>
+              <th>Nome</th>
+              <th>Qtd</th>
+              <th>Mín.</th>
+              <th>Preço Custo</th>
+              <th>Preço Venda</th>
+              <th>Categoria</th>
+              <th>Ações</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyProdutos">
+            <tr><td colspan="8" class="empty">Carregando...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <div id="modalMovimento" class="modal-overlay">
+    <div class="modal">
+      <h3>Movimentação de Estoque</h3>
+      <p class="produto-nome" id="nomeProdutoMovimento"></p>
+      <p class="qtd-atual">Quantidade atual: <strong id="quantidadeAtualSpan">0</strong></p>
+      <form id="formMovimento">
+        <input type="hidden" id="idProdutoMovimento">
+        <div class="modal-actions">
+          <label>
+            <input type="radio" name="tipoMov" id="tipoEntrada" value="entrada" checked>
+            <span>Entrada</span>
+          </label>
+          <label>
+            <input type="radio" name="tipoMov" id="tipoSaida" value="saida">
+            <span>Saída</span>
+          </label>
+        </div>
+        <div class="form-group">
+          <label for="quantidadeMovimento">Quantidade (<span id="tipoMovimentoSpan">Entrada</span>)</label>
+          <input type="number" id="quantidadeMovimento" min="1" required placeholder="Ex: 10">
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Confirmar</button>
+          <button type="button" id="btnFecharModal" class="btn btn-secondary">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <datalist id="listaCategorias"></datalist>
+
+  <script src="db.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
