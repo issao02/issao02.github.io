@@ -839,7 +839,20 @@
     });
   });
   document.getElementById('buscaVenda')?.addEventListener('input', () => renderizarProdutosVenda());
-  document.getElementById('buscaVenda')?.addEventListener('keyup', () => renderizarProdutosVenda());
+  document.getElementById('buscaVenda')?.addEventListener('keyup', (e) => {
+    renderizarProdutosVenda();
+    if (e.key === 'Enter') {
+      const busca = (document.getElementById('buscaVenda')?.value || '').trim();
+      if (!busca) return;
+      const porCodigo = produtos.find((p) => (p.codigo || '').trim().toLowerCase() === busca.toLowerCase());
+      const p = porCodigo || produtos.find((x) => (x.quantidade ?? 0) > 0 && ((x.nome || '').toLowerCase().includes(busca.toLowerCase()) || (x.codigo || '').toLowerCase().includes(busca.toLowerCase())));
+      if (p) {
+        adicionarAoCarrinho(p.id);
+        document.getElementById('buscaVenda').value = '';
+        renderizarProdutosVenda();
+      }
+    }
+  });
   document.getElementById('btnFinalizarVenda')?.addEventListener('click', abrirModalFormaPagamento);
 
   // Init
