@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rolar Dado</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0f0f12;
+      --bg-card: #18181d;
+      --accent: #6366f1;
+      --accent-hover: #818cf8;
+      --text: #e4e4e7;
+      --text-muted: #a1a1aa;
+      --border: #27272a;
+      --dice-bg: #27272a;
+      --dice-face: #3f3f46;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2rem;
+      max-width: 420px;
+      width: 100%;
+    }
+
+    h1 {
+      font-size: clamp(1.75rem, 4vw, 2.25rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #fff 0%, var(--text-muted) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-align: center;
+    }
+
+    .controls {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      width: 100%;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .input-group label {
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .input-row {
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+    }
+
+    input[type="number"] {
+      flex: 1;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.25rem;
+      padding: 0.85rem 1rem;
+      background: var(--bg-card);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input[type="number"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
+    }
+
+    input[type="number"]::-webkit-inner-spin-button,
+    input[type="number"]::-webkit-outer-spin-button {
+      opacity: 1;
+    }
+
+    .quick-dice {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .quick-btn {
+      padding: 0.4rem 0.75rem;
+      font-size: 0.85rem;
+      font-family: 'JetBrains Mono', monospace;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .quick-btn:hover {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent);
+    }
+
+    .roll-btn {
+      width: 100%;
+      padding: 1rem 2rem;
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: white;
+      background: linear-gradient(135deg, var(--accent) 0%, #4f46e5 100%);
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: 0 4px 14px rgba(99, 102, 241, 0.35);
+    }
+
+    .roll-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(99, 102, 241, 0.45);
+    }
+
+    .roll-btn:active:not(:disabled) {
+      transform: translateY(0);
+    }
+
+    .roll-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    /* Área do dado */
+    .dice-area {
+      width: 180px;
+      height: 180px;
+      perspective: 600px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .dice {
+      width: 120px;
+      height: 120px;
+      background: var(--dice-face);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 3.5rem;
+      font-weight: 700;
+      color: white;
+      box-shadow: 
+        inset 0 2px 4px rgba(255,255,255,0.1),
+        inset 0 -2px 4px rgba(0,0,0,0.3),
+        0 8px 24px rgba(0,0,0,0.4);
+      border: 2px solid rgba(255,255,255,0.08);
+      transform-style: preserve-3d;
+      user-select: none;
+    }
+
+    .dice.rolling {
+      animation: diceRoll 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+    }
+
+    @keyframes diceRoll {
+      0% {
+        transform: rotateX(0deg) rotateY(0deg) scale(1);
+        box-shadow: 
+          inset 0 2px 4px rgba(255,255,255,0.1),
+          inset 0 -2px 4px rgba(0,0,0,0.3),
+          0 8px 24px rgba(0,0,0,0.4);
+      }
+      15% {
+        transform: rotateX(180deg) rotateY(180deg) scale(1.15);
+        box-shadow: 
+          inset 0 2px 4px rgba(255,255,255,0.1),
+          inset 0 -2px 4px rgba(0,0,0,0.3),
+          0 12px 32px rgba(0,0,0,0.5);
+      }
+      30% {
+        transform: rotateX(360deg) rotateY(360deg) scale(0.95);
+      }
+      45% {
+        transform: rotateX(540deg) rotateY(450deg) scale(1.08);
+      }
+      60% {
+        transform: rotateX(720deg) rotateY(540deg) scale(0.98);
+      }
+      75% {
+        transform: rotateX(900deg) rotateY(630deg) scale(1.03);
+      }
+      90% {
+        transform: rotateX(1080deg) rotateY(720deg) scale(0.99);
+      }
+      100% {
+        transform: rotateX(1080deg) rotateY(720deg) scale(1);
+        box-shadow: 
+          inset 0 2px 4px rgba(255,255,255,0.1),
+          inset 0 -2px 4px rgba(0,0,0,0.3),
+          0 8px 24px rgba(0,0,0,0.4);
+      }
+    }
+
+    .dice .number {
+      transition: opacity 0.05s;
+    }
+
+    .dice.rolling .number {
+      animation: numberFlash 0.1s infinite;
+    }
+
+    @keyframes numberFlash {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+
+    .result-label {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      text-align: center;
+      min-height: 1.5em;
+    }
+
+    .result-label strong {
+      color: var(--accent);
+    }
+
+    @media (max-width: 480px) {
+      .dice {
+        width: 100px;
+        height: 100px;
+        font-size: 2.75rem;
+      }
+
+      .dice-area {
+        width: 140px;
+        height: 140px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Rolar Dado</h1>
+
+    <div class="controls">
+      <div class="input-group">
+        <label for="sides">Quantidade de lados</label>
+        <div class="input-row">
+          <input type="number" id="sides" min="2" max="120" value="6" placeholder="Ex: 6">
+          <div class="quick-dice">
+            <button type="button" class="quick-btn" data-sides="4">d4</button>
+            <button type="button" class="quick-btn" data-sides="6">d6</button>
+            <button type="button" class="quick-btn" data-sides="8">d8</button>
+            <button type="button" class="quick-btn" data-sides="10">d10</button>
+            <button type="button" class="quick-btn" data-sides="12">d12</button>
+            <button type="button" class="quick-btn" data-sides="20">d20</button>
+            <button type="button" class="quick-btn" data-sides="100">d100</button>
+          </div>
+        </div>
+      </div>
+
+      <button type="button" class="roll-btn" id="rollBtn">Jogar</button>
+    </div>
+
+    <div class="dice-area">
+      <div class="dice" id="dice">
+        <span class="number" id="diceNumber">—</span>
+      </div>
+    </div>
+
+    <p class="result-label" id="resultLabel">Defina os lados e clique em Jogar</p>
+  </div>
+
+  <script>
+    const diceEl = document.getElementById('dice');
+    const diceNumberEl = document.getElementById('diceNumber');
+    const rollBtn = document.getElementById('rollBtn');
+    const sidesInput = document.getElementById('sides');
+    const resultLabel = document.getElementById('resultLabel');
+    const quickBtns = document.querySelectorAll('.quick-btn');
+
+    let isRolling = false;
+
+    quickBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        sidesInput.value = btn.dataset.sides;
+      });
+    });
+
+    function getRandomInt(min, max) {
+      min = Math.ceil(min);
+      max = Math.floor(max);
+      return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    rollBtn.addEventListener('click', () => {
+      if (isRolling) return;
+
+      let sides = parseInt(sidesInput.value, 10);
+      if (isNaN(sides) || sides < 2 || sides > 120) {
+        resultLabel.innerHTML = 'Digite um número de <strong>2 a 120</strong>';
+        return;
+      }
+
+      isRolling = true;
+      rollBtn.disabled = true;
+      diceEl.classList.remove('rolling');
+      resultLabel.textContent = 'Rolando...';
+
+      // Força reflow para reaplicar animação
+      void diceEl.offsetWidth;
+      diceEl.classList.add('rolling');
+
+      // Cicla números durante a animação
+      const duration = 800;
+      const interval = 50;
+      let elapsed = 0;
+      const flashInterval = setInterval(() => {
+        elapsed += interval;
+        diceNumberEl.textContent = getRandomInt(1, sides);
+        if (elapsed >= duration) {
+          clearInterval(flashInterval);
+        }
+      }, interval);
+
+      // Resultado final
+      const result = getRandomInt(1, sides);
+      setTimeout(() => {
+        diceNumberEl.textContent = result;
+        diceEl.classList.remove('rolling');
+        resultLabel.innerHTML = `Resultado: <strong>${result}</strong>`;
+        isRolling = false;
+        rollBtn.disabled = false;
+      }, duration);
+    });
+
+    // Valor inicial
+    diceNumberEl.textContent = '—';
+  </script>
+</body>
+</html>
