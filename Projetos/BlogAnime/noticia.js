@@ -38,7 +38,7 @@
       .map(n => typeof n === 'string' ? { arquivo: n, titulo: n, data: '' } : n)
       .sort((a, b) => new Date(b.data) - new Date(a.data));
     listaEl.innerHTML = outras.length
-      ? outras.map(n => `<li><a href="${base + n.arquivo}">${(n.titulo || '').replace(/</g, '&lt;')} — ${formatarData(n.data)}</a></li>`).join('')
+      ? outras.map(n => `<li><a href="${base + n.arquivo}">${formatarDataDDMMYYYY(n.data)} - ${(n.titulo || '').replace(/</g, '&lt;')}</a></li>`).join('')
       : '<li>Nenhuma outra notícia.</li>';
   }
 
@@ -78,4 +78,10 @@ function formatarData(str) {
   if (!str) return '';
   const d = new Date(str);
   return isNaN(d) ? str : d.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+function formatarDataDDMMYYYY(str) {
+  if (!str) return '';
+  const d = new Date(str);
+  return isNaN(d) ? str : d.toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
