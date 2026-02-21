@@ -60,9 +60,9 @@
 
     .modes-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      grid-template-columns: repeat(2, 1fr);
       gap: 1rem;
-      max-width: 700px;
+      max-width: 500px;
       width: 100%;
     }
 
@@ -146,29 +146,42 @@
     }
 
     /* ========== TELA QUEBRADA ========== */
-    .effect-quebrada .effect-content {
-      background: #000 url('imgs/tela-quebrada.png') center/cover no-repeat;
+    .effect-content.effect-quebrada {
+      background: #000 url('imgs/tela-quebrada.png') center center no-repeat;
+      background-size: auto 100%;
     }
 
     /* ========== TELA COM DEFEITO (GLITCH) ========== */
-    .effect-defeito .effect-content {
-      background: #000 url('imgs/tela-defeito.png') center/cover no-repeat;
+    .effect-content.effect-defeito {
+      background: #000 url('imgs/tela-defeito.png') center center no-repeat;
+      background-size: auto 100%;
     }
 
     /* ========== TELA COM LINHAS ========== */
-    .effect-linhas .effect-content {
-      background: #000 url('imgs/tela-linhas.png') center/cover no-repeat;
+    .effect-content.effect-linhas {
+      background: #000 url('imgs/tela-linhas.png') center center no-repeat;
+      background-size: auto 100%;
     }
 
     /* ========== TELA DE BLOQUEIO ========== */
-    .effect-bloqueio .effect-content {
+    .effect-content.effect-bloqueio {
       background: linear-gradient(180deg, rgba(0,0,0,0.4) 0%, rgba(0,0,0,0.2) 50%, rgba(0,0,0,0.5) 100%),
-                  url('https://images.pexels.com/photos/1252890/pexels-photo-1252890.jpeg?auto=compress&cs=tinysrgb&w=1920') center/cover no-repeat;
+                  url('https://images.pexels.com/photos/1252890/pexels-photo-1252890.jpeg?auto=compress&cs=tinysrgb&w=1920') center center no-repeat;
+      background-size: 100% 100%, auto 100%;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: space-between;
-      padding: 3rem 2rem 4rem;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .lock-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 1.5rem;
     }
 
     .lock-time {
@@ -176,17 +189,11 @@
       font-weight: 600;
       font-family: 'IBM Plex Mono', monospace;
       letter-spacing: 0.05em;
-      margin-top: 4rem;
     }
 
     .lock-date {
       font-size: 1.25rem;
       color: var(--text-muted);
-      margin-top: 0.5rem;
-    }
-
-    .lock-spacer {
-      flex: 1;
     }
 
     .lock-button-area {
@@ -206,8 +213,15 @@
       align-items: center;
       justify-content: center;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.15s ease;
       box-shadow: 0 0 0 4px rgba(255,255,255,0.1);
+      -webkit-tap-highlight-color: transparent;
+      tap-highlight-color: transparent;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+      outline: none;
+      -webkit-touch-callout: none;
     }
 
     .lock-home-btn:hover {
@@ -215,8 +229,14 @@
       transform: scale(1.05);
     }
 
-    .lock-home-btn:active {
-      transform: scale(0.98);
+    .lock-home-btn:active,
+    .lock-home-btn.pressed {
+      transform: scale(0.92);
+      background: rgba(255,255,255,0.35);
+    }
+
+    .lock-home-btn:focus {
+      outline: none;
     }
 
     .lock-home-btn svg {
@@ -268,7 +288,7 @@
     </div>
 
     <button class="fullscreen-btn" id="fullscreenBtn">Ativar tela cheia</button>
-    <p class="hint">Pressione ESC para sair da tela cheia</p>
+    <p class="hint">ESC para sair · No celular: puxe de cima para baixo</p>
   </div>
 
   <!-- Containers dos efeitos em fullscreen -->
@@ -286,19 +306,18 @@
 
   <div class="fullscreen-effect" id="effectBloqueio">
     <div class="effect-content effect-bloqueio">
-      <div>
+      <div class="lock-content">
         <div class="lock-time" id="lockTime">00:00</div>
         <div class="lock-date" id="lockDate">Sábado, 21 de fevereiro</div>
-      </div>
-      <div class="lock-spacer"></div>
-      <div class="lock-button-area">
-        <button type="button" class="lock-home-btn" aria-label="Desbloquear">
+        <div class="lock-button-area">
+          <button type="button" class="lock-home-btn" aria-label="Desbloquear">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
             <polyline points="9 22 9 12 15 12 15 22"/>
           </svg>
-        </button>
-        <p class="lock-hint">Toque para desbloquear · ESC para sair</p>
+          </button>
+          <p class="lock-hint">Toque para desbloquear · ESC ou puxe de cima para baixo para sair</p>
+        </div>
       </div>
     </div>
   </div>
@@ -397,6 +416,25 @@
         exitFullscreen();
       }
     });
+
+    // Botão desbloquear: feedback tátil e visual no Android
+    const lockBtn = document.querySelector('.lock-home-btn');
+    if (lockBtn) {
+      lockBtn.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        lockBtn.classList.add('pressed');
+        if (navigator.vibrate) navigator.vibrate(15);
+      }, { passive: false });
+
+      lockBtn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        lockBtn.classList.remove('pressed');
+      }, { passive: false });
+
+      lockBtn.addEventListener('touchcancel', () => {
+        lockBtn.classList.remove('pressed');
+      });
+    }
   </script>
 </body>
 </html>
