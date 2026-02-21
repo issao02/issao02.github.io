@@ -128,7 +128,6 @@ async function movimentar(id, quantidade, tipo) {
   const agora = new Date().toISOString();
   const updates = { quantidade: novoQtd };
   if (tipo === 'entrada') updates.dataEntrada = agora;
-  else updates.dataSaida = agora;
 
   return updateProduto(id, updates);
 }
@@ -153,6 +152,18 @@ async function getVendas() {
     const store = tx.objectStore(STORE_VENDAS);
     const request = store.getAll();
     request.onsuccess = () => resolve(request.result);
+    request.onerror = () => reject(request.error);
+    tx.oncomplete = () => db.close();
+  });
+}
+
+async function deleteVenda(id) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(STORE_VENDAS, 'readwrite');
+    const store = tx.objectStore(STORE_VENDAS);
+    const request = store.delete(Number(id));
+    request.onsuccess = () => resolve();
     request.onerror = () => reject(request.error);
     tx.oncomplete = () => db.close();
   });
