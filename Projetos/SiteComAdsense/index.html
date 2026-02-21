@@ -272,5 +272,10 @@
   <script>
     for (let i = 0; i < 10; i++) (adsbygoogle = window.adsbygoogle || []).push({});
   </script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').then(function() {});
+    }
+  </script>
 </body>
 </html>
