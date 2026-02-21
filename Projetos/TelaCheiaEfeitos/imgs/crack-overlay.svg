@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1400">
+  <!-- Padrão de rachaduras realistas estilo vidro quebrado - ponto de impacto no centro -->
+  <defs>
+    <pattern id="cracks" x="0" y="0" width="800" height="1400">
+      <!-- Rachaduras principais emanando do centro -->
+      <path d="M400 700 L420 520 L445 350 L470 200 L480 80 L475 50" stroke="rgba(255,255,255,0.25)" stroke-width="1.5" fill="none"/>
+      <path d="M400 700 L380 530 L355 380 L330 250 L310 120 L305 40" stroke="rgba(255,255,255,0.22)" stroke-width="1.2" fill="none"/>
+      <path d="M400 700 L430 680 L470 650 L520 620 L580 590 L650 560 L720 530" stroke="rgba(255,255,255,0.2)" stroke-width="1" fill="none"/>
+      <path d="M400 700 L370 720 L330 750 L280 790 L230 840 L180 900" stroke="rgba(255,255,255,0.18)" stroke-width="1" fill="none"/>
+      <path d="M400 700 L435 730 L485 770 L540 820 L600 880 L660 950 L710 1020" stroke="rgba(255,255,255,0.15)" stroke-width="0.8" fill="none"/>
+      <path d="M400 700 L365 735 L315 780 L255 835 L185 905 L120 980" stroke="rgba(255,255,255,0.12)" stroke-width="0.8" fill="none"/>
+      
+      <!-- Rachaduras secundárias e ramificações -->
+      <path d="M445 350 L455 280 L465 210 L460 150" stroke="rgba(255,255,255,0.15)" stroke-width="0.6" fill="none"/>
+      <path d="M355 380 L345 320 L340 260 L335 200" stroke="rgba(255,255,255,0.14)" stroke-width="0.6" fill="none"/>
+      <path d="M520 620 L560 600 L610 585 L670 575" stroke="rgba(255,255,255,0.12)" stroke-width="0.5" fill="none"/>
+      <path d="M330 750 L290 770 L245 795 L195 825" stroke="rgba(255,255,255,0.11)" stroke-width="0.5" fill="none"/>
+      <path d="M400 700 L415 750 L440 810 L475 870 L515 930" stroke="rgba(255,255,255,0.1)" stroke-width="0.5" fill="none"/>
+      <path d="M400 700 L385 755 L360 815 L330 875 L295 935" stroke="rgba(255,255,255,0.1)" stroke-width="0.5" fill="none"/>
+      
+      <!-- Micro-rachaduras -->
+      <path d="M470 200 L472 175 L468 155" stroke="rgba(255,255,255,0.08)" stroke-width="0.3" fill="none"/>
+      <path d="M330 250 L328 230 L332 210" stroke="rgba(255,255,255,0.08)" stroke-width="0.3" fill="none"/>
+      <path d="M650 560 L665 545 L685 535" stroke="rgba(255,255,255,0.07)" stroke-width="0.3" fill="none"/>
+      <path d="M180 900 L165 920 L155 945" stroke="rgba(255,255,255,0.07)" stroke-width="0.3" fill="none"/>
+    </pattern>
+  </defs>
+  <rect width="800" height="1400" fill="url(#cracks)"/>
+</svg>
