@@ -108,7 +108,7 @@
     }
 
     header {
-      margin-bottom: 2rem;
+      margin-bottom: 1.5rem;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -116,24 +116,47 @@
       gap: 1rem;
     }
 
+    .nav-menu {
+      display: flex;
+      gap: 0.5rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.35rem;
+    }
+
+    .nav-menu a {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      text-decoration: none;
+      color: var(--text-muted);
+      font-weight: 500;
+      font-size: 0.95rem;
+      transition: all 0.2s;
+    }
+
+    .nav-menu a:hover {
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .nav-menu a.active {
+      color: var(--accent);
+      background: rgba(34, 197, 94, 0.15);
+    }
+
+    .pagina {
+      display: none;
+    }
+
+    .pagina.ativa {
+      display: block;
+    }
+
     h1 {
       font-size: clamp(1.5rem, 4vw, 2rem);
       font-weight: 700;
       color: var(--text);
-    }
-
-    .back-link {
-      color: var(--text-muted);
-      text-decoration: none;
-      font-size: 0.9rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      transition: color 0.2s;
-    }
-
-    .back-link:hover {
-      color: var(--accent);
     }
 
     .secao {
@@ -435,9 +458,175 @@
       color: #fff;
     }
 
+    /* Vender - PDV */
+    .vender-grid {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 1.5rem;
+    }
+
+    @media (max-width: 900px) {
+      .vender-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .produtos-venda {
+      max-height: 400px;
+      overflow-y: auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .produto-card-venda {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 1rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-align: center;
+    }
+
+    .produto-card-venda:hover {
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .produto-card-venda.sem-estoque {
+      opacity: 0.5;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .produto-card-venda .nome {
+      font-weight: 500;
+      margin-bottom: 0.25rem;
+      font-size: 0.9rem;
+    }
+
+    .produto-card-venda .preco {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    .produto-card-venda .qtd {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .carrinho-venda {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      position: sticky;
+      top: 1rem;
+      height: fit-content;
+    }
+
+    .carrinho-venda h3 {
+      margin-bottom: 1rem;
+      font-size: 1.1rem;
+    }
+
+    .carrinho-itens {
+      max-height: 280px;
+      overflow-y: auto;
+      margin-bottom: 1rem;
+    }
+
+    .carrinho-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.5rem 0;
+      border-bottom: 1px solid var(--border);
+      gap: 0.5rem;
+    }
+
+    .carrinho-item .nome {
+      flex: 1;
+      font-size: 0.9rem;
+    }
+
+    .carrinho-item .controles {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+
+    .carrinho-item .controles button {
+      width: 28px;
+      height: 28px;
+      border: none;
+      border-radius: 6px;
+      background: var(--bg-input);
+      color: var(--text);
+      cursor: pointer;
+      font-size: 1rem;
+      line-height: 1;
+      transition: background 0.2s;
+    }
+
+    .carrinho-item .controles button:hover {
+      background: var(--accent);
+      color: #0f0f12;
+    }
+
+    .carrinho-total {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+
+    .carrinho-vazio {
+      color: var(--text-muted);
+      text-align: center;
+      padding: 2rem;
+      font-size: 0.95rem;
+    }
+
+    /* Relatórios */
+    .relatorios-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 1rem;
+    }
+
+    .relatorio-card {
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+
+    .relatorio-card .valor {
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-top: 0.5rem;
+    }
+
+    .relatorio-card .label {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
     @media (max-width: 600px) {
       .container {
         padding: 1rem;
+      }
+
+      .nav-menu {
+        flex-wrap: wrap;
+      }
+
+      .nav-menu a {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.85rem;
       }
 
       .form-grid {
@@ -472,9 +661,36 @@
   <div class="container">
     <header>
       <h1>📦 Sistema de Estoque</h1>
-      <a href="../" class="back-link">← Voltar aos projetos</a>
+      <nav class="nav-menu">
+        <a href="#" data-pagina="vender" class="active">💵 Vender</a>
+        <a href="#" data-pagina="estoque">📦 Estoque</a>
+        <a href="#" data-pagina="relatorios">📊 Relatórios</a>
+      </nav>
     </header>
 
+    <main id="paginaVender" class="pagina ativa">
+      <div class="secao">
+        <h2 style="margin-bottom: 1rem;">Ponto de Venda</h2>
+        <div class="vender-grid">
+          <div>
+            <div class="toolbar" style="margin-bottom: 1rem;">
+              <input type="search" id="buscaVenda" placeholder="Buscar produto..." style="min-width: 200px;">
+            </div>
+            <div id="listaProdutosVenda" class="produtos-venda"></div>
+          </div>
+          <div class="carrinho-venda">
+            <h3>🛒 Carrinho</h3>
+            <div id="carrinhoItens" class="carrinho-itens">
+              <div class="carrinho-vazio">Nenhum item no carrinho</div>
+            </div>
+            <div id="carrinhoTotal" class="carrinho-total" style="display: none;"></div>
+            <button type="button" id="btnFinalizarVenda" class="btn btn-primary" style="width: 100%;" disabled>Finalizar Venda</button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <main id="paginaEstoque" class="pagina">
     <section id="secaoForm" class="secao secao-form hidden">
       <h2 id="tituloForm">Novo Produto</h2>
       <form id="formProduto">
@@ -508,6 +724,14 @@
             <label for="precoVenda">Preço de Venda</label>
             <input type="number" id="precoVenda" name="precoVenda" min="0" step="0.01" placeholder="0,00">
           </div>
+          <div class="form-group">
+            <label for="dataEntrada">Data de Entrada</label>
+            <input type="date" id="dataEntrada" name="dataEntrada">
+          </div>
+          <div class="form-group">
+            <label for="dataSaida">Data de Saída</label>
+            <input type="date" id="dataSaida" name="dataSaida">
+          </div>
         </div>
         <div class="form-actions">
           <button type="submit" class="btn btn-primary">Salvar</button>
@@ -536,15 +760,25 @@
               <th>Preço Custo</th>
               <th>Preço Venda</th>
               <th>Categoria</th>
+              <th>Data Entrada</th>
+              <th>Data Saída</th>
               <th>Ações</th>
             </tr>
           </thead>
           <tbody id="tbodyProdutos">
-            <tr><td colspan="8" class="empty">Carregando...</td></tr>
+            <tr><td colspan="10" class="empty">Carregando...</td></tr>
           </tbody>
         </table>
       </div>
     </section>
+    </main>
+
+    <main id="paginaRelatorios" class="pagina">
+      <div class="secao">
+        <h2 style="margin-bottom: 1rem;">📊 Relatórios</h2>
+        <div id="relatoriosConteudo" class="relatorios-grid"></div>
+      </div>
+    </main>
   </div>
 
   <div id="modalMovimento" class="modal-overlay">
