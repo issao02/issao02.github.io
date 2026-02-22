@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Imobiliária | Imóveis à Venda</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
+  <style>
+    :root {
+      --bg: #faf9f7;
+      --surface: #fff;
+      --accent: #1a5f4a;
+      --accent-hover: #238f6f;
+      --text: #1a1a1a;
+      --text-muted: #6b6b6b;
+      --border: #e8e6e3;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    header {
+      background: var(--surface);
+      box-shadow: 0 2px 20px rgba(0,0,0,0.06);
+      padding: 1rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--accent); }
+
+    .hero {
+      background: linear-gradient(135deg, var(--accent) 0%, #0d3d32 100%);
+      color: #fff;
+      padding: 3rem 2rem;
+      text-align: center;
+    }
+
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.75rem, 4vw, 2.5rem);
+      margin-bottom: 0.5rem;
+    }
+
+    .hero p { opacity: 0.9; font-size: 1.05rem; }
+
+    .filtros {
+      background: var(--surface);
+      padding: 1.5rem 2rem;
+      margin: -1.5rem 2rem 2rem;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: flex-end;
+    }
+
+    .filtro-grupo {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .filtro-grupo label {
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .filtro-grupo select,
+    .filtro-grupo input {
+      padding: 0.6rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      min-width: 140px;
+    }
+
+    .btn-filtro {
+      padding: 0.6rem 1.5rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-family: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-filtro:hover { background: var(--accent-hover); }
+
+    .btn-mapa {
+      padding: 0.6rem 1.5rem;
+      background: transparent;
+      color: var(--accent);
+      border: 2px solid var(--accent);
+      border-radius: 10px;
+      font-family: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn-mapa:hover {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 2rem 3rem;
+    }
+
+    .acoes-topo {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .contador { color: var(--text-muted); font-size: 0.95rem; }
+
+    .grid-imoveis {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .card-imovel {
+      background: var(--surface);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.06);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .card-imovel:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+    }
+
+    .card-imovel.hidden { display: none; }
+
+    .card-galeria {
+      position: relative;
+      height: 220px;
+      overflow: hidden;
+    }
+
+    .card-galeria img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.4s;
+    }
+
+    .card-imovel:hover .card-galeria img { transform: scale(1.05); }
+
+    .card-galeria-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 36px;
+      height: 36px;
+      background: rgba(255,255,255,0.9);
+      border: none;
+      border-radius: 50%;
+      font-size: 1.25rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 3;
+      opacity: 0;
+      transition: opacity 0.2s;
+      color: var(--text);
+    }
+
+    .card-imovel:hover .card-galeria-nav { opacity: 1; }
+
+    .card-galeria-nav:hover { background: #fff; }
+
+    .card-galeria-nav.prev { left: 8px; }
+    .card-galeria-nav.next { right: 8px; }
+
+    .card-miniaturas {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 4px;
+      z-index: 2;
+    }
+
+    .card-miniaturas span {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.5);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .card-miniaturas span.ativo { background: #fff; width: 18px; border-radius: 3px; }
+
+    .card-tipo {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      background: var(--accent);
+      color: #fff;
+      padding: 0.35rem 0.75rem;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      z-index: 2;
+    }
+
+    .card-body { padding: 1.25rem; }
+
+    .card-preco {
+      font-size: 1.35rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+    }
+
+    .card-titulo {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+      line-height: 1.3;
+    }
+
+    .card-endereco {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+    }
+
+    .card-detalhes {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .card-detalhes span { display: flex; align-items: center; gap: 0.35rem; }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 2100;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      overflow-y: auto;
+    }
+
+    .modal-overlay.ativo { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border-radius: 20px;
+      max-width: 900px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+    }
+
+    .modal-fechar {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      width: 40px;
+      height: 40px;
+      border: none;
+      background: rgba(0,0,0,0.5);
+      color: #fff;
+      border-radius: 50%;
+      font-size: 1.25rem;
+      cursor: pointer;
+      z-index: 10;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+
+    .modal-fechar:hover { background: rgba(0,0,0,0.7); }
+
+    .modal-galeria {
+      height: 350px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .modal-galeria img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .modal-galeria-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 48px;
+      height: 48px;
+      background: rgba(255,255,255,0.9);
+      border: none;
+      border-radius: 50%;
+      font-size: 1.5rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s;
+      z-index: 5;
+    }
+
+    .modal-galeria-nav:hover { background: #fff; }
+
+    .modal-galeria-nav.prev { left: 1rem; }
+    .modal-galeria-nav.next { right: 1rem; }
+
+    .modal-body { padding: 2rem; }
+
+    .modal-preco { font-size: 1.75rem; font-weight: 700; color: var(--accent); margin-bottom: 0.5rem; }
+    .modal-titulo { font-size: 1.35rem; margin-bottom: 0.5rem; }
+    .modal-endereco { color: var(--text-muted); margin-bottom: 1.5rem; }
+    .modal-detalhes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .modal-detalhes span { display: flex; align-items: center; gap: 0.5rem; }
+    #modal-mapa {
+      height: 280px;
+      border-radius: 12px;
+      margin-top: 1rem;
+    }
+
+    .modal-mapa-container h3 { margin-bottom: 0.75rem; font-size: 1rem; }
+
+    .mapa-fullscreen {
+      position: fixed;
+      inset: 0;
+      background: var(--surface);
+      z-index: 2000;
+      display: none;
+      flex-direction: column;
+    }
+
+    .mapa-fullscreen.ativo { display: flex; }
+
+    .mapa-header {
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .mapa-header h2 { font-size: 1.25rem; }
+
+    .mapa-fechar {
+      padding: 0.5rem 1rem;
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: #fff;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: inherit;
+      font-weight: 600;
+    }
+
+    .mapa-fechar:hover { background: rgba(255,255,255,0.3); }
+
+    #mapa-imoveis {
+      flex: 1;
+      min-height: 400px;
+    }
+
+    .popup-imovel {
+      min-width: 200px;
+      max-width: 240px;
+      text-align: left;
+    }
+
+    .popup-imovel img {
+      width: 100%;
+      height: 110px;
+      object-fit: cover;
+      border-radius: 8px;
+      margin-bottom: 8px;
+    }
+
+    .popup-imovel .popup-titulo {
+      font-weight: 600;
+      margin-bottom: 4px;
+      font-size: 0.95rem;
+    }
+
+    .popup-imovel .popup-preco {
+      color: var(--accent);
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    .popup-imovel .popup-detalhes {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .popup-imovel.popup-clicavel {
+      cursor: pointer;
+    }
+
+    .popup-imovel.popup-clicavel:hover {
+      opacity: 0.95;
+    }
+
+    .popup-imovel .popup-ver-detalhes {
+      margin-top: 8px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--accent);
+    }
+
+    .leaflet-popup-content-wrapper.popup-imovel-wrapper {
+      padding: 0;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    }
+
+    .leaflet-popup-content-wrapper.popup-imovel-wrapper .leaflet-popup-content {
+      margin: 12px;
+      min-width: 200px;
+    }
+
+    .home-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 600;
+      margin-top: 2rem;
+    }
+
+    .home-link:hover { text-decoration: underline; }
+
+    @media (max-width: 768px) {
+      .filtros { margin: -1rem 1rem 1.5rem; padding: 1rem; }
+      .container { padding: 0 1rem 2rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="logo">Imobiliária Premium</span>
+    <nav class="nav-links">
+      <a href="#">Venda</a>
+      <a href="#">Locação</a>
+      <a href="#">Contato</a>
+    </nav>
+  </header>
+
+  <section class="hero">
+    <h1>Imóveis à Venda</h1>
+    <p>Encontre o imóvel dos seus sonhos</p>
+  </section>
+
+  <div class="filtros">
+    <div class="filtro-grupo">
+      <label>Tipo</label>
+      <select id="filtro-tipo">
+        <option value="">Todos</option>
+        <option value="apartamento">Apartamento</option>
+        <option value="casa">Casa</option>
+        <option value="sobrado">Sobrado</option>
+      </select>
+    </div>
+    <div class="filtro-grupo">
+      <label>Quartos (mín.)</label>
+      <select id="filtro-quartos">
+        <option value="0">Qualquer</option>
+        <option value="1">1+</option>
+        <option value="2">2+</option>
+        <option value="3">3+</option>
+        <option value="4">4+</option>
+      </select>
+    </div>
+    <div class="filtro-grupo">
+      <label>Preço até (R$)</label>
+      <input type="number" id="filtro-preco" placeholder="Ex: 800000" min="0">
+    </div>
+    <div class="filtro-grupo">
+      <label>Área mín. (m²)</label>
+      <input type="number" id="filtro-area" placeholder="Ex: 80" min="0">
+    </div>
+    <button class="btn-filtro" onclick="aplicarFiltros()">Filtrar</button>
+    <button class="btn-mapa" onclick="abrirMapa()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+      Ver no mapa
+    </button>
+  </div>
+
+  <div class="container">
+    <div class="acoes-topo">
+      <span class="contador" id="contador">20 imóveis encontrados</span>
+    </div>
+
+    <div class="grid-imoveis" id="grid-imoveis"></div>
+
+    <a href="../../index.html" class="home-link">← Voltar ao início</a>
+  </div>
+
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
+      <button class="modal-fechar" onclick="fecharModal()">×</button>
+      <div class="modal-galeria" id="modal-galeria">
+        <button class="modal-galeria-nav prev" onclick="navFoto(-1)">‹</button>
+        <img id="modal-img" src="" alt="">
+        <button class="modal-galeria-nav next" onclick="navFoto(1)">›</button>
+      </div>
+      <div class="modal-body">
+        <div class="modal-preco" id="modal-preco"></div>
+        <h2 class="modal-titulo" id="modal-titulo"></h2>
+        <p class="modal-endereco" id="modal-endereco"></p>
+        <div class="modal-detalhes" id="modal-detalhes"></div>
+        <div class="modal-mapa-container">
+          <h3>Localização</h3>
+          <div id="modal-mapa"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="mapa-fullscreen" id="mapa-fullscreen">
+    <div class="mapa-header">
+      <h2>Localização dos imóveis</h2>
+      <button class="mapa-fechar" onclick="fecharMapa()">Fechar</button>
+    </div>
+    <div id="mapa-imoveis"></div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script>
+    const imoveis = [
+      { id: 1, tipo: "apartamento", titulo: "Apartamento amplo com vista", endereco: "Av. Paulista, 1000 - Bela Vista, São Paulo", preco: 850000, quartos: 3, banheiros: 2, area: 95, lat: -23.5614, lng: -46.6560, fotos: ["https://picsum.photos/seed/i1a/800/500", "https://picsum.photos/seed/i1b/800/500", "https://picsum.photos/seed/i1c/800/500", "https://picsum.photos/seed/i1d/800/500", "https://picsum.photos/seed/i1e/800/500"] },
+      { id: 2, tipo: "casa", titulo: "Casa com jardim e churrasqueira", endereco: "Rua das Flores, 45 - Pinheiros, São Paulo", preco: 1200000, quartos: 4, banheiros: 3, area: 180, lat: -23.5650, lng: -46.6920, fotos: ["https://picsum.photos/seed/i2a/800/500", "https://picsum.photos/seed/i2b/800/500", "https://picsum.photos/seed/i2c/800/500", "https://picsum.photos/seed/i2d/800/500", "https://picsum.photos/seed/i2e/800/500"] },
+      { id: 3, tipo: "sobrado", titulo: "Sobrado moderno em condomínio", endereco: "Alameda Santos, 500 - Jardins, São Paulo", preco: 2100000, quartos: 5, banheiros: 4, area: 320, lat: -23.5680, lng: -46.6580, fotos: ["https://picsum.photos/seed/i3a/800/500", "https://picsum.photos/seed/i3b/800/500", "https://picsum.photos/seed/i3c/800/500", "https://picsum.photos/seed/i3d/800/500", "https://picsum.photos/seed/i3e/800/500"] },
+      { id: 4, tipo: "apartamento", titulo: "Apto 2 quartos reformado", endereco: "Rua Augusta, 2000 - Consolação, São Paulo", preco: 520000, quartos: 2, banheiros: 1, area: 65, lat: -23.5520, lng: -46.6620, fotos: ["https://picsum.photos/seed/i4a/800/500", "https://picsum.photos/seed/i4b/800/500", "https://picsum.photos/seed/i4c/800/500", "https://picsum.photos/seed/i4d/800/500", "https://picsum.photos/seed/i4e/800/500"] },
+      { id: 5, tipo: "casa", titulo: "Casa térrea com garagem", endereco: "Rua Oscar Freire, 800 - Jardins, São Paulo", preco: 1850000, quartos: 4, banheiros: 3, area: 220, lat: -23.5620, lng: -46.6680, fotos: ["https://picsum.photos/seed/i5a/800/500", "https://picsum.photos/seed/i5b/800/500", "https://picsum.photos/seed/i5c/800/500", "https://picsum.photos/seed/i5d/800/500", "https://picsum.photos/seed/i5e/800/500"] },
+      { id: 6, tipo: "apartamento", titulo: "Cobertura duplex", endereco: "Av. Brigadeiro Faria Lima, 3000 - Itaim Bibi, São Paulo", preco: 3500000, quartos: 4, banheiros: 4, area: 280, lat: -23.5880, lng: -46.6820, fotos: ["https://picsum.photos/seed/i6a/800/500", "https://picsum.photos/seed/i6b/800/500", "https://picsum.photos/seed/i6c/800/500", "https://picsum.photos/seed/i6d/800/500", "https://picsum.photos/seed/i6e/800/500"] },
+      { id: 7, tipo: "sobrado", titulo: "Sobrado com piscina", endereco: "Rua Haddock Lobo, 595 - Cerqueira César, São Paulo", preco: 2400000, quartos: 5, banheiros: 4, area: 350, lat: -23.5550, lng: -46.6650, fotos: ["https://picsum.photos/seed/i7a/800/500", "https://picsum.photos/seed/i7b/800/500", "https://picsum.photos/seed/i7c/800/500", "https://picsum.photos/seed/i7d/800/500", "https://picsum.photos/seed/i7e/800/500"] },
+      { id: 8, tipo: "apartamento", titulo: "Apto compacto 1 quarto", endereco: "Rua da Consolação, 1500 - Consolação, São Paulo", preco: 380000, quartos: 1, banheiros: 1, area: 42, lat: -23.5480, lng: -46.6550, fotos: ["https://picsum.photos/seed/i8a/800/500", "https://picsum.photos/seed/i8b/800/500", "https://picsum.photos/seed/i8c/800/500", "https://picsum.photos/seed/i8d/800/500", "https://picsum.photos/seed/i8e/800/500"] },
+      { id: 9, tipo: "casa", titulo: "Casa de campo estilo rústico", endereco: "Rua Bela Cintra, 900 - Consolação, São Paulo", preco: 950000, quartos: 3, banheiros: 2, area: 150, lat: -23.5500, lng: -46.6600, fotos: ["https://picsum.photos/seed/i9a/800/500", "https://picsum.photos/seed/i9b/800/500", "https://picsum.photos/seed/i9c/800/500", "https://picsum.photos/seed/i9d/800/500", "https://picsum.photos/seed/i9e/800/500"] },
+      { id: 10, tipo: "apartamento", titulo: "Apto 3 quartos com varanda", endereco: "Rua Pamplona, 1000 - Jardim Paulista, São Paulo", preco: 720000, quartos: 3, banheiros: 2, area: 88, lat: -23.5580, lng: -46.6620, fotos: ["https://picsum.photos/seed/i10a/800/500", "https://picsum.photos/seed/i10b/800/500", "https://picsum.photos/seed/i10c/800/500", "https://picsum.photos/seed/i10d/800/500", "https://picsum.photos/seed/i10e/800/500"] },
+      { id: 11, tipo: "sobrado", titulo: "Sobrado em condomínio fechado", endereco: "Av. Rebouças, 2000 - Pinheiros, São Paulo", preco: 1650000, quartos: 4, banheiros: 3, area: 260, lat: -23.5720, lng: -46.6980, fotos: ["https://picsum.photos/seed/i11a/800/500", "https://picsum.photos/seed/i11b/800/500", "https://picsum.photos/seed/i11c/800/500", "https://picsum.photos/seed/i11d/800/500", "https://picsum.photos/seed/i11e/800/500"] },
+      { id: 12, tipo: "apartamento", titulo: "Apto com vista para o parque", endereco: "Rua Estados Unidos, 1500 - Jardim Paulista, São Paulo", preco: 680000, quartos: 2, banheiros: 2, area: 75, lat: -23.5600, lng: -46.6580, fotos: ["https://picsum.photos/seed/i12a/800/500", "https://picsum.photos/seed/i12b/800/500", "https://picsum.photos/seed/i12c/800/500", "https://picsum.photos/seed/i12d/800/500", "https://picsum.photos/seed/i12e/800/500"] },
+      { id: 13, tipo: "casa", titulo: "Casa com escritório integrado", endereco: "Rua Groenlândia, 500 - Jardins, São Paulo", preco: 1400000, quartos: 4, banheiros: 3, area: 195, lat: -23.5660, lng: -46.6700, fotos: ["https://picsum.photos/seed/i13a/800/500", "https://picsum.photos/seed/i13b/800/500", "https://picsum.photos/seed/i13c/800/500", "https://picsum.photos/seed/i13d/800/500", "https://picsum.photos/seed/i13e/800/500"] },
+      { id: 14, tipo: "apartamento", titulo: "Studio mobiliado", endereco: "Rua Bela Cintra, 500 - Consolação, São Paulo", preco: 320000, quartos: 1, banheiros: 1, area: 35, lat: -23.5485, lng: -46.6585, fotos: ["https://picsum.photos/seed/i14a/800/500", "https://picsum.photos/seed/i14b/800/500", "https://picsum.photos/seed/i14c/800/500", "https://picsum.photos/seed/i14d/800/500", "https://picsum.photos/seed/i14e/800/500"] },
+      { id: 15, tipo: "sobrado", titulo: "Sobrado com área gourmet", endereco: "Rua Joaquim Floriano, 800 - Itaim Bibi, São Paulo", preco: 2200000, quartos: 5, banheiros: 4, area: 310, lat: -23.5850, lng: -46.6780, fotos: ["https://picsum.photos/seed/i15a/800/500", "https://picsum.photos/seed/i15b/800/500", "https://picsum.photos/seed/i15c/800/500", "https://picsum.photos/seed/i15d/800/500", "https://picsum.photos/seed/i15e/800/500"] },
+      { id: 16, tipo: "casa", titulo: "Casa com piscina e sauna", endereco: "Rua Cardeal Arcoverde, 1200 - Pinheiros, São Paulo", preco: 1950000, quartos: 5, banheiros: 4, area: 290, lat: -23.5700, lng: -46.6880, fotos: ["https://picsum.photos/seed/i16a/800/500", "https://picsum.photos/seed/i16b/800/500", "https://picsum.photos/seed/i16c/800/500", "https://picsum.photos/seed/i16d/800/500", "https://picsum.photos/seed/i16e/800/500"] },
+      { id: 17, tipo: "apartamento", titulo: "Apto 4 quartos luxo", endereco: "Av. Brasil, 1500 - Jardim América, São Paulo", preco: 1280000, quartos: 4, banheiros: 3, area: 145, lat: -23.5625, lng: -46.6720, fotos: ["https://picsum.photos/seed/i17a/800/500", "https://picsum.photos/seed/i17b/800/500", "https://picsum.photos/seed/i17c/800/500", "https://picsum.photos/seed/i17d/800/500", "https://picsum.photos/seed/i17e/800/500"] },
+      { id: 18, tipo: "apartamento", titulo: "Apto 2 quartos próximo ao metrô", endereco: "Rua Vergueiro, 2000 - Vila Mariana, São Paulo", preco: 480000, quartos: 2, banheiros: 1, area: 58, lat: -23.5950, lng: -46.6380, fotos: ["https://picsum.photos/seed/i18a/800/500", "https://picsum.photos/seed/i18b/800/500", "https://picsum.photos/seed/i18c/800/500", "https://picsum.photos/seed/i18d/800/500", "https://picsum.photos/seed/i18e/800/500"] },
+      { id: 19, tipo: "casa", titulo: "Casa geminada moderna", endereco: "Rua dos Pinheiros, 800 - Pinheiros, São Paulo", preco: 1100000, quartos: 3, banheiros: 2, area: 165, lat: -23.5680, lng: -46.6925, fotos: ["https://picsum.photos/seed/i19a/800/500", "https://picsum.photos/seed/i19b/800/500", "https://picsum.photos/seed/i19c/800/500", "https://picsum.photos/seed/i19d/800/500", "https://picsum.photos/seed/i19e/800/500"] },
+      { id: 20, tipo: "sobrado", titulo: "Sobrado duplex com elevador", endereco: "Alameda Campinas, 700 - Jardim Paulista, São Paulo", preco: 2800000, quartos: 6, banheiros: 5, area: 420, lat: -23.5640, lng: -46.6640, fotos: ["https://picsum.photos/seed/i20a/800/500", "https://picsum.photos/seed/i20b/800/500", "https://picsum.photos/seed/i20c/800/500", "https://picsum.photos/seed/i20d/800/500", "https://picsum.photos/seed/i20e/800/500"] }
+    ];
+
+    let imoveisFiltrados = [...imoveis];
+    let modalFotoAtual = 0;
+    let modalImovelAtual = null;
+    let mapaModal = null;
+    let mapaFull = null;
+
+    function formatarPreco(v) {
+      return 'R$ ' + v.toLocaleString('pt-BR');
+    }
+
+    function tipoLabel(t) {
+      return { apartamento: 'Apartamento', casa: 'Casa', sobrado: 'Sobrado' }[t] || t;
+    }
+
+    function renderizarCards() {
+      const grid = document.getElementById('grid-imoveis');
+      grid.innerHTML = imoveisFiltrados.map(im => {
+        const tipo = tipoLabel(im.tipo);
+        return `
+          <div class="card-imovel" data-id="${im.id}">
+            <div class="card-galeria" onclick="abrirModal(${im.id})">
+              <button class="card-galeria-nav prev" onclick="event.stopPropagation(); navFotoCard(${im.id}, -1)" type="button">‹</button>
+              <img src="${im.fotos[0]}" alt="${im.titulo}" data-foto-idx="0">
+              <button class="card-galeria-nav next" onclick="event.stopPropagation(); navFotoCard(${im.id}, 1)" type="button">›</button>
+              <span class="card-tipo">${tipo}</span>
+              <div class="card-miniaturas">
+                ${im.fotos.map((_, i) => `<span class="${i === 0 ? 'ativo' : ''}" data-foto="${i}" onclick="event.stopPropagation(); trocarFotoCard(this, ${im.id})"></span>`).join('')}
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="card-preco">${formatarPreco(im.preco)}</div>
+              <h3 class="card-titulo">${im.titulo}</h3>
+              <p class="card-endereco">${im.endereco}</p>
+              <div class="card-detalhes">
+                <span>🛏 ${im.quartos} quartos</span>
+                <span>🚿 ${im.banheiros} ban.</span>
+                <span>📐 ${im.area} m²</span>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('contador').textContent = imoveisFiltrados.length + ' imóveis encontrados';
+    }
+
+    function trocarFotoCard(el, id) {
+      const im = imoveis.find(i => i.id === id);
+      const idx = parseInt(el.dataset.foto);
+      const card = el.closest('.card-imovel');
+      card.querySelector('.card-galeria img').src = im.fotos[idx];
+      card.querySelector('.card-galeria img').dataset.fotoIdx = idx;
+      card.querySelectorAll('.card-miniaturas span').forEach((s, i) => s.classList.toggle('ativo', i === idx));
+    }
+
+    function navFotoCard(id, dir) {
+      const im = imoveis.find(i => i.id === id);
+      const card = document.querySelector(`.card-imovel[data-id="${id}"]`);
+      if (!card) return;
+      const img = card.querySelector('.card-galeria img');
+      let idx = parseInt(img.dataset.fotoIdx || 0);
+      idx = (idx + dir + im.fotos.length) % im.fotos.length;
+      img.src = im.fotos[idx];
+      img.dataset.fotoIdx = idx;
+      card.querySelectorAll('.card-miniaturas span').forEach((s, i) => s.classList.toggle('ativo', i === idx));
+    }
+
+    function aplicarFiltros() {
+      const tipo = document.getElementById('filtro-tipo').value;
+      const quartos = parseInt(document.getElementById('filtro-quartos').value) || 0;
+      const precoMax = parseInt(document.getElementById('filtro-preco').value) || Infinity;
+      const areaMin = parseInt(document.getElementById('filtro-area').value) || 0;
+
+      imoveisFiltrados = imoveis.filter(im => {
+        if (tipo && im.tipo !== tipo) return false;
+        if (im.quartos < quartos) return false;
+        if (im.preco > precoMax) return false;
+        if (im.area < areaMin) return false;
+        return true;
+      });
+
+      renderizarCards();
+    }
+
+    function abrirModal(id) {
+      modalImovelAtual = imoveis.find(i => i.id === id);
+      modalFotoAtual = 0;
+      document.getElementById('modal-img').src = modalImovelAtual.fotos[0];
+      document.getElementById('modal-preco').textContent = formatarPreco(modalImovelAtual.preco);
+      document.getElementById('modal-titulo').textContent = modalImovelAtual.titulo;
+      document.getElementById('modal-endereco').textContent = modalImovelAtual.endereco;
+      document.getElementById('modal-detalhes').innerHTML = `
+        <span>🛏 ${modalImovelAtual.quartos} quartos</span>
+        <span>🚿 ${modalImovelAtual.banheiros} banheiros</span>
+        <span>📐 ${modalImovelAtual.area} m²</span>
+        <span>🏠 ${tipoLabel(modalImovelAtual.tipo)}</span>
+      `;
+
+      document.getElementById('modal-overlay').classList.add('ativo');
+
+      setTimeout(() => {
+        if (mapaModal) mapaModal.remove();
+        mapaModal = L.map('modal-mapa').setView([modalImovelAtual.lat, modalImovelAtual.lng], 16);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(mapaModal);
+        L.marker([modalImovelAtual.lat, modalImovelAtual.lng]).addTo(mapaModal).bindPopup(modalImovelAtual.titulo);
+        mapaModal.invalidateSize();
+      }, 50);
+    }
+
+    function fecharModal() {
+      document.getElementById('modal-overlay').classList.remove('ativo');
+      if (mapaModal) { mapaModal.remove(); mapaModal = null; }
+    }
+
+    function navFoto(dir) {
+      modalFotoAtual = (modalFotoAtual + dir + modalImovelAtual.fotos.length) % modalImovelAtual.fotos.length;
+      document.getElementById('modal-img').src = modalImovelAtual.fotos[modalFotoAtual];
+    }
+
+    function criarPopupImovel(im) {
+      return `<div class="popup-imovel popup-clicavel" onclick="abrirModalDoMapa(${im.id})" role="button" tabindex="0">
+        <img src="${im.fotos[0]}" alt="${im.titulo}">
+        <div class="popup-titulo">${im.titulo}</div>
+        <div class="popup-preco">${formatarPreco(im.preco)}</div>
+        <div class="popup-detalhes">${im.quartos} quartos · ${im.area} m² · ${tipoLabel(im.tipo)}</div>
+        <div class="popup-ver-detalhes">Ver anúncio completo →</div>
+      </div>`;
+    }
+
+    function abrirModalDoMapa(id) {
+      abrirModal(id);
+    }
+
+    function abrirMapa() {
+      document.getElementById('mapa-fullscreen').classList.add('ativo');
+      setTimeout(() => {
+        if (mapaFull) mapaFull.remove();
+        mapaFull = L.map('mapa-imoveis').setView([-23.56, -46.66], 12);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(mapaFull);
+
+        const bounds = L.latLngBounds();
+        imoveisFiltrados.forEach(im => {
+          const marker = L.marker([im.lat, im.lng]).addTo(mapaFull);
+          const conteudo = criarPopupImovel(im);
+          marker.bindPopup(conteudo, {
+            className: 'popup-imovel-wrapper',
+            minWidth: 220,
+            maxWidth: 260
+          });
+          bounds.extend([im.lat, im.lng]);
+        });
+
+        if (imoveisFiltrados.length > 0) {
+          mapaFull.fitBounds(bounds, { padding: [50, 50], maxZoom: 15 });
+        }
+      }, 100);
+    }
+
+    function fecharMapa() {
+      document.getElementById('mapa-fullscreen').classList.remove('ativo');
+      if (mapaFull) { mapaFull.remove(); mapaFull = null; }
+    }
+
+    document.getElementById('modal-overlay').addEventListener('click', e => {
+      if (e.target.id === 'modal-overlay') fecharModal();
+    });
+
+    renderizarCards();
+  </script>
+</body>
+</html>

@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Flappy Bird</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Press Start 2P', cursive;
+      background: #1a1a2e;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      touch-action: manipulation;
+    }
+
+    .game-wrapper {
+      position: relative;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+    }
+
+    #gameCanvas {
+      display: block;
+      background: linear-gradient(180deg, #87CEEB 0%, #E0F6FF 60%, #90EE90 100%);
+      cursor: pointer;
+    }
+
+    .ui-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem;
+    }
+
+    .score-display {
+      font-size: 1.5rem;
+      color: #fff;
+      text-shadow: 3px 3px 0 #000, -1px -1px 0 #000;
+      padding: 0.5rem 1rem;
+    }
+
+    .start-screen, .game-over-screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      pointer-events: auto;
+    }
+
+    .game-over-screen {
+      display: none;
+    }
+
+    .start-screen h1, .game-over-screen h1 {
+      font-size: 1.2rem;
+      color: #FFD700;
+      text-align: center;
+      text-shadow: 2px 2px 0 #000;
+      line-height: 1.8;
+    }
+
+    .final-score {
+      font-size: 1rem;
+      color: #fff;
+    }
+
+    .tap-hint {
+      font-size: 0.6rem;
+      color: rgba(255, 255, 255, 0.9);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+
+    .level-select {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin: 1rem 0;
+    }
+
+    .level-btn {
+      font-family: 'Press Start 2P', cursive;
+      font-size: 0.5rem;
+      padding: 0.6rem 0.8rem;
+      border: 3px solid #444;
+      border-radius: 8px;
+      background: #2a2a3e;
+      color: #a1a1aa;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .level-btn:hover {
+      background: #3a3a4e;
+      color: #fff;
+    }
+
+    .level-btn.selected {
+      border-color: #FFD700;
+      background: #4a4a5e;
+      color: #FFD700;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .back-link {
+      position: fixed;
+      top: 1rem;
+      left: 1rem;
+      font-size: 0.6rem;
+      color: rgba(255, 255, 255, 0.8);
+      text-decoration: none;
+      z-index: 100;
+      pointer-events: auto;
+    }
+
+    .back-link:hover {
+      color: #FFD700;
+    }
+  </style>
+</head>
+<body>
+  <a href="../../index.html" class="back-link">← Voltar</a>
+
+  <div class="game-wrapper">
+    <canvas id="gameCanvas" width="400" height="600"></canvas>
+
+    <div class="ui-overlay">
+      <div class="score-display">0</div>
+    </div>
+
+    <div class="start-screen" id="startScreen">
+      <h1>FLAPPY BIRD</h1>
+      <p style="font-size: 0.5rem; color: #a1a1aa; margin-bottom: 0.5rem;">NÍVEL</p>
+      <div class="level-select">
+        <button type="button" class="level-btn" data-level="easy">FÁCIL</button>
+        <button type="button" class="level-btn selected" data-level="medium">MÉDIO</button>
+        <button type="button" class="level-btn" data-level="hard">HARD</button>
+      </div>
+      <p class="tap-hint" id="startHint">CLIQUE OU TOQUE PARA COMEÇAR</p>
+    </div>
+
+    <div class="game-over-screen" id="gameOverScreen">
+      <h1>GAME OVER</h1>
+      <p class="final-score">PONTOS: <span id="finalScore">0</span></p>
+      <p style="font-size: 0.5rem; color: #a1a1aa; margin: 0.5rem 0;">NÍVEL</p>
+      <div class="level-select" id="gameOverLevelSelect">
+        <button type="button" class="level-btn" data-level="easy">FÁCIL</button>
+        <button type="button" class="level-btn selected" data-level="medium">MÉDIO</button>
+        <button type="button" class="level-btn" data-level="hard">HARD</button>
+      </div>
+      <p class="tap-hint" id="gameOverHint">CLIQUE PARA JOGAR NOVAMENTE</p>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const scoreDisplay = document.querySelector('.score-display');
+    const startScreen = document.getElementById('startScreen');
+    const gameOverScreen = document.getElementById('gameOverScreen');
+    const finalScoreSpan = document.getElementById('finalScore');
+    const startHint = document.getElementById('startHint');
+    const gameOverHint = document.getElementById('gameOverHint');
+
+    // Detecta se é mobile (touch) ou desktop
+    const isMobile = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+    if (isMobile) {
+      startHint.textContent = 'CLIQUE OU TOQUE PARA COMEÇAR';
+      gameOverHint.textContent = 'CLIQUE OU TOQUE PARA JOGAR NOVAMENTE';
+    } else {
+      startHint.textContent = 'APERTE ESPAÇO PARA COMEÇAR';
+      gameOverHint.textContent = 'APERTE ESPAÇO PARA JOGAR NOVAMENTE';
+    }
+
+    // Configurações
+    const GRAVITY = 0.4;
+    const FLAP_STRENGTH = -8;
+    const PIPE_WIDTH = 60;
+    const PIPE_SPEED = 3;
+    const PIPE_SPAWN_INTERVAL = 1800;
+
+    const LEVELS = { easy: 180, medium: 140, hard: 100 }; // abertura dos tubos
+    let pipeGap = LEVELS.medium;
+
+    let gameState = 'start'; // start, playing, gameover
+    let bird = { x: 80, y: 250, vy: 0, radius: 18 };
+    let pipes = [];
+    let score = 0;
+    let lastPipeTime = 0;
+    let animationId;
+    let gracePeriodEnd = 0; // 0,3 seg parado após começar
+
+    // Desenha o pássaro
+    function drawBird() {
+      ctx.save();
+      ctx.translate(bird.x, bird.y);
+      ctx.rotate(Math.min(bird.vy * 0.05, 0.8));
+
+      // Corpo amarelo
+      ctx.fillStyle = '#F4D03F';
+      ctx.beginPath();
+      ctx.ellipse(0, 0, bird.radius, bird.radius * 1.2, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Bico laranja
+      ctx.fillStyle = '#E67E22';
+      ctx.beginPath();
+      ctx.moveTo(bird.radius, 0);
+      ctx.lineTo(bird.radius + 15, -5);
+      ctx.lineTo(bird.radius + 15, 5);
+      ctx.closePath();
+      ctx.fill();
+
+      // Olho branco
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.arc(5, -5, 6, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Pupila
+      ctx.fillStyle = '#000';
+      ctx.beginPath();
+      ctx.arc(7, -5, 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.restore();
+    }
+
+    // Desenha retângulo com textura de madeira
+    function drawWoodRect(x, y, w, h) {
+      const grad = ctx.createLinearGradient(x, 0, x + w, 0);
+      grad.addColorStop(0, '#8B4513');
+      grad.addColorStop(0.3, '#A0522D');
+      grad.addColorStop(0.5, '#8B6914');
+      grad.addColorStop(0.7, '#6B4423');
+      grad.addColorStop(1, '#5D3A1A');
+      ctx.fillStyle = grad;
+      ctx.fillRect(x, y, w, h);
+
+      ctx.strokeStyle = '#4A2C0A';
+      ctx.lineWidth = 2;
+      ctx.strokeRect(x, y, w, h);
+
+      // Veios da madeira
+      ctx.strokeStyle = 'rgba(60, 30, 10, 0.4)';
+      ctx.lineWidth = 1;
+      for (let i = 0; i < h; i += 8) {
+        ctx.beginPath();
+        ctx.moveTo(x, y + i);
+        ctx.lineTo(x + w, y + i + (Math.sin(i * 0.1) * 3));
+        ctx.stroke();
+      }
+    }
+
+    // Desenha os canos (madeira)
+    function drawPipes() {
+      pipes.forEach(pipe => {
+        drawWoodRect(pipe.x, 0, PIPE_WIDTH, pipe.top);
+        drawWoodRect(pipe.x - 5, pipe.top - 25, PIPE_WIDTH + 10, 25);
+        drawWoodRect(pipe.x, pipe.bottom, PIPE_WIDTH, canvas.height - pipe.bottom);
+        drawWoodRect(pipe.x - 5, pipe.bottom, PIPE_WIDTH + 10, 25);
+      });
+    }
+
+    // Desenha nuvens de fundo
+    function drawClouds() {
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+      const time = Date.now() * 0.0002;
+      for (let i = 0; i < 5; i++) {
+        const x = ((i * 120 + time * 50) % (canvas.width + 100)) - 50;
+        const y = 80 + (i % 3) * 100;
+        ctx.beginPath();
+        ctx.arc(x, y, 25, 0, Math.PI * 2);
+        ctx.arc(x + 30, y, 30, 0, Math.PI * 2);
+        ctx.arc(x + 60, y, 25, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function spawnPipe() {
+      const minTop = 80;
+      const maxTop = canvas.height - pipeGap - 80;
+      const top = minTop + Math.random() * (maxTop - minTop);
+      pipes.push({
+        x: canvas.width,
+        top: top,
+        bottom: top + pipeGap,
+        scored: false
+      });
+    }
+
+    function checkCollision() {
+      // Colisão com chão ou teto
+      if (bird.y - bird.radius <= 0 || bird.y + bird.radius >= canvas.height) {
+        return true;
+      }
+
+      // Colisão com canos
+      for (const pipe of pipes) {
+        if (bird.x + bird.radius > pipe.x && bird.x - bird.radius < pipe.x + PIPE_WIDTH) {
+          if (bird.y - bird.radius < pipe.top || bird.y + bird.radius > pipe.bottom) {
+            return true;
+          }
+        }
+      }
+      return false;
+    }
+
+    function update() {
+      if (gameState !== 'playing') return;
+
+      const now = Date.now();
+
+      // Período de 0,3 seg: pássaro fica parado na mesma altura
+      if (now < gracePeriodEnd) {
+        bird.vy = 0;
+        pipes.forEach(pipe => {
+          pipe.x -= PIPE_SPEED;
+          if (!pipe.scored && pipe.x + PIPE_WIDTH < bird.x) {
+            pipe.scored = true;
+            score++;
+            scoreDisplay.textContent = score;
+          }
+        });
+        pipes = pipes.filter(p => p.x + PIPE_WIDTH > 0);
+        if (checkCollision()) gameOver();
+        return;
+      }
+
+      if (now - lastPipeTime > PIPE_SPAWN_INTERVAL) {
+        spawnPipe();
+        lastPipeTime = now;
+      }
+
+      bird.vy += GRAVITY;
+      bird.y += bird.vy;
+
+      pipes.forEach(pipe => {
+        pipe.x -= PIPE_SPEED;
+
+        if (!pipe.scored && pipe.x + PIPE_WIDTH < bird.x) {
+          pipe.scored = true;
+          score++;
+          scoreDisplay.textContent = score;
+        }
+      });
+
+      pipes = pipes.filter(p => p.x + PIPE_WIDTH > 0);
+
+      if (checkCollision()) {
+        gameOver();
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      drawClouds();
+      drawPipes();
+      drawBird();
+    }
+
+    function gameLoop() {
+      update();
+      draw();
+      if (gameState === 'playing') {
+        animationId = requestAnimationFrame(gameLoop);
+      }
+    }
+
+    function startGame() {
+      gameState = 'playing';
+      bird = { x: 80, y: 250, vy: 0, radius: 18 };
+      pipes = [];
+      score = 0;
+      lastPipeTime = Date.now();
+      gracePeriodEnd = Date.now() + 300; // 0,3 seg parado
+      scoreDisplay.textContent = '0';
+      startScreen.style.display = 'none';
+      gameOverScreen.style.display = 'none';
+      gameLoop();
+    }
+
+    function gameOver() {
+      gameState = 'gameover';
+      cancelAnimationFrame(animationId);
+      animationId = null;
+      finalScoreSpan.textContent = score;
+      gameOverScreen.style.display = 'flex';
+    }
+
+    function selectLevel(level) {
+      pipeGap = LEVELS[level];
+      document.querySelectorAll('.level-btn').forEach(btn => {
+        btn.classList.toggle('selected', btn.dataset.level === level);
+      });
+    }
+
+    function flap(e) {
+      if (e && e.target && e.target.closest('.level-btn')) return;
+      if (gameState === 'start') {
+        startGame();
+      } else if (gameState === 'playing') {
+        bird.vy = FLAP_STRENGTH;
+      } else if (gameState === 'gameover') {
+        startGame();
+      }
+    }
+
+    document.querySelectorAll('.level-btn').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        selectLevel(btn.dataset.level);
+      });
+      btn.addEventListener('touchstart', (e) => {
+        e.stopPropagation();
+        selectLevel(btn.dataset.level);
+      }, { passive: true });
+    });
+
+    canvas.addEventListener('click', flap);
+    startScreen.addEventListener('click', flap);
+    gameOverScreen.addEventListener('click', flap);
+    startScreen.addEventListener('touchstart', (e) => { e.preventDefault(); flap(e); }, { passive: false });
+    gameOverScreen.addEventListener('touchstart', (e) => { e.preventDefault(); flap(e); }, { passive: false });
+    canvas.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      flap(e);
+    }, { passive: false });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        if (e.repeat) return; // Evita múltiplos flaps ao segurar a tecla
+        flap();
+      }
+    });
+  </script>
+</body>
+</html>
