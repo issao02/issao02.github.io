@@ -288,7 +288,8 @@
       7: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
       8: 'linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%)',
       9: 'radial-gradient(ellipse at center, #1a1a2e 0%, #0a0a12 100%)',
-      10: '#0a0a12'
+      10: '#0a0a12',
+      11: 'radial-gradient(ellipse at center, #0d0d14 0%, #050508 50%, #000 100%)'
     };
 
     function stopAll() {
@@ -832,12 +833,123 @@
       loop();
     }
 
+    function anim11() {
+      const c = document.createElement('canvas');
+      c.id = 'anim-canvas';
+      c.width = window.innerWidth;
+      c.height = window.innerHeight;
+      container.appendChild(c);
+      const ctx = c.getContext('2d');
+
+      const cx = c.width / 2;
+      const cy = c.height / 2;
+      const globeRadius = Math.min(c.width, c.height) * 0.35;
+      let t = 0;
+
+      function loop() {
+        t += 0.008;
+        ctx.fillStyle = '#050508';
+        ctx.fillRect(0, 0, c.width, c.height);
+
+        // Ambiente sutil com estrelas/partículas
+        for (let i = 0; i < 40; i++) {
+          const px = (i * 137.5 + t * 20) % (c.width + 40) - 20;
+          const py = (i * 89.3 + t * 10) % (c.height + 40) - 20;
+          const bright = 0.15 + Math.sin(t * 2 + i) * 0.1;
+          ctx.fillStyle = `rgba(255,255,255,${bright})`;
+          ctx.beginPath();
+          ctx.arc(px, py, 1, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.save();
+
+        // Sombra do globo (no chão)
+        const shadowY = cy + globeRadius * 0.85;
+        const shadowGrad = ctx.createRadialGradient(cx, shadowY, 0, cx, shadowY, globeRadius * 1.8);
+        shadowGrad.addColorStop(0, 'rgba(0,0,0,0.5)');
+        shadowGrad.addColorStop(0.5, 'rgba(0,0,0,0.15)');
+        shadowGrad.addColorStop(1, 'rgba(0,0,0,0)');
+        ctx.fillStyle = shadowGrad;
+        ctx.beginPath();
+        ctx.ellipse(cx, shadowY, globeRadius * 1.4, globeRadius * 0.35, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Clipping para o globo
+        ctx.beginPath();
+        ctx.arc(cx, cy, globeRadius, 0, Math.PI * 2);
+        ctx.clip();
+
+        // Base do globo espelhado: gradiente escuro prateado
+        const baseGrad = ctx.createRadialGradient(
+          cx - globeRadius * 0.4, cy - globeRadius * 0.4, 0,
+          cx, cy, globeRadius * 1.2
+        );
+        baseGrad.addColorStop(0, '#1a1a22');
+        baseGrad.addColorStop(0.3, '#0e0e14');
+        baseGrad.addColorStop(0.7, '#08080c');
+        baseGrad.addColorStop(1, '#030305');
+        ctx.fillStyle = baseGrad;
+        ctx.fillRect(cx - globeRadius - 10, cy - globeRadius - 10, globeRadius * 2 + 20, globeRadius * 2 + 20);
+
+        // Posição do reflexo de luz (fonte de luz girando)
+        const lightAngle = t * 1.2;
+        const lx = cx + Math.cos(lightAngle) * globeRadius * 0.85;
+        const ly = cy + Math.sin(lightAngle) * globeRadius * 0.85;
+
+        // Highlight principal (specular) - brilho intenso
+        const specGrad = ctx.createRadialGradient(lx, ly, 0, lx, ly, globeRadius * 0.6);
+        specGrad.addColorStop(0, 'rgba(255,255,255,0.95)');
+        specGrad.addColorStop(0.2, 'rgba(220,230,255,0.5)');
+        specGrad.addColorStop(0.4, 'rgba(180,200,255,0.15)');
+        specGrad.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = specGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, globeRadius + 5, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Segundo highlight menor (mais intenso)
+        const hotSpot = ctx.createRadialGradient(lx, ly, 0, lx, ly, globeRadius * 0.25);
+        hotSpot.addColorStop(0, 'rgba(255,255,255,1)');
+        hotSpot.addColorStop(0.15, 'rgba(240,248,255,0.6)');
+        hotSpot.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = hotSpot;
+        ctx.beginPath();
+        ctx.arc(cx, cy, globeRadius + 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Reflexo secundário (na parte oposta - ambiente)
+        const envAngle = lightAngle + Math.PI;
+        const ex = cx + Math.cos(envAngle) * globeRadius * 0.6;
+        const ey = cy + Math.sin(envAngle) * globeRadius * 0.6;
+        const envGrad = ctx.createRadialGradient(ex, ey, 0, ex, ey, globeRadius * 0.5);
+        envGrad.addColorStop(0, 'rgba(80,90,120,0.25)');
+        envGrad.addColorStop(0.5, 'rgba(40,50,80,0.08)');
+        envGrad.addColorStop(1, 'rgba(255,255,255,0)');
+        ctx.fillStyle = envGrad;
+        ctx.beginPath();
+        ctx.arc(cx, cy, globeRadius + 2, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Borda com reflexo suave
+        ctx.restore();
+        ctx.strokeStyle = 'rgba(120,130,180,0.2)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(cx, cy, globeRadius, 0, Math.PI * 2);
+        ctx.stroke();
+
+        animId = requestAnimationFrame(loop);
+      }
+      loop();
+    }
+
     document.getElementById('btn-exec').addEventListener('click', () => {
       const val = document.getElementById('anim-select').value;
       stopAll();
       body.style.background = backgrounds[val];
       body.style.backgroundAttachment = (val == 1 || val == 4 || val == 5) ? 'fixed' : 'scroll';
-      const fns = { 1: anim1, 2: anim2, 3: anim3, 4: anim4, 5: anim5, 6: anim6, 7: anim7, 8: anim8, 9: anim9, 10: anim10 };
+      const fns = { 1: anim1, 2: anim2, 3: anim3, 4: anim4, 5: anim5, 6: anim6, 7: anim7, 8: anim8, 9: anim9, 10: anim10, 11: anim11 };
       fns[val]();
     });
 

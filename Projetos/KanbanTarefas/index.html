@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0f0f12">
+  <title>Kanban - Tarefas do Dia</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0f12;
+      --bg-card: #18181d;
+      --bg-col: #1a1a20;
+      --accent-novo: #22c55e;
+      --accent-exec: #f59e0b;
+      --accent-fim: #6366f1;
+      --text: #e4e4e7;
+      --text-muted: #a1a1aa;
+      --border: #27272a;
+      --danger: #ef4444;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      min-height: 100dvh;
+      overflow-x: hidden;
+    }
+
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .header {
+      flex-shrink: 0;
+      padding: 1rem 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      background: rgba(15, 15, 18, 0.9);
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      z-index: 1;
+    }
+
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .home-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      padding: 0.5rem;
+      border-radius: 8px;
+      transition: color 0.2s, background 0.2s;
+    }
+
+    .home-link:hover {
+      color: var(--text);
+      background: rgba(255,255,255,0.05);
+    }
+
+    h1 {
+      font-size: clamp(1.25rem, 4vw, 1.75rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .cache-warning {
+      flex: 1;
+      min-width: 200px;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      background: rgba(245, 158, 11, 0.12);
+      border: 1px solid rgba(245, 158, 11, 0.3);
+      border-radius: 8px;
+      font-size: 0.8rem;
+      color: #fcd34d;
+      max-width: 360px;
+    }
+
+    .cache-warning svg {
+      flex-shrink: 0;
+      width: 18px;
+      height: 18px;
+    }
+
+    .btn-limpar {
+      flex-shrink: 0;
+      padding: 0.6rem 1.2rem;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #fff;
+      background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%);
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.2s;
+    }
+
+    .btn-limpar:hover {
+      opacity: 0.9;
+      transform: translateY(-1px);
+    }
+
+    .btn-limpar:active {
+      transform: translateY(0);
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-shrink: 0;
+    }
+
+    .header-actions .add-tarefa {
+      margin-top: 0;
+      flex: 1;
+      min-width: 180px;
+      max-width: 280px;
+    }
+
+    .kanban {
+      flex: 1;
+      display: flex;
+      gap: 1rem;
+      padding: 1rem;
+      overflow: hidden;
+      min-height: 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .coluna {
+      flex: 1;
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .coluna-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      border-radius: 12px 12px 0 0;
+      font-weight: 600;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+
+    .coluna-novo .coluna-header { background: linear-gradient(135deg, rgba(34, 197, 94, 0.25) 0%, rgba(34, 197, 94, 0.1) 100%); color: var(--accent-novo); }
+    .coluna-executando .coluna-header { background: linear-gradient(135deg, rgba(245, 158, 11, 0.25) 0%, rgba(245, 158, 11, 0.1) 100%); color: var(--accent-exec); }
+    .coluna-finalizado .coluna-header { background: linear-gradient(135deg, rgba(99, 102, 241, 0.25) 0%, rgba(99, 102, 241, 0.1) 100%); color: var(--accent-fim); }
+
+    .coluna-label .label-mobile {
+      display: none;
+    }
+
+    .coluna-count {
+      background: rgba(0,0,0,0.2);
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      font-size: 0.85rem;
+    }
+
+    .coluna-cards {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      padding: 1rem;
+      background: var(--bg-col);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 12px 12px;
+      overflow-y: auto;
+      min-height: 0;
+    }
+
+    .coluna.drag-over .coluna-cards {
+      background: rgba(99, 102, 241, 0.08);
+      border-color: var(--accent-fim);
+      box-shadow: inset 0 0 0 2px rgba(99, 102, 241, 0.3);
+    }
+
+    .tarefa {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.9rem 1rem;
+      cursor: grab;
+      transition: box-shadow 0.2s, transform 0.2s, opacity 0.2s;
+      user-select: none;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 0.5rem;
+      touch-action: none;
+    }
+
+    .tarefa:hover {
+      border-color: rgba(99, 102, 241, 0.4);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+
+    .tarefa.dragging {
+      opacity: 0.6;
+      transform: scale(0.98);
+      cursor: grabbing;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+
+    .tarefa.drag-over {
+      border-color: var(--accent-fim);
+      background: rgba(99, 102, 241, 0.08);
+    }
+
+    .tarefa-texto {
+      flex: 1;
+      min-width: 0;
+      font-size: 0.95rem;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    .tarefa-excluir {
+      flex-shrink: 0;
+      padding: 0.35rem;
+      color: var(--text-muted);
+      background: none;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0.7;
+      transition: opacity 0.2s, color 0.2s, background 0.2s;
+    }
+
+    .tarefa-excluir:hover {
+      opacity: 1;
+      color: var(--danger);
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    .tarefa-excluir svg {
+      display: block;
+    }
+
+    .add-tarefa {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 0.5rem;
+    }
+
+    .input-tarefa {
+      flex: 1;
+      padding: 0.7rem 1rem;
+      font-family: inherit;
+      font-size: 0.95rem;
+      color: var(--text);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .input-tarefa:focus {
+      border-color: var(--accent-fim);
+    }
+
+    .input-tarefa::placeholder {
+      color: var(--text-muted);
+    }
+
+    .btn-add {
+      padding: 0.7rem 1rem;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #fff;
+      background: linear-gradient(135deg, var(--accent-fim) 0%, #8b5cf6 100%);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: opacity 0.2s;
+    }
+
+    .btn-add:hover {
+      opacity: 0.9;
+    }
+
+    @media (max-width: 768px) {
+      .header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .header-left {
+        justify-content: space-between;
+      }
+
+      .cache-warning {
+        max-width: none;
+      }
+
+      .header-actions {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .header-actions .add-tarefa {
+        max-width: none;
+      }
+
+      .header-actions .btn-limpar {
+        order: -1;
+      }
+
+      .coluna {
+        flex: 0 0 auto;
+        min-width: 100%;
+        flex-direction: row;
+      }
+
+      .coluna-label .label-full {
+        display: none;
+      }
+
+      .coluna-label .label-mobile {
+        display: inline;
+      }
+
+      .coluna-header {
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        padding: 0.5rem 0.5rem;
+        width: 4.25rem;
+        min-width: 4.25rem;
+        border-radius: 12px 0 0 12px;
+        font-size: 0.8rem;
+      }
+
+      .coluna-count {
+        margin-top: 0.25rem;
+        font-size: 0.75rem;
+      }
+
+      .coluna-cards {
+        flex: 1;
+        min-width: 0;
+        min-height: 100px;
+        border-radius: 0 12px 12px 0;
+        border-top: 1px solid var(--border);
+        border-left: none;
+      }
+
+      .kanban {
+        flex-direction: column;
+        overflow-y: auto;
+        overflow-x: hidden;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .header {
+        padding: 0.75rem 1rem;
+      }
+
+      .cache-warning {
+        font-size: 0.75rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-left">
+      <h1>Kanban - Tarefas do Dia</h1>
+    </div>
+    <div class="cache-warning" role="alert">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+      </svg>
+      Se o cache do navegador for limpo, os dados serão perdidos.
+    </div>
+    <div class="header-actions">
+      <div class="add-tarefa">
+        <input type="text" class="input-tarefa" id="inputNovo" placeholder="Nova tarefa..." maxlength="200">
+        <button type="button" class="btn-add" id="btnAddNovo">+</button>
+      </div>
+      <button type="button" class="btn-limpar" id="btnLimpar">Limpar tudo</button>
+    </div>
+  </header>
+
+  <main class="kanban">
+    <div class="coluna coluna-novo" data-etapa="novo">
+      <div class="coluna-header">
+        <span class="coluna-label"><span class="label-full">Novo</span><span class="label-mobile">Novo</span></span>
+        <span class="coluna-count" id="countNovo">0</span>
+      </div>
+      <div class="coluna-cards" id="cardsNovo"></div>
+    </div>
+
+    <div class="coluna coluna-executando" data-etapa="executando">
+      <div class="coluna-header">
+        <span class="coluna-label"><span class="label-full">Executando</span><span class="label-mobile">Exec</span></span>
+        <span class="coluna-count" id="countExecutando">0</span>
+      </div>
+      <div class="coluna-cards" id="cardsExecutando"></div>
+    </div>
+
+    <div class="coluna coluna-finalizado" data-etapa="finalizado">
+      <div class="coluna-header">
+        <span class="coluna-label"><span class="label-full">Finalizado</span><span class="label-mobile">Final</span></span>
+        <span class="coluna-count" id="countFinalizado">0</span>
+      </div>
+      <div class="coluna-cards" id="cardsFinalizado"></div>
+    </div>
+  </main>
+
+  <script>
+    const STORAGE_KEY = 'kanban-tarefas';
+    const ETAPAS = ['novo', 'executando', 'finalizado'];
+
+    let dados = { novo: [], executando: [], finalizado: [] };
+    let tarefaArrastando = null;
+    let colunaOrigem = null;
+    let indexOrigem = null;
+    let touchDropTarget = null;
+
+    const cards = {
+      novo: document.getElementById('cardsNovo'),
+      executando: document.getElementById('cardsExecutando'),
+      finalizado: document.getElementById('cardsFinalizado')
+    };
+
+    const counts = {
+      novo: document.getElementById('countNovo'),
+      executando: document.getElementById('countExecutando'),
+      finalizado: document.getElementById('countFinalizado')
+    };
+
+    function carregar() {
+      try {
+        const s = localStorage.getItem(STORAGE_KEY);
+        if (s) {
+          const parsed = JSON.parse(s);
+          dados = {
+            novo: parsed.novo || [],
+            executando: parsed.executando || [],
+            finalizado: parsed.finalizado || []
+          };
+        }
+      } catch (_) {}
+      renderizar();
+    }
+
+    function salvar() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(dados));
+      } catch (_) {}
+      renderizar();
+    }
+
+    function renderizar() {
+      ETAPAS.forEach(etapa => {
+        const arr = dados[etapa];
+        counts[etapa].textContent = arr.length;
+
+        const container = cards[etapa];
+        container.innerHTML = '';
+
+        arr.forEach((t, i) => {
+          const el = criarTarefa(t.id, t.texto, etapa);
+          container.appendChild(el);
+        });
+      });
+
+      reatribuirEventos();
+    }
+
+    function criarTarefa(id, texto, etapa) {
+      const div = document.createElement('div');
+      div.className = 'tarefa';
+      div.draggable = true;
+      div.dataset.id = id;
+      div.dataset.etapa = etapa;
+      div.innerHTML = `
+        <div class="tarefa-texto">${escapeHtml(texto)}</div>
+        <button type="button" class="tarefa-excluir" title="Excluir" aria-label="Excluir tarefa">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" width="18" height="18">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+        </button>
+      `;
+      return div;
+    }
+
+    function escapeHtml(s) {
+      const d = document.createElement('div');
+      d.textContent = s;
+      return d.innerHTML;
+    }
+
+    function reatribuirEventos() {
+      document.querySelectorAll('.tarefa').forEach(t => {
+        t.addEventListener('dragstart', onDragStart);
+        t.addEventListener('dragend', onDragEnd);
+        t.addEventListener('dragover', onDragOver);
+        t.addEventListener('drop', onDrop);
+        t.addEventListener('touchstart', onTouchStart, { passive: false });
+        t.addEventListener('touchmove', onTouchMove, { passive: false });
+        t.addEventListener('touchend', onTouchEnd, { passive: false });
+        t.querySelector('.tarefa-excluir')?.addEventListener('click', onExcluir);
+      });
+
+      document.querySelectorAll('.coluna-cards').forEach(col => {
+        col.addEventListener('dragover', onColunaDragOver);
+        col.addEventListener('drop', onColunaDrop);
+        col.addEventListener('dragleave', onColunaDragLeave);
+        col.addEventListener('touchmove', onTouchMoveCol, { passive: false });
+      });
+    }
+
+    function onTouchStart(e) {
+      if (e.target.closest('.tarefa-excluir')) return;
+      const card = e.currentTarget;
+      const touch = e.touches[0];
+      if (!touch) return;
+      card._touchStart = { x: touch.clientX, y: touch.clientY };
+      touchDropTarget = null;
+    }
+
+    function atualizarTouchTarget(clientX, clientY) {
+      const el = document.elementFromPoint(clientX, clientY);
+      if (!el) return;
+      const outraTarefa = el.closest('.tarefa');
+      const colCards = el.closest('.coluna-cards');
+      const col = colCards?.closest('.coluna');
+      document.querySelectorAll('.tarefa, .coluna').forEach(x => x.classList.remove('drag-over'));
+      if (outraTarefa && outraTarefa !== tarefaArrastando) {
+        outraTarefa.classList.add('drag-over');
+        touchDropTarget = { tipo: 'tarefa', el: outraTarefa };
+      } else if (col) {
+        col.classList.add('drag-over');
+        touchDropTarget = { tipo: 'coluna', el: col };
+      } else {
+        touchDropTarget = null;
+      }
+    }
+
+    function onTouchMove(e) {
+      if (!e.currentTarget._touchStart) return;
+      const card = e.currentTarget;
+      const touch = e.touches[0];
+      if (!touch) return;
+      const dx = Math.abs(touch.clientX - card._touchStart.x);
+      const dy = Math.abs(touch.clientY - card._touchStart.y);
+      if (dx < 10 && dy < 10) return;
+      if (!tarefaArrastando) {
+        tarefaArrastando = card;
+        colunaOrigem = card.closest('.coluna');
+        const lista = card.parentElement;
+        indexOrigem = Array.from(lista.querySelectorAll('.tarefa')).indexOf(card);
+        card.classList.add('dragging');
+      }
+      e.preventDefault();
+      atualizarTouchTarget(touch.clientX, touch.clientY);
+    }
+
+    function onTouchMoveCol(e) {
+      if (tarefaArrastando && e.touches[0]) {
+        atualizarTouchTarget(e.touches[0].clientX, e.touches[0].clientY);
+        e.preventDefault();
+      }
+    }
+
+    function onTouchEnd(e) {
+      const card = e.currentTarget;
+      card._touchStart = null;
+      if (!tarefaArrastando) return;
+      e.preventDefault();
+      tarefaArrastando.classList.remove('dragging');
+      document.querySelectorAll('.tarefa, .coluna').forEach(x => x.classList.remove('drag-over'));
+      const target = touchDropTarget;
+      touchDropTarget = null;
+      if (target) {
+        if (target.tipo === 'tarefa') {
+          moverEntreTarefas(target.el);
+        } else if (target.tipo === 'coluna') {
+          const colDest = target.el;
+          const arrOrigem = dados[colunaOrigem.dataset.etapa];
+          const arrDest = dados[colDest.dataset.etapa];
+          const item = arrOrigem.find(x => x.id === tarefaArrastando.dataset.id);
+          if (item) {
+            arrOrigem.splice(indexOrigem, 1);
+            arrDest.push(item);
+            salvar();
+          }
+        }
+      }
+      tarefaArrastando = null;
+      colunaOrigem = null;
+    }
+
+    function onDragStart(e) {
+      tarefaArrastando = e.currentTarget;
+      colunaOrigem = tarefaArrastando.closest('.coluna');
+      const lista = tarefaArrastando.parentElement;
+      indexOrigem = Array.from(lista.querySelectorAll('.tarefa')).indexOf(tarefaArrastando);
+      tarefaArrastando.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', tarefaArrastando.dataset.id);
+    }
+
+    function onDragEnd() {
+      tarefaArrastando?.classList.remove('dragging');
+      document.querySelectorAll('.tarefa, .coluna').forEach(el => {
+        el.classList.remove('drag-over');
+      });
+      tarefaArrastando = null;
+      colunaOrigem = null;
+    }
+
+    function onDragOver(e) {
+      e.preventDefault();
+      if (!tarefaArrastando) return;
+      const t = e.currentTarget;
+      if (t.classList.contains('tarefa')) {
+        document.querySelectorAll('.tarefa').forEach(el => el.classList.remove('drag-over'));
+        t.classList.add('drag-over');
+      }
+    }
+
+    function onDrop(e) {
+      e.preventDefault();
+      const t = e.currentTarget;
+      if (t.classList.contains('tarefa')) {
+        t.classList.remove('drag-over');
+        moverEntreTarefas(t);
+      }
+    }
+
+    function moverEntreTarefas(targetTask) {
+      if (!tarefaArrastando || tarefaArrastando === targetTask) return;
+
+      const id = tarefaArrastando.dataset.id;
+      const etapaTarget = targetTask.dataset.etapa;
+      const listaTarget = targetTask.parentElement;
+      const tarefas = listaTarget.querySelectorAll('.tarefa');
+      const indexTarget = Array.from(tarefas).indexOf(targetTask);
+
+      const arrOrigem = dados[colunaOrigem.dataset.etapa];
+      const arrDest = dados[etapaTarget];
+      const item = arrOrigem.find(x => x.id === id);
+      if (!item) return;
+
+      arrOrigem.splice(indexOrigem, 1);
+      let ins;
+      if (arrOrigem === arrDest) {
+        ins = indexOrigem < indexTarget ? indexTarget - 1 : indexTarget;
+      } else {
+        ins = indexTarget >= 0 ? indexTarget : arrDest.length;
+      }
+      arrDest.splice(Math.max(0, ins), 0, item);
+
+      salvar();
+    }
+
+    function onColunaDragOver(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      const col = e.currentTarget.closest('.coluna');
+      if (col) col.classList.add('drag-over');
+    }
+
+    function onColunaDragLeave(e) {
+      const col = e.currentTarget.closest('.coluna');
+      if (!col.contains(e.relatedTarget)) col.classList.remove('drag-over');
+    }
+
+    function onColunaDrop(e) {
+      e.preventDefault();
+      const col = e.currentTarget.closest('.coluna');
+      if (col) col.classList.remove('drag-over');
+
+      if (!tarefaArrastando || !col) return;
+
+      const id = tarefaArrastando.dataset.id;
+      const etapaDest = col.dataset.etapa;
+      const arrOrigem = dados[colunaOrigem.dataset.etapa];
+      const arrDest = dados[etapaDest];
+      const item = arrOrigem.find(x => x.id === id);
+      if (!item) return;
+
+      arrOrigem.splice(indexOrigem, 1);
+      arrDest.push(item);
+
+      salvar();
+    }
+
+    function onExcluir(e) {
+      const card = e.target.closest('.tarefa');
+      if (!card) return;
+
+      const id = card.dataset.id;
+      const etapa = card.dataset.etapa;
+
+      dados[etapa] = dados[etapa].filter(x => x.id !== id);
+      salvar();
+    }
+
+    function adicionarTarefa(etapa) {
+      const input = document.getElementById('inputNovo');
+      const texto = (input?.value || '').trim();
+      if (!texto) return;
+
+      dados.novo.unshift({
+        id: 't' + Date.now(),
+        texto
+      });
+
+      if (input) input.value = '';
+      salvar();
+    }
+
+    document.getElementById('btnAddNovo').addEventListener('click', () => adicionarTarefa('novo'));
+    document.getElementById('inputNovo').addEventListener('keydown', e => {
+      if (e.key === 'Enter') adicionarTarefa('novo');
+    });
+
+    document.getElementById('btnLimpar').addEventListener('click', () => {
+      if (!confirm('Tem certeza que deseja apagar todas as tarefas? Esta ação não pode ser desfeita.')) return;
+      dados = { novo: [], executando: [], finalizado: [] };
+      salvar();
+    });
+
+    window.addEventListener('resize', () => {
+      document.body.style.minHeight = window.innerHeight + 'px';
+    });
+
+    window.addEventListener('orientationchange', () => {
+      setTimeout(() => {
+        document.body.style.minHeight = window.innerHeight + 'px';
+        document.body.style.height = 'auto';
+      }, 100);
+    });
+
+    carregar();
+  </script>
+</body>
+</html>
