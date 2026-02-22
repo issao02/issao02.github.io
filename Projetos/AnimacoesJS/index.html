@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Animações em JavaScript</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=JetBrains+Mono:wght@400&family=Cinzel:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0a0a0f;
+      --surface: #16161d;
+      --border: #2a2a35;
+      --accent: #00d4aa;
+      --text: #e8e8ed;
+      --text-muted: #8888a0;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'JetBrains Mono', monospace;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow: hidden;
+      transition: background 0.5s ease;
+    }
+
+    .controls {
+      position: fixed;
+      top: 1rem;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      display: flex;
+      gap: 0.75rem;
+      align-items: center;
+      padding: 0.75rem 1.25rem;
+      background: rgba(22, 22, 29, 0.95);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+    }
+
+    .controls select {
+      padding: 0.5rem 1rem;
+      font-family: inherit;
+      font-size: 0.9rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      cursor: pointer;
+      min-width: 220px;
+    }
+
+    .controls button {
+      padding: 0.5rem 1.25rem;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 600;
+      background: var(--accent);
+      border: none;
+      border-radius: 8px;
+      color: #0a0a0f;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .controls button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(0, 212, 170, 0.4);
+    }
+
+    #canvas-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+    }
+
+    #anim-canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .anim-layer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+      pointer-events: none;
+    }
+
+    .star-wars-text {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      perspective: 300px;
+      z-index: 2;
+      pointer-events: none;
+    }
+
+    .star-wars-text div {
+      position: absolute;
+      width: 80%;
+      max-width: 600px;
+      font-family: 'Cinzel', serif;
+      font-size: clamp(1rem, 2.5vw, 1.5rem);
+      text-align: justify;
+      color: #ffd700;
+      transform: rotateX(25deg);
+      animation: starwars-scroll 30s linear forwards;
+    }
+
+    @keyframes starwars-scroll {
+      0% { transform: rotateX(25deg) translateY(100%); opacity: 0; }
+      5% { opacity: 1; }
+      95% { opacity: 1; }
+      100% { transform: rotateX(25deg) translateY(-200%); opacity: 0; }
+    }
+
+    .hello-world {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-family: 'Cinzel', serif;
+      font-size: clamp(2rem, 8vw, 5rem);
+      font-weight: 700;
+      color: #ffd700;
+      text-shadow: 0 0 30px rgba(255, 215, 0, 0.5);
+      letter-spacing: 0.1em;
+      z-index: 2;
+    }
+
+    .hello-world .cursor {
+      display: inline-block;
+      width: 4px;
+      height: 1em;
+      background: #ffd700;
+      animation: blink 0.8s infinite;
+      vertical-align: text-bottom;
+    }
+
+    @keyframes blink {
+      0%, 50% { opacity: 1; }
+      51%, 100% { opacity: 0; }
+    }
+
+    .load-excavator {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .load-excavator canvas {
+      display: block;
+      max-width: 100%;
+      max-height: 70vh;
+    }
+
+    .load-percent {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2;
+      text-align: center;
+      width: 80%;
+      max-width: 400px;
+    }
+
+    .load-percent .bar {
+      height: 24px;
+      background: var(--surface);
+      border-radius: 12px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+      border: 1px solid var(--border);
+    }
+
+    .load-percent .fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), #00a88a);
+      border-radius: 12px;
+      transition: width 0.1s linear;
+    }
+
+    .load-percent .pct {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .petal {
+      position: absolute;
+      pointer-events: none;
+      filter: drop-shadow(0 1px 2px rgba(0,0,0,0.1));
+    }
+
+    .mobius-container {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+    }
+  </style>
+</head>
+<body>
+  <div class="controls">
+    <select id="anim-select">
+      <option value="1">1 - Nuvens no céu</option>
+      <option value="2">2 - Abertura Star Wars</option>
+      <option value="3">3 - Velocidade da luz (Star Trek)</option>
+      <option value="4">4 - Pétalas de sakura</option>
+      <option value="5">5 - Chuva em Osaka</option>
+      <option value="6">6 - Letras Matrix</option>
+      <option value="7">7 - Load em círculo</option>
+      <option value="8">8 - Load com porcentagem</option>
+      <option value="9">9 - Hello World</option>
+      <option value="10">10 - Telas flutuantes</option>
+    </select>
+    <button id="btn-exec">Executar</button>
+  </div>
+
+  <div id="canvas-container"></div>
+
+  <script>
+    const body = document.body;
+    const container = document.getElementById('canvas-container');
+    let animId = null;
+    let intervalId = null;
+
+    const backgrounds = {
+      1: 'linear-gradient(180deg, #87CEEB 0%, #B0E0E6 50%, #E0F4FF 100%)',
+      2: 'radial-gradient(2px 2px at 20px 30px, #fff, transparent), radial-gradient(2px 2px at 40px 70px, rgba(255,255,255,0.8), transparent), radial-gradient(2px 2px at 50px 160px, #fff, transparent), radial-gradient(2px 2px at 90px 40px, rgba(255,255,255,0.6), transparent), radial-gradient(2px 2px at 130px 80px, #fff, transparent), #000',
+      3: '#000',
+      4: 'url(https://images.unsplash.com/photo-1522383225653-ed111181a951?w=1920) center/cover',
+      5: 'url(https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=1920) center/cover',
+      6: '#000',
+      7: 'linear-gradient(135deg, #1a1a2e 0%, #16213e 100%)',
+      8: 'linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%)',
+      9: 'radial-gradient(ellipse at center, #1a1a2e 0%, #0a0a12 100%)',
+      10: '#0a0a12'
+    };
+
+    function stopAll() {
+      if (animId) cancelAnimationFrame(animId);
+      if (intervalId) clearInterval(intervalId);
+      container.innerHTML = '';
+      document.querySelectorAll('.anim-layer, .star-wars-text, .hello-world, .load-people, .load-percent, .load-excavator, .mobius-container').forEach(el => el.remove());
+    }
+
+    function anim1() {
+      const c = document.createElement('canvas');
+      c.id = 'anim-canvas';
+      c.width = window.innerWidth;
+      c.height = window.innerHeight;
+      container.appendChild(c);
+      const ctx = c.getContext('2d');
+
+      const clouds = [];
+      for (let i = 0; i < 8; i++) {
+        clouds.push({
+          x: Math.random() * c.width * 1.5 - c.width * 0.2,
+          y: c.height * (0.1 + Math.random() * 0.5),
+          size: 40 + Math.random() * 60,
+          speed: 0.3 + Math.random() * 0.5,
+          wobble: Math.random() * Math.PI * 2
+        });
+      }
+
+      function drawCloud(x, y, size, wobble) {
+        const s = size;
+        ctx.fillStyle = 'rgba(255,255,255,0.9)';
+        ctx.beginPath();
+        ctx.arc(x, y, s * 0.5, 0, Math.PI * 2);
+        ctx.arc(x + s * 0.6, y - s * 0.1 + Math.sin(wobble) * 5, s * 0.45, 0, Math.PI * 2);
+        ctx.arc(x + s * 1.1, y + s * 0.05, s * 0.55, 0, Math.PI * 2);
+        ctx.arc(x + s * 0.5, y + s * 0.3 + Math.cos(wobble * 1.2) * 4, s * 0.4, 0, Math.PI * 2);
+        ctx.arc(x + s * 0.2, y + s * 0.15, s * 0.35, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      function loop() {
+        const grad = ctx.createLinearGradient(0, 0, 0, c.height);
+        grad.addColorStop(0, '#87CEEB');
+        grad.addColorStop(0.5, '#B0E0E6');
+        grad.addColorStop(1, '#E0F4FF');
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, c.width, c.height);
+
+        clouds.forEach(cl => {
+          cl.x += cl.speed;
+          cl.wobble += 0.02;
+          if (cl.x > c.width + cl.size * 2) cl.x = -cl.size * 2;
+          drawCloud(cl.x, cl.y, cl.size, cl.wobble);
+        });
+
+        animId = requestAnimationFrame(loop);
+      }
+      loop();
+    }
+
+    function anim2() {
+      const div = document.createElement('div');
+      div.className = 'star-wars-text';
+      div.innerHTML = `
+        <div>
+          <h2 style="text-align:center;margin-bottom:1.5rem;">Episode IV<br>A NEW HOPE</h2>
+          <p>É um período de guerra civil. Naves rebeldes, atacando a partir de uma base oculta, obtiveram sua primeira vitória contra o malvado Império Galáctico.</p>
+          <p style="margin-top:1rem;">Durante a batalha, espiões rebeldes conseguiram roubar os planos secretos da arma definitiva do Império, a ESTRELA DA MORTE, uma estação espacial blindada com poder suficiente para destruir um planeta inteiro.</p>
+          <p style="margin-top:1rem;">Perseguida pelos sinistros agentes do Império, a princesa Leia voa para casa a bordo de sua nave estelar, guardando os planos roubados que podem salvar seu povo e restaurar a liberdade na galáxia...</p>
+        </div>
+      `;
+      document.body.appendChild(div);
+      setTimeout(() => div.remove(), 31000);
+    }
+
+    function anim3() {
+      const c = document.createElement('canvas');
+      c.id = 'anim-canvas';
+      c.width = window.innerWidth;
+      c.height = window.innerHeight;
+      container.appendChild(c);
+      const ctx = c.getContext('2d');
+
+      const lines = [];
+      const centerX = c.width / 2;
+      const centerY = c.height / 2;
+      const maxDist = Math.max(c.width, c.height) * 0.7;
+      for (let i = 0; i < 80; i++) {
+        const angle = (i / 80) * Math.PI * 2 + Date.now() * 0.0001;
+        lines.push({
+          angle,
+          dist: Math.random() * maxDist,
+          speed: 2 + Math.random() * 4
+        });
+      }
+
+      function loop() {
+        ctx.fillStyle = 'rgba(0,0,0,0.12)';
+        ctx.fillRect(0, 0, c.width, c.height);
+        lines.forEach(l => {
+          l.dist += l.speed;
+          if (l.dist > maxDist) l.dist = 0;
+          const x = centerX + Math.cos(l.angle) * l.dist;
+          const y = centerY + Math.sin(l.angle) * l.dist;
+          const scale = l.dist / maxDist;
+          ctx.strokeStyle = `rgba(255,255,255,${0.4 + scale * 0.6})`;
+          ctx.lineWidth = 2 + scale * 3;
+          ctx.beginPath();
+          ctx.moveTo(centerX, centerY);
+          ctx.lineTo(x, y);
+          ctx.stroke();
+        });
+        animId = requestAnimationFrame(loop);
+      }
+      loop();
+    }
+
+    function anim4() {
+      const layer = document.createElement('div');
+      layer.className = 'anim-layer';
+      layer.id = 'petals-layer';
+      container.appendChild(layer);
+
+      const petalSvgs = [
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 50 45"><defs><linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ffcce0"/><stop offset="50%" stop-color="#ffb7c5"/><stop offset="100%" stop-color="#ffe4ec"/></linearGradient></defs><path fill="url(#g1)" opacity="0.95" d="M25 1c-8 6-14 18-12 32 2 8 6 10 12 12 4-4 10-8 12-16 2-8 0-18-2-28z"/></svg>',
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 42"><defs><linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#ffb7c5"/><stop offset="100%" stop-color="#ffeef3"/></linearGradient></defs><path fill="url(#g2)" opacity="0.9" d="M24 0c-7 5-12 16-10 28 1 7 5 10 10 11 3-3 8-7 10-14 2-7 0-16-2-25z"/></svg>',
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 44 40"><defs><linearGradient id="g3" x1="0%" y1="0%" x2="50%" y2="100%"><stop offset="0%" stop-color="#ffe4ec"/><stop offset="100%" stop-color="#ff9aab"/></linearGradient></defs><path fill="url(#g3)" opacity="0.92" d="M22 0c-6 5-11 14-9 25 1 6 4 9 9 10 3-3 7-6 9-12 2-6 0-14-2-23z"/></svg>',
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 36"><defs><linearGradient id="g4" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ffd4e0"/><stop offset="100%" stop-color="#ffb7c5"/></linearGradient></defs><path fill="url(#g4)" opacity="0.88" d="M20 0c-5 4-10 12-8 22 1 5 3 8 8 9 2-2 6-5 8-10 2-5 0-12-2-21z"/></svg>',
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 36 32"><defs><linearGradient id="g5" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#ffcce0"/><stop offset="100%" stop-color="#fff0f5"/></linearGradient></defs><path fill="url(#g5)" opacity="0.85" d="M18 0c-4 4-8 11-7 19 1 4 3 7 7 8 2-2 5-5 7-9 2-4 0-10-2-18z"/></svg>'
+      ].map(s => 'data:image/svg+xml,' + encodeURIComponent(s));
+
+      const petals = [];
+      const start = performance.now();
+      for (let i = 0; i < 55; i++) {
+        const p = document.createElement('img');
+        p.src = petalSvgs[i % petalSvgs.length];
+        p.className = 'petal';
+        petals.push({
+          el: p,
+          x: Math.random() * (window.innerWidth + 100) - 50,
+          y: Math.random() * window.innerHeight - 100,
+          vx: (Math.random() - 0.5) * 0.8,
+          vy: 0.3 + Math.random() * 0.9,
+          rot: Math.random() * 360,
+          rotSpeed: (Math.random() - 0.5) * 4,
+          size: 12 + Math.random() * 28
+        });
+        p.style.cssText = `width:${petals[i].size}px;position:absolute;left:0;top:0`;
+        layer.appendChild(p);
+      }
+
+      function loop(now) {
+        const layerEl = document.getElementById('petals-layer');
+        if (!layerEl) return;
+        petals.forEach(pt => {
+          pt.x += pt.vx;
+          pt.y += pt.vy;
+          pt.rot += pt.rotSpeed;
+          if (pt.y > window.innerHeight + 50) {
+            pt.y = -30;
+            pt.x = Math.random() * (window.innerWidth + 100) - 50;
+          }
+          if (pt.x < -60) pt.x = window.innerWidth + 60;
+          if (pt.x > window.innerWidth + 60) pt.x = -60;
+          pt.el.style.transform = `translate(${pt.x}px,${pt.y}px) rotate(${pt.rot}deg)`;
+        });
+        animId = requestAnimationFrame(loop);
+      }
+      animId = requestAnimationFrame(loop);
+    }
+
+    function anim5() {
+      const c = document.createElement('canvas');
+      c.id = 'anim-canvas';
+      c.width = window.innerWidth;
+      c.height = window.innerHeight;
+      container.appendChild(c);
+      const ctx = c.getContext('2d');
+
+      const drops = [];
+      for (let i = 0; i < 400; i++) {
+        const isHeavy = Math.random() < 0.15;
+        drops.push({
+          x: Math.random() * c.width * 1.2 - c.width * 0.1,
+          y: Math.random() * c.height,
+          len: isHeavy ? 18 + Math.random() * 22 : 8 + Math.random() * 18,
+          speed: isHeavy ? 10 + Math.random() * 12 : 5 + Math.random() * 10,
+          thick: isHeavy ? 1 : 0.5,
+          opacity: isHeavy ? 0.4 + Math.random() * 0.2 : 0.2 + Math.random() * 0.15,
+          slant: (Math.random() - 0.5) * 6
+        });
+      }
+
+      const droplets = [];
+      for (let i = 0; i < 18; i++) {
+        droplets.push({
+          x: Math.random() * c.width,
+          y: Math.random() * c.height,
+          r: 2 + Math.random() * 6,
+          opacity: 0.1 + Math.random() * 0.12,
+          drip: Math.random() < 0.25,
+          dripY: 0,
+          dripSpeed: 0.15 + Math.random() * 0.2
+        });
+      }
+
+      function loop() {
+        ctx.clearRect(0, 0, c.width, c.height);
+        drops.forEach(d => {
+          ctx.strokeStyle = `rgba(255,255,255,${d.opacity})`;
+          ctx.lineWidth = d.thick;
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.moveTo(d.x, d.y);
+          ctx.lineTo(d.x + d.slant, d.y + d.len);
+          ctx.stroke();
+          d.y += d.speed;
+          d.x += d.slant * 0.3;
+          if (d.y > c.height + 50) {
+            d.y = -d.len - 20;
+            d.x = Math.random() * c.width * 1.2 - c.width * 0.1;
+          }
+          if (d.x < -50 || d.x > c.width + 50) d.x = Math.random() * c.width;
+        });
+
+        droplets.forEach(g => {
+          const grad = ctx.createRadialGradient(g.x - g.r * 0.3, g.y - g.r * 0.3, 0, g.x, g.y, g.r * 1.5);
+          grad.addColorStop(0, `rgba(255,255,255,${g.opacity * 0.8})`);
+          grad.addColorStop(0.5, `rgba(200,220,255,${g.opacity * 0.4})`);
+          grad.addColorStop(1, 'rgba(255,255,255,0)');
+          ctx.fillStyle = grad;
+          ctx.beginPath();
+          ctx.ellipse(g.x, g.y, g.r, g.r * 1.2, 0, 0, Math.PI * 2);
+          ctx.fill();
+          if (g.drip) {
+            g.dripY += g.dripSpeed;
+            ctx.strokeStyle = `rgba(255,255,255,${g.opacity * 0.5})`;
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(g.x, g.y + g.r);
+            ctx.lineTo(g.x, g.y + g.r + Math.min(g.dripY, 30));
+            ctx.stroke();
+            if (g.dripY > 35) g.dripY = 0;
+          }
+        });
+
+        animId = requestAnimationFrame(loop);
+      }
+      loop();
+    }
+
+    function anim6() {
+      const c = document.createElement('canvas');
+      c.id = 'anim-canvas';
+      c.width = window.innerWidth;
+      c.height = window.innerHeight;
+      container.appendChild(c);
+      const ctx = c.getContext('2d');
+
+      const chars = 'アイウエオカキクケコサシスセソタチツテトナニヌネノハヒフヘホマミムメモヤユヨラリルレロワヲン0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz+*><:$¥?!@#%&';
+      const charSize = 24;
+      const cols = Math.min(55, Math.floor(c.width / (charSize * 1.2)));
+      const fallSpeed = 1.5;
+      const trailLength = 18;
+      const pixelsPerNewChar = charSize;
+
+      function createColumn() {
+        return {
+          x: 0,
+          y: -charSize * 2 - Math.random() * c.height * 1.5,
+          chars: [],
+          pixelsSinceChar: Math.random() * pixelsPerNewChar,
+          nextChange: []
+        };
+      }
+
+      const columns = [];
+      const colSpacing = c.width / (cols + 1);
+      for (let i = 0; i < cols; i++) {
+        const col = createColumn();
+        col.x = (i + 1) * colSpacing;
+        columns.push(col);
+      }
+
+      function loop() {
+        ctx.fillStyle = 'rgba(0,0,0,0.05)';
+        ctx.fillRect(0, 0, c.width, c.height);
+        ctx.font = `bold ${charSize}px "JetBrains Mono", "Consolas", "Courier New", monospace`;
+        ctx.textAlign = 'center';
+
+        columns.forEach((col) => {
+          col.y += fallSpeed;
+          col.pixelsSinceChar += fallSpeed;
+
+          if (col.pixelsSinceChar >= pixelsPerNewChar) {
+            col.pixelsSinceChar -= pixelsPerNewChar;
+            col.chars.unshift(chars[Math.floor(Math.random() * chars.length)]);
+            if (col.chars.length > trailLength) col.chars.pop();
+            col.nextChange.unshift(90 + Math.floor(Math.random() * 220));
+            if (col.nextChange.length > trailLength) col.nextChange.pop();
+          }
+
+          col.nextChange.forEach((_, i) => {
+            col.nextChange[i]--;
+            if (col.nextChange[i] <= 0 && Math.random() < 0.12) {
+              col.chars[i] = chars[Math.floor(Math.random() * chars.length)];
+              col.nextChange[i] = 120 + Math.floor(Math.random() * 250);
+            } else if (col.nextChange[i] <= 0) {
+              col.nextChange[i] = 60 + Math.floor(Math.random() * 140);
+            }
+          });
+
+          if (col.y > c.height + charSize * trailLength) {
+            col.y = -charSize * 3 - Math.random() * c.height;
+            col.chars = [];
+            col.nextChange = [];
+            col.pixelsSinceChar = Math.random() * pixelsPerNewChar;
+          }
+
+          col.chars.forEach((ch, i) => {
+            const drawY = col.y - i * charSize;
+            if (drawY < -charSize || drawY > c.height + charSize) return;
+            const fade = i === 0 ? 1 : Math.max(0.5, 1 - (i / trailLength) * 0.5);
+            const alpha = Math.max(0.4, fade * (1 - (col.y / c.height) * 0.2));
+            ctx.fillStyle = `rgba(0,255,102,${alpha})`;
+            if (i === 0) {
+              ctx.shadowColor = '#00ff66';
+              ctx.shadowBlur = 14;
+            }
+            ctx.fillText(ch, col.x, drawY);
+            ctx.shadowBlur = 0;
+          });
+        });
+
+        animId = requestAnimationFrame(loop);
+      }
+      loop();
+    }
+
+    function anim7() {
+      const wrap = document.createElement('div');
+      wrap.className = 'load-excavator';
+      const c = document.createElement('canvas');
+      c.width = 520;
+      c.height = 360;
+      wrap.appendChild(c);
+      document.body.appendChild(wrap);
+
+      const ctx = c.getContext('2d');
+      let t = 0;
+      const cx = c.width / 2;
+      const cy = c.height / 2 - 15;
+
+      function loop() {
+        const el = document.querySelector('.load-excavator');
+        if (!el) return;
+
+        t += 0.02;
+        ctx.fillStyle = '#1a1a2e';
+        ctx.fillRect(0, 0, c.width, c.height);
+
+        const pulse = 0.7 + Math.sin(t * 3) * 0.15;
+        const glow = ctx.createRadialGradient(cx, cy, 0, cx, cy, 120);
+        glow.addColorStop(0, `rgba(0,212,170,${0.15 * pulse})`);
+        glow.addColorStop(0.5, 'rgba(0,212,170,0.03)');
+        glow.addColorStop(1, 'transparent');
+        ctx.fillStyle = glow;
+        ctx.fillRect(0, 0, c.width, c.height);
+
+        ctx.strokeStyle = '#1a2e2a';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 85, 0, Math.PI * 2);
+        ctx.stroke();
+
+        const grad = ctx.createLinearGradient(cx - 80, cy, cx + 80, cy);
+        grad.addColorStop(0, '#00d4aa');
+        grad.addColorStop(0.5, '#00ffcc');
+        grad.addColorStop(1, '#00d4aa');
+        ctx.strokeStyle = grad;
+        ctx.lineWidth = 4;
+        ctx.lineCap = 'round';
+        ctx.beginPath();
+        ctx.arc(cx, cy, 85, t, t + Math.PI * 1.8);
+        ctx.stroke();
+
+        ctx.strokeStyle = 'rgba(0,212,170,0.4)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 70, -t * 1.3, -t * 1.3 + Math.PI * 0.6);
+        ctx.stroke();
+
+        ctx.strokeStyle = 'rgba(0,212,170,0.3)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 55, t * 0.8, t * 0.8 + Math.PI * 0.4);
+        ctx.stroke();
+
+        for (let i = 0; i < 8; i++) {
+          const a = t + (i / 8) * Math.PI * 2;
+          const x = cx + Math.cos(a) * 95;
+          const y = cy + Math.sin(a) * 95;
+          const size = 3 + Math.sin(t * 4 + i) * 1;
+          ctx.fillStyle = `rgba(0,212,170,${0.5 + Math.sin(t * 5 + i) * 0.3})`;
+          ctx.beginPath();
+          ctx.arc(x, y, size, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        const innerPct = (Math.sin(t * 0.5) * 0.5 + 0.5) * 100;
+        ctx.fillStyle = '#00d4aa';
+        ctx.font = 'bold 24px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(Math.floor(innerPct) + '%', cx, cy + 8);
+
+        const dots = '.'.repeat(Math.floor(t * 2) % 4);
+        ctx.fillStyle = 'rgba(0,212,170,0.9)';
+        ctx.font = '16px sans-serif';
+        ctx.fillText('Carregando' + dots, cx, cy + 95);
+
+        animId = requestAnimationFrame(loop);
+      }
+      loop();
+    }
+
+    function anim8() {
+      const div = document.createElement('div');
+      div.className = 'load-percent';
+      div.innerHTML = `
+        <div class="bar"><div class="fill" id="pct-fill" style="width:0%"></div></div>
+        <div class="pct" id="pct-num">0%</div>
+      `;
+      document.body.appendChild(div);
+      let pct = 0;
+      intervalId = setInterval(() => {
+        pct += Math.random() * 8 + 2;
+        if (pct >= 100) {
+          pct = 100;
+          clearInterval(intervalId);
+        }
+        document.getElementById('pct-fill').style.width = pct + '%';
+        document.getElementById('pct-num').textContent = Math.min(100, Math.floor(pct)) + '%';
+      }, 150);
+    }
+
+    function anim9() {
+      const div = document.createElement('div');
+      div.className = 'hello-world';
+      div.id = 'hw-container';
+      document.body.appendChild(div);
+
+      const text = 'Hello World';
+      let i = 0;
+      const type = () => {
+        if (i <= text.length) {
+          div.innerHTML = text.slice(0, i) + '<span class="cursor"></span>';
+          i++;
+          setTimeout(type, 150);
+        } else {
+          div.innerHTML = text;
+        }
+      };
+      type();
+    }
+
+    function anim10() {
+      const c = document.createElement('canvas');
+      c.id = 'anim-canvas';
+      c.width = window.innerWidth;
+      c.height = window.innerHeight;
+      container.appendChild(c);
+      const ctx = c.getContext('2d');
+
+      const centerX = c.width / 2;
+      const centerY = c.height / 2;
+      const maxDist = Math.max(c.width, c.height) * 0.65;
+      const imgSize = 320;
+      const baseW = 140;
+      const baseH = 95;
+
+      function createScreen() {
+        const seed = Math.floor(Math.random() * 10000);
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.src = `https://picsum.photos/seed/${seed}/${imgSize}/${Math.round(imgSize * baseH / baseW)}`;
+        return {
+          angle: Math.random() * Math.PI * 2,
+          dist: 0,
+          speed: 0.5 + Math.random() * 1,
+          img: img,
+          w: baseW,
+          h: baseH,
+          scaleRand: 0.7 + Math.random() * 0.8
+        };
+      }
+
+      const screens = [];
+      for (let i = 0; i < 22; i++) {
+        screens.push(createScreen());
+      }
+
+      function loop() {
+        ctx.fillStyle = '#0a0a12';
+        ctx.fillRect(0, 0, c.width, c.height);
+
+        screens.forEach((s) => {
+          s.dist += s.speed;
+          if (s.dist > maxDist) {
+            s.dist = 0;
+            s.angle = Math.random() * Math.PI * 2;
+            s.scaleRand = 0.7 + Math.random() * 0.8;
+          }
+
+          const scale = (0.06 + (s.dist / maxDist) * 2.4) * s.scaleRand;
+          const w = s.w * scale;
+          const h = s.h * scale;
+          const x = centerX + Math.cos(s.angle) * s.dist;
+          const y = centerY + Math.sin(s.angle) * s.dist;
+          const alpha = 0.5 + (s.dist / maxDist) * 0.5;
+
+          ctx.save();
+          ctx.translate(x, y);
+          ctx.globalAlpha = alpha;
+
+          if (s.img.complete && s.img.naturalWidth) {
+            ctx.drawImage(s.img, -w / 2, -h / 2, w, h);
+          } else {
+            ctx.fillStyle = '#1a1a2e';
+            ctx.fillRect(-w / 2, -h / 2, w, h);
+          }
+
+          ctx.strokeStyle = `rgba(255,255,255,${0.3 + (s.dist / maxDist) * 0.4})`;
+          ctx.lineWidth = 1 + (s.dist / maxDist) * 2;
+          ctx.strokeRect(-w / 2, -h / 2, w, h);
+
+          ctx.restore();
+        });
+
+        animId = requestAnimationFrame(loop);
+      }
+      loop();
+    }
+
+    document.getElementById('btn-exec').addEventListener('click', () => {
+      const val = document.getElementById('anim-select').value;
+      stopAll();
+      body.style.background = backgrounds[val];
+      body.style.backgroundAttachment = (val == 1 || val == 4 || val == 5) ? 'fixed' : 'scroll';
+      const fns = { 1: anim1, 2: anim2, 3: anim3, 4: anim4, 5: anim5, 6: anim6, 7: anim7, 8: anim8, 9: anim9, 10: anim10 };
+      fns[val]();
+    });
+
+    window.addEventListener('resize', () => {
+      const canvas = document.getElementById('anim-canvas');
+      if (canvas && canvas.width !== window.innerWidth) {
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+      }
+    });
+  </script>
+</body>
+</html>
