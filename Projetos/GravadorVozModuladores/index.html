@@ -155,7 +155,7 @@
     /* Efeitos */
     .effects-grid {
       display: grid;
-      grid-template-columns: repeat(2, 1fr);
+      grid-template-columns: repeat(3, 1fr);
       gap: 0.75rem;
     }
 
@@ -283,19 +283,45 @@
       cursor: not-allowed;
     }
 
-    .back-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      color: var(--text-muted);
-      text-decoration: none;
-      font-size: 0.9rem;
-      margin-top: 1rem;
-      transition: color 0.2s;
+    .playback-buttons {
+      display: flex;
+      gap: 0.75rem;
     }
 
-    .back-link:hover {
-      color: var(--accent);
+    .playback-buttons .play-btn {
+      flex: 1;
+    }
+
+    .cancel-btn {
+      padding: 1rem 1.25rem;
+      border-radius: 12px;
+      border: 1px solid var(--record);
+      background: transparent;
+      color: var(--record-active);
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .cancel-btn:hover {
+      background: rgba(239, 68, 68, 0.15);
+      border-color: var(--record-active);
+    }
+
+    .effect-btn:disabled,
+    .effect-btn.disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      pointer-events: none;
+    }
+
+    .playback-controls select:disabled,
+    .playback-controls input:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
     }
 
     /* Gráfico de modulação */
@@ -332,7 +358,14 @@
 
     @media (max-width: 500px) {
       .effects-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(3, 1fr);
+      }
+      .effect-btn {
+        padding: 0.75rem 0.5rem;
+        font-size: 0.85rem;
+      }
+      .effect-btn .icon {
+        font-size: 1.25rem;
       }
     }
   </style>
@@ -353,14 +386,8 @@
     </div>
 
     <div class="section viz-section">
-      <div class="section-title">Gráficos de modulação</div>
+      <div class="section-title">Gráfico de modulação</div>
       <div class="viz-grid">
-        <div>
-          <div class="viz-wrapper">
-            <canvas id="vizCanvas"></canvas>
-          </div>
-          <p class="viz-label">Ondas (tempo)</p>
-        </div>
         <div>
           <div class="viz-wrapper">
             <canvas id="vizSpectrum"></canvas>
@@ -380,6 +407,9 @@
         <button class="effect-btn active" data-effect="distortion">
           <span class="icon">🔊</span> Distorção
         </button>
+        <button class="effect-btn" data-effect="overdrive">
+          <span class="icon">⚡</span> Overdrive
+        </button>
         <button class="effect-btn" data-effect="robot">
           <span class="icon">🤖</span> Robot
         </button>
@@ -389,14 +419,32 @@
         <button class="effect-btn" data-effect="pitch-down">
           <span class="icon">↘️</span> Grave
         </button>
+        <button class="effect-btn" data-effect="chipmunk">
+          <span class="icon">🐿️</span> Chipmunk
+        </button>
+        <button class="effect-btn" data-effect="monster">
+          <span class="icon">👹</span> Monstro
+        </button>
         <button class="effect-btn" data-effect="reverb">
           <span class="icon">🏛️</span> Reverb
+        </button>
+        <button class="effect-btn" data-effect="caverna">
+          <span class="icon">🕳️</span> Caverna
         </button>
         <button class="effect-btn" data-effect="echo">
           <span class="icon">🔁</span> Echo
         </button>
+        <button class="effect-btn" data-effect="flanger">
+          <span class="icon">🌀</span> Flanger
+        </button>
         <button class="effect-btn" data-effect="alien">
           <span class="icon">👽</span> Alienígena
+        </button>
+        <button class="effect-btn" data-effect="telefone">
+          <span class="icon">📞</span> Telefone
+        </button>
+        <button class="effect-btn" data-effect="megafone">
+          <span class="icon">📢</span> Megafone
         </button>
       </div>
     </div>
@@ -422,13 +470,16 @@
             <input type="range" id="volumeSlider" min="0" max="100" value="100">
           </div>
         </div>
-        <button id="playBtn" class="play-btn" disabled>
-          ▶ Reproduzir com efeito
-        </button>
+        <div class="playback-buttons">
+          <button id="playBtn" class="play-btn" disabled>
+            ▶ Reproduzir com efeito
+          </button>
+          <button id="cancelBtn" class="cancel-btn" style="display: none;">
+            ⏹ Cancelar
+          </button>
+        </div>
       </div>
     </div>
-
-    <a href="../../index.html" class="back-link">← Voltar aos projetos</a>
   </div>
 
   <script>
@@ -436,77 +487,48 @@
     const recordStatus = document.getElementById('recordStatus');
     const playBtn = document.getElementById('playBtn');
     const effectBtns = document.querySelectorAll('.effect-btn');
-    const vizCanvas = document.getElementById('vizCanvas');
     const vizSpectrum = document.getElementById('vizSpectrum');
     const vizLabel = document.getElementById('vizLabel');
     const speedSelect = document.getElementById('speedSelect');
     const speedVal = document.getElementById('speedVal');
     const volumeSlider = document.getElementById('volumeSlider');
     const volumeVal = document.getElementById('volumeVal');
+    const cancelBtn = document.getElementById('cancelBtn');
 
     let mediaRecorder = null;
     let audioChunks = [];
     let selectedEffect = 'distortion';
-    let vizAnimationId = null;
     let vizSpectrumAnimationId = null;
     let vizAudioContext = null;
     let vizAnalyser = null;
+    let currentSource = null;
+    let currentAudioContext = null;
+
+    function lockPlaybackControls() {
+      effectBtns.forEach(b => { b.disabled = true; b.classList.add('disabled'); });
+      speedSelect.disabled = true;
+      volumeSlider.disabled = true;
+      playBtn.disabled = true;
+      cancelBtn.style.display = 'block';
+    }
+
+    function unlockPlaybackControls() {
+      effectBtns.forEach(b => { b.disabled = false; b.classList.remove('disabled'); });
+      speedSelect.disabled = false;
+      volumeSlider.disabled = false;
+      playBtn.disabled = audioChunks.length === 0;
+      playBtn.textContent = '▶ Reproduzir com efeito';
+      cancelBtn.style.display = 'none';
+    }
 
     // Configurar canvas
     function setupCanvas() {
       const dpr = window.devicePixelRatio || 1;
-      [vizCanvas, vizSpectrum].forEach(canvas => {
-        const rect = canvas.getBoundingClientRect();
-        canvas.width = rect.width * dpr;
-        canvas.height = rect.height * dpr;
-        const ctx = canvas.getContext('2d');
-        ctx.scale(dpr, dpr);
-      });
-    }
-
-    // Desenhar forma de onda
-    function drawWaveform(analyser) {
-      if (!analyser) return;
-      const ctx = vizCanvas.getContext('2d');
-      const w = vizCanvas.width / (window.devicePixelRatio || 1);
-      const h = vizCanvas.height / (window.devicePixelRatio || 1);
-      const bufferLength = analyser.fftSize;
-      const dataArray = new Uint8Array(bufferLength);
-
-      function draw() {
-        vizAnimationId = requestAnimationFrame(draw);
-        analyser.getByteTimeDomainData(dataArray);
-
-        ctx.fillStyle = 'rgba(10, 10, 13, 0.4)';
-        ctx.fillRect(0, 0, w, h);
-
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = '#a855f7';
-        ctx.beginPath();
-
-        const sliceWidth = w / bufferLength;
-        let x = 0;
-
-        for (let i = 0; i < bufferLength; i++) {
-          const v = dataArray[i] / 128;
-          const y = (v * h) / 2 + h / 2;
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
-          x += sliceWidth;
-        }
-
-        ctx.lineTo(w, h / 2);
-        ctx.stroke();
-
-        // Linha central
-        ctx.strokeStyle = 'rgba(168, 85, 247, 0.2)';
-        ctx.lineWidth = 1;
-        ctx.beginPath();
-        ctx.moveTo(0, h / 2);
-        ctx.lineTo(w, h / 2);
-        ctx.stroke();
-      }
-      draw();
+      const rect = vizSpectrum.getBoundingClientRect();
+      vizSpectrum.width = rect.width * dpr;
+      vizSpectrum.height = rect.height * dpr;
+      const ctx = vizSpectrum.getContext('2d');
+      ctx.scale(dpr, dpr);
     }
 
     // Espectro de frequência — linha fixa no meio, barras para cima e para baixo
@@ -556,21 +578,15 @@
     }
 
     function stopViz() {
-      if (vizAnimationId) {
-        cancelAnimationFrame(vizAnimationId);
-        vizAnimationId = null;
-      }
       if (vizSpectrumAnimationId) {
         cancelAnimationFrame(vizSpectrumAnimationId);
         vizSpectrumAnimationId = null;
       }
-      [vizCanvas, vizSpectrum].forEach(canvas => {
-        const ctx = canvas.getContext('2d');
-        const w = canvas.width / (window.devicePixelRatio || 1);
-        const h = canvas.height / (window.devicePixelRatio || 1);
-        ctx.fillStyle = '#0a0a0d';
-        ctx.fillRect(0, 0, w, h);
-      });
+      const ctx = vizSpectrum.getContext('2d');
+      const w = vizSpectrum.width / (window.devicePixelRatio || 1);
+      const h = vizSpectrum.height / (window.devicePixelRatio || 1);
+      ctx.fillStyle = '#0a0a0d';
+      ctx.fillRect(0, 0, w, h);
     }
 
     // Seleção de efeito
@@ -606,7 +622,6 @@
         const source = vizAudioContext.createMediaStreamSource(stream);
         source.connect(vizAnalyser);
         vizLabel.textContent = 'Gravando...';
-        drawWaveform(vizAnalyser);
         drawSpectrum(vizAnalyser);
 
         mediaRecorder.ondataavailable = (e) => {
@@ -703,6 +718,13 @@
           lastNode = createDistortion();
           source.connect(lastNode);
           break;
+        case 'overdrive':
+          const overdrive = audioContext.createWaveShaper();
+          overdrive.curve = makeDistortionCurve(400);
+          overdrive.oversample = '4x';
+          lastNode = overdrive;
+          source.connect(lastNode);
+          break;
         case 'robot':
           lastNode = createDistortion();
           source.connect(lastNode);
@@ -718,6 +740,22 @@
         case 'pitch-down':
           effectPlaybackRate = 0.7;
           break;
+        case 'chipmunk':
+          effectPlaybackRate = 2;
+          break;
+        case 'monster':
+          const monsterDist = audioContext.createWaveShaper();
+          monsterDist.curve = makeDistortionCurve(300);
+          monsterDist.oversample = '4x';
+          const monsterFilter = audioContext.createBiquadFilter();
+          monsterFilter.type = 'lowpass';
+          monsterFilter.frequency.value = 500;
+          monsterFilter.Q.value = 1;
+          source.connect(monsterDist);
+          monsterDist.connect(monsterFilter);
+          lastNode = monsterFilter;
+          effectPlaybackRate = 0.75;
+          break;
         case 'alien':
           effectPlaybackRate = 0.85;
           const alienFilter = audioContext.createBiquadFilter();
@@ -729,6 +767,20 @@
           break;
         case 'reverb':
           lastNode = createReverb();
+          source.connect(lastNode);
+          break;
+        case 'caverna':
+          const cavernaConv = audioContext.createConvolver();
+          const cavernaLen = audioContext.sampleRate * 4;
+          const cavernaImpulse = audioContext.createBuffer(2, cavernaLen, audioContext.sampleRate);
+          const cavernaL = cavernaImpulse.getChannelData(0);
+          const cavernaR = cavernaImpulse.getChannelData(1);
+          for (let i = 0; i < cavernaLen; i++) {
+            cavernaL[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / cavernaLen, 1.5);
+            cavernaR[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / cavernaLen, 1.5);
+          }
+          cavernaConv.buffer = cavernaImpulse;
+          lastNode = cavernaConv;
           source.connect(lastNode);
           break;
         case 'echo':
@@ -745,11 +797,55 @@
           delay.connect(mix);
           lastNode = mix;
           break;
+        case 'flanger':
+          const flangerDelay = audioContext.createDelay(0.02);
+          flangerDelay.delayTime.value = 0.005;
+          const flangerLFO = audioContext.createOscillator();
+          flangerLFO.frequency.value = 0.5;
+          flangerLFO.type = 'sine';
+          const flangerGain = audioContext.createGain();
+          flangerGain.gain.value = 0.003;
+          flangerLFO.connect(flangerGain);
+          flangerGain.connect(flangerDelay.delayTime);
+          const flangerMix = audioContext.createGain();
+          flangerMix.gain.value = 0.5;
+          source.connect(flangerDelay);
+          source.connect(flangerMix);
+          flangerDelay.connect(flangerMix);
+          flangerLFO.start();
+          lastNode = flangerMix;
+          break;
+        case 'telefone':
+          const telFilter = audioContext.createBiquadFilter();
+          telFilter.type = 'bandpass';
+          telFilter.frequency.value = 1200;
+          telFilter.Q.value = 0.7;
+          const telFilter2 = audioContext.createBiquadFilter();
+          telFilter2.type = 'bandpass';
+          telFilter2.frequency.value = 2000;
+          telFilter2.Q.value = 0.5;
+          source.connect(telFilter);
+          telFilter.connect(telFilter2);
+          lastNode = telFilter2;
+          break;
+        case 'megafone':
+          const megaFilter = audioContext.createBiquadFilter();
+          megaFilter.type = 'bandpass';
+          megaFilter.frequency.value = 1800;
+          megaFilter.Q.value = 3;
+          const megaDist = audioContext.createWaveShaper();
+          megaDist.curve = makeDistortionCurve(80);
+          megaDist.oversample = '2x';
+          source.connect(megaFilter);
+          megaFilter.connect(megaDist);
+          lastNode = megaDist;
+          break;
         default:
           break;
       }
 
-      if (selectedEffect !== 'echo' && selectedEffect !== 'alien') {
+      const bypassEffects = ['echo', 'alien', 'monster', 'flanger', 'megafone'];
+      if (!bypassEffects.includes(selectedEffect)) {
         if (lastNode !== source) source.connect(lastNode);
       }
 
@@ -764,16 +860,21 @@
       analyser.connect(gainNode);
       gainNode.connect(audioContext.destination);
 
-      const effectLabels = { none: 'Normal', distortion: 'Distorção', robot: 'Robot', 'pitch-up': 'Agudo', 'pitch-down': 'Grave', reverb: 'Reverb', echo: 'Echo', alien: 'Alienígena' };
+      currentSource = source;
+      currentAudioContext = audioContext;
+
+      const effectLabels = { none: 'Normal', distortion: 'Distorção', overdrive: 'Overdrive', robot: 'Robot', 'pitch-up': 'Agudo', 'pitch-down': 'Grave', chipmunk: 'Chipmunk', monster: 'Monstro', reverb: 'Reverb', caverna: 'Caverna', echo: 'Echo', flanger: 'Flanger', alien: 'Alienígena', telefone: 'Telefone', megafone: 'Megafone' };
       vizLabel.textContent = 'Reproduzindo com efeito: ' + (effectLabels[selectedEffect] || selectedEffect);
-      drawWaveform(analyser);
       drawSpectrum(analyser);
 
       return new Promise((resolve) => {
         source.onended = () => {
+          currentSource = null;
+          currentAudioContext = null;
           stopViz();
           vizLabel.textContent = 'Aparece durante gravação ou reprodução';
           audioContext.close();
+          unlockPlaybackControls();
           resolve();
         };
         source.start(0);
@@ -784,10 +885,17 @@
     setupCanvas();
     window.addEventListener('resize', setupCanvas);
 
+    // Cancelar reprodução
+    cancelBtn.addEventListener('click', () => {
+      if (currentSource) {
+        currentSource.stop();
+      }
+    });
+
     // Reprodução
     playBtn.addEventListener('click', async () => {
       if (audioChunks.length === 0) return;
-      playBtn.disabled = true;
+      lockPlaybackControls();
       playBtn.textContent = '⏳ Processando...';
 
       const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
@@ -797,10 +905,8 @@
       } catch (err) {
         console.error(err);
         recordStatus.textContent = 'Erro ao reproduzir. Tente gravar novamente.';
+        unlockPlaybackControls();
       }
-
-      playBtn.disabled = false;
-      playBtn.textContent = '▶ Reproduzir com efeito';
     });
   </script>
 </body>

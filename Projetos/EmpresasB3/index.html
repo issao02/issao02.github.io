@@ -177,6 +177,29 @@
 
     .contador strong { color: var(--text); }
 
+    .btn-indicadores {
+      padding: 0.5rem 1rem;
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-indicadores:hover:not(:disabled) {
+      background: var(--accent);
+      color: var(--bg);
+    }
+
+    .btn-indicadores:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
     .table-wrap {
       background: var(--surface);
       border-radius: 12px;
@@ -427,33 +450,47 @@
 
   <div class="filtros">
     <div class="filtros-inner">
-      <div class="filtro-grupo">
-        <label for="filtroBusca">Buscar</label>
-        <input type="text" id="filtroBusca" placeholder="Ticker ou nome da empresa...">
-      </div>
-      <div class="filtro-grupo">
-        <label for="filtroSetor">Setor</label>
-        <select id="filtroSetor">
-          <option value="">Todos os setores</option>
-        </select>
-      </div>
-      <div class="filtro-grupo">
-        <label for="filtroTipo">Tipo</label>
-        <select id="filtroTipo">
-          <option value="">Todos</option>
-          <option value="stock">Ações</option>
-          <option value="fii">FIIs</option>
-          <option value="etf">ETFs</option>
-          <option value="bdr">BDRs</option>
-          <option value="unit">Units</option>
-        </select>
-      </div>
+        <div class="filtro-grupo">
+          <label for="filtroBusca">Buscar</label>
+          <input type="text" id="filtroBusca" placeholder="Ticker ou nome da empresa...">
+        </div>
+        <div class="filtro-grupo">
+          <label for="filtroSetor">Setor</label>
+          <select id="filtroSetor">
+            <option value="">Todos os setores</option>
+          </select>
+        </div>
+        <div class="filtro-grupo">
+          <label for="filtroTipo">Tipo</label>
+          <select id="filtroTipo">
+            <option value="">Todos</option>
+            <option value="stock">Ações</option>
+            <option value="fii">FIIs</option>
+            <option value="etf">ETFs</option>
+            <option value="bdr">BDRs</option>
+            <option value="unit">Units</option>
+          </select>
+        </div>
+        <div class="filtro-grupo">
+          <label for="filtroPL">P/L máx.</label>
+          <input type="number" id="filtroPL" placeholder="Ex: 15" min="0" step="0.1">
+        </div>
+        <div class="filtro-grupo">
+          <label for="filtroDivYield">Div.Yield mín. %</label>
+          <input type="number" id="filtroDivYield" placeholder="Ex: 5" min="0" step="0.1">
+        </div>
     </div>
   </div>
 
   <main class="container">
     <div class="toolbar">
       <p class="contador">Exibindo <strong id="filteredCount">0</strong> de <strong id="totalDisplay">0</strong> ativos</p>
+      <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+        <button type="button" class="btn-indicadores" id="btnIndicadores" title="Busca P/L, LPA e Div. Yield para os ativos exibidos">
+          📊 Carregar indicadores (P/L, LPA, Div.Yield)
+        </button>
+        <span id="indicadoresStatus" class="contador" style="font-size:0.85rem;"></span>
+      </div>
     </div>
 
     <div class="table-wrap">
@@ -466,14 +503,17 @@
               <th data-sort="close" class="numero">Preço</th>
               <th data-sort="change" class="numero">Variação %</th>
               <th data-sort="volume" class="numero">Volume</th>
-              <th data-sort="market_cap" class="numero">Valor de Mercado</th>
+              <th data-sort="market_cap" class="numero">Valor Mercado</th>
+              <th data-sort="priceEarnings" class="numero">P/L</th>
+              <th data-sort="earningsPerShare" class="numero">LPA</th>
+              <th data-sort="dividendYield" class="numero">Div.Yield</th>
               <th data-sort="sector">Setor</th>
               <th data-sort="type">Tipo</th>
             </tr>
           </thead>
           <tbody id="tbody">
             <tr>
-              <td colspan="8" class="loading">
+              <td colspan="11" class="loading">
                 <div class="loading-spinner"></div>
                 Carregando dados da B3...
               </td>
@@ -517,6 +557,8 @@
     const filtroBusca = document.getElementById('filtroBusca');
     const filtroSetor = document.getElementById('filtroSetor');
     const filtroTipo = document.getElementById('filtroTipo');
+    const filtroPL = document.getElementById('filtroPL');
+    const filtroDivYield = document.getElementById('filtroDivYield');
     const lastUpdate = document.getElementById('lastUpdate');
     const totalCount = document.getElementById('totalCount');
     const filteredCount = document.getElementById('filteredCount');
@@ -554,13 +596,34 @@
       return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
+    function fmtPL(v) {
+      if (v == null || v === '' || isNaN(v)) return '—';
+      const n = Number(v);
+      return n > 0 ? n.toFixed(2) : '—';
+    }
+
+    function fmtLPA(v) {
+      if (v == null || v === '' || isNaN(v)) return '—';
+      return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function fmtDivYield(v) {
+      if (v == null || v === '' || isNaN(v)) return '—';
+      return Number(v).toFixed(2) + '%';
+    }
+
+    const tipoDesc = { stock: 'Ação', fii: 'FII', etf: 'ETF', bdr: 'BDR', unit: 'Unit' };
+    function tipoDescritivo(t) {
+      return (t && tipoDesc[t.toLowerCase()]) || t || '—';
+    }
+
     function classeVariacao(v) {
       if (v == null || v === '' || isNaN(v)) return 'neutro';
       return Number(v) > 0 ? 'positivo' : Number(v) < 0 ? 'negativo' : 'neutro';
     }
 
     async function carregarDados() {
-      tbody.innerHTML = '<tr><td colspan="8" class="loading"><div class="loading-spinner"></div>Carregando dados da B3...</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="11" class="loading"><div class="loading-spinner"></div>Carregando dados da B3...</td></tr>';
       btnAtualizar.disabled = true;
 
       try {
@@ -579,7 +642,7 @@
         popularSetores();
         aplicarFiltros();
       } catch (e) {
-        tbody.innerHTML = '<tr><td colspan="8"><div class="erro"><p>Erro ao carregar dados</p><small>' + (e.message || 'Verifique sua conexão e tente novamente.') + '</small><br><small>Dados via brapi.dev — use token próprio para mais requisições.</small></div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="11"><div class="erro"><p>Erro ao carregar dados</p><small>' + (e.message || 'Verifique sua conexão e tente novamente.') + '</small><br><small>Dados via brapi.dev — use token próprio para mais requisições.</small></div></td></tr>';
       } finally {
         btnAtualizar.disabled = false;
       }
@@ -598,6 +661,8 @@
       const busca = (filtroBusca.value || '').trim().toLowerCase();
       const setor = (filtroSetor.value || '').trim();
       const tipo = (filtroTipo.value || '').trim();
+      const plMax = parseFloat(filtroPL?.value) || 0;
+      const divMin = parseFloat(filtroDivYield?.value) || 0;
 
       if (busca) {
         base = base.filter(d =>
@@ -607,6 +672,14 @@
       }
       if (setor) base = base.filter(d => (d.sector || '') === setor);
       if (tipo) base = base.filter(d => (d.type || '') === tipo);
+      if (plMax > 0) base = base.filter(d => {
+        const pl = Number(d.priceEarnings);
+        return !isNaN(pl) && pl > 0 && pl <= plMax;
+      });
+      if (divMin > 0) base = base.filter(d => {
+        const dy = Number(d.dividendYield);
+        return !isNaN(dy) && dy >= divMin;
+      });
 
       dadosFiltrados = base;
       ordenar();
@@ -632,6 +705,7 @@
     function renderizar() {
       filteredCount.textContent = dadosFiltrados.length;
       totalDisplay.textContent = dados.length;
+      if (btnIndicadores) btnIndicadores.disabled = dadosFiltrados.length === 0;
 
       document.querySelectorAll('th[data-sort]').forEach(th => {
         th.classList.remove('sorted-asc', 'sorted-desc');
@@ -639,7 +713,7 @@
       });
 
       if (!dadosFiltrados.length) {
-        tbody.innerHTML = '<tr><td colspan="8" class="loading">Nenhum ativo encontrado com os filtros aplicados.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="11" class="loading">Nenhum ativo encontrado com os filtros aplicados.</td></tr>';
         return;
       }
 
@@ -654,8 +728,11 @@
             <td class="numero ${changeClass}">${fmtPct(change)}</td>
             <td class="numero">${fmtNum(d.volume)}</td>
             <td class="numero">${fmtMoeda(d.market_cap)}</td>
+            <td class="numero">${fmtPL(d.priceEarnings)}</td>
+            <td class="numero">${fmtLPA(d.earningsPerShare)}</td>
+            <td class="numero">${fmtDivYield(d.dividendYield)}</td>
             <td>${d.sector || '—'}</td>
-            <td><span class="badge">${d.type || '—'}</span></td>
+            <td><span class="badge">${tipoDescritivo(d.type)}</span></td>
           </tr>
         `;
       }).join('');
@@ -675,10 +752,102 @@
       });
     });
 
+    const btnIndicadores = document.getElementById('btnIndicadores');
+    const indicadoresStatus = document.getElementById('indicadoresStatus');
+
+    async function fetchComCors(url) {
+      try {
+        const res = await fetch(url);
+        return res;
+      } catch (e) {
+        if (e.name === 'TypeError' && e.message.includes('fetch')) {
+          const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
+          return await fetch(proxyUrl);
+        }
+        throw e;
+      }
+    }
+
+    function mergeIndicadores(r, d) {
+      if (!d) return;
+      d.priceEarnings = r.priceEarnings;
+      d.earningsPerShare = r.earningsPerShare;
+      if (r.dividendsData?.cashDividends?.length && r.regularMarketPrice) {
+        const umAnoAtras = Date.now() - 365 * 24 * 60 * 60 * 1000;
+        const div12m = r.dividendsData.cashDividends
+          .filter(x => new Date(x.paymentDate).getTime() > umAnoAtras)
+          .reduce((s, x) => s + (Number(x.rate) || 0), 0);
+        d.dividendYield = div12m > 0 ? (div12m / r.regularMarketPrice) * 100 : null;
+      } else {
+        d.dividendYield = null;
+      }
+      if (r.priceToBook != null) d.priceToBook = r.priceToBook;
+      if (r.returnOnEquity != null) d.returnOnEquity = r.returnOnEquity;
+    }
+
+    async function carregarIndicadores() {
+      if (dadosFiltrados.length === 0) return;
+      btnIndicadores.disabled = true;
+      btnIndicadores.textContent = 'Carregando...';
+      if (indicadoresStatus) indicadoresStatus.textContent = 'Buscando P/L, LPA e Div.Yield...';
+      const tickers = dadosFiltrados.slice(0, 45).map(d => (d.stock || d.symbol || '')).filter(Boolean);
+      let totalOk = 0;
+      const BATCH = 5;
+      for (let i = 0; i < tickers.length; i += BATCH) {
+        const batch = tickers.slice(i, i + BATCH);
+        const url = `${BRAPI_QUOTE}${batch.map(t => encodeURIComponent(t)).join(',')}?token=${BRAPI_TOKEN}&fundamental=true&dividends=true`;
+        try {
+          const res = await fetchComCors(url);
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          const json = await res.json();
+          const results = json.results || [];
+          results.forEach(r => {
+            const symb = (r.symbol || '').trim();
+            const d = dados.find(x => (x.stock || x.symbol || '').trim() === symb);
+            if (d) {
+              mergeIndicadores(r, d);
+              totalOk++;
+            }
+          });
+        } catch (e) {
+          if (batch.length === 1) {
+            if (indicadoresStatus) indicadoresStatus.textContent = 'Erro em ' + batch[0] + '. Tente com token próprio.';
+          } else {
+            for (const t of batch) {
+              try {
+                const rUrl = `${BRAPI_QUOTE}${encodeURIComponent(t)}?token=${BRAPI_TOKEN}&fundamental=true&dividends=true`;
+                const rRes = await fetchComCors(rUrl);
+                if (!rRes.ok) continue;
+                const rJson = await rRes.json();
+                const r = rJson.results?.[0];
+                if (r) {
+                  const d = dados.find(x => (x.stock || x.symbol || '').trim() === (r.symbol || '').trim());
+                  if (d) { mergeIndicadores(r, d); totalOk++; }
+                }
+              } catch (_) {}
+            }
+          }
+        }
+        if (i + BATCH < tickers.length) await new Promise(r => setTimeout(r, 400));
+      }
+      aplicarFiltros();
+      btnIndicadores.disabled = false;
+      btnIndicadores.textContent = 'Carregar indicadores (P/L, LPA, Div.Yield)';
+      if (indicadoresStatus) {
+        indicadoresStatus.textContent = totalOk > 0 ? '✓ ' + totalOk + ' ativos com indicadores' : '⚠ Nenhum obtido. Use token brapi.dev para mais requisições.';
+        setTimeout(() => { if (indicadoresStatus) indicadoresStatus.textContent = ''; }, 8000);
+      }
+    }
+
     filtroBusca.addEventListener('input', aplicarFiltros);
     filtroSetor.addEventListener('change', aplicarFiltros);
     filtroTipo.addEventListener('change', aplicarFiltros);
+    filtroPL?.addEventListener('input', aplicarFiltros);
+    filtroPL?.addEventListener('change', aplicarFiltros);
+    filtroDivYield?.addEventListener('input', aplicarFiltros);
+    filtroDivYield?.addEventListener('change', aplicarFiltros);
     btnAtualizar.addEventListener('click', carregarDados);
+    btnIndicadores.addEventListener('click', carregarIndicadores);
 
     async function abrirDetalhes(ticker) {
       if (!ticker) return;
@@ -690,7 +859,7 @@
       modalBody.innerHTML = '<div class="modal-loading">Carregando detalhes...</div>';
 
       try {
-        const url = `${BRAPI_QUOTE}${encodeURIComponent(ticker)}?token=${BRAPI_TOKEN}`;
+        const url = `${BRAPI_QUOTE}${encodeURIComponent(ticker)}?token=${BRAPI_TOKEN}&fundamental=true&dividends=true`;
         const res = await fetch(url);
         if (!res.ok) throw new Error('Falha ao buscar detalhes');
 
@@ -698,9 +867,27 @@
         const r = json.results?.[0];
         if (!r) throw new Error('Sem dados');
 
+        let divYield = '—';
+        if (r.dividendsData?.cashDividends?.length && r.regularMarketPrice) {
+          const div12m = r.dividendsData.cashDividends
+            .filter(x => new Date(x.paymentDate) > new Date(Date.now() - 365*24*60*60*1000))
+            .reduce((s, x) => s + (x.rate || 0), 0);
+          if (div12m > 0) divYield = ((div12m / r.regularMarketPrice) * 100).toFixed(2) + '%';
+        }
+        const pl = r.priceEarnings != null ? r.priceEarnings.toFixed(2) : '—';
+        const lpa = r.earningsPerShare != null ? 'R$ ' + r.earningsPerShare.toFixed(2) : '—';
+        const pvp = (r.priceToBook ?? r.priceToBookValue) != null ? Number(r.priceToBook ?? r.priceToBookValue).toFixed(2) : '—';
+        const roeVal = r.returnOnEquity ?? r.roe;
+        const roe = roeVal != null ? (Math.abs(roeVal) <= 1 ? Number(roeVal) * 100 : Number(roeVal)).toFixed(2) + '%' : '—';
+
         modalBody.innerHTML = `
           <div class="modal-item"><label>Preço atual</label><span>${fmtPreco(r.regularMarketPrice)}</span></div>
           <div class="modal-item"><label>Variação %</label><span class="${classeVariacao(r.regularMarketChangePercent)}">${fmtPct(r.regularMarketChangePercent)}</span></div>
+          <div class="modal-item"><label>P/L</label><span>${pl}</span></div>
+          <div class="modal-item"><label>P/VP</label><span>${pvp}</span></div>
+          <div class="modal-item"><label>ROE</label><span>${roe}</span></div>
+          <div class="modal-item"><label>LPA</label><span>${lpa}</span></div>
+          <div class="modal-item"><label>Div. Yield</label><span>${divYield}</span></div>
           <div class="modal-item"><label>Preço abertura</label><span>${fmtPreco(r.regularMarketOpen)}</span></div>
           <div class="modal-item"><label>Fechamento anterior</label><span>${fmtPreco(r.regularMarketPreviousClose)}</span></div>
           <div class="modal-item"><label>Máxima do dia</label><span>${fmtPreco(r.regularMarketDayHigh)}</span></div>
@@ -708,8 +895,6 @@
           <div class="modal-item"><label>Faixa 52 semanas</label><span>${r.fiftyTwoWeekRange || '—'}</span></div>
           <div class="modal-item"><label>Volume</label><span>${fmtNum(r.regularMarketVolume)}</span></div>
           <div class="modal-item"><label>Valor de mercado</label><span>${fmtMoeda(r.marketCap)}</span></div>
-          <div class="modal-item"><label>P/L</label><span>${r.priceEarnings != null ? r.priceEarnings.toFixed(2) : '—'}</span></div>
-          <div class="modal-item"><label>LPA</label><span>${r.earningsPerShare != null ? 'R$ ' + r.earningsPerShare.toFixed(2) : '—'}</span></div>
           <div class="modal-item"><label>Moeda</label><span>${r.currency || 'BRL'}</span></div>
           <div class="modal-item"><label>Última atualização</label><span>${r.regularMarketTime ? new Date(r.regularMarketTime).toLocaleString('pt-BR') : '—'}</span></div>
         `;
