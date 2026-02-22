@@ -11,8 +11,8 @@
   <style>
     :root {
       --bg-dark: #0f0f12;
-      --bg-board-light: #e8e4d9;
-      --bg-board-dark: #7d8b6a;
+      --bg-board-light: #ffffff;
+      --bg-board-dark: #000000;
       --accent: #6366f1;
       --accent-hover: #818cf8;
       --text: #e4e4e7;
@@ -177,15 +177,19 @@
     }
 
     .piece.white {
-      -webkit-text-stroke: 1px #000;
+      color: #c4a574;
+      -webkit-text-stroke: 1.5px #c4a574;
       paint-order: stroke fill;
-      text-shadow: 1px 1px 0 #000, -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000;
+      text-shadow:
+        0 0 0 #c4a574,
+        0 0 1px #1a1a1a,
+        0 0 2px #1a1a1a;
     }
 
     .piece.black {
-      -webkit-text-stroke: 1px #fff;
+      color: #000000;
+      -webkit-text-stroke: 1px #e0e0e0;
       paint-order: stroke fill;
-      text-shadow: 1px 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff, -1px 1px 0 #fff;
     }
 
     .square.light {
@@ -229,8 +233,12 @@
       opacity: 0.9;
     }
 
-    .square.last-move {
-      background: rgba(251, 191, 36, 0.35) !important;
+    .square.last-move-from {
+      background: rgba(255, 0, 0, 0.5) !important;
+    }
+
+    .square.last-move-to {
+      background: rgba(0, 180, 0, 0.5) !important;
     }
 
     .controls {
@@ -371,6 +379,9 @@
     let lastMove = { from: null, to: null };
     let moveHistory = [];
     let pendingPromotion = null;
+    let gameSessionId = 0;
+    let aiDelayTimeout = null;
+    let aiThinkingTimeout = null;
 
     const board = document.getElementById('board');
     const statusEl = document.getElementById('status');
@@ -403,7 +414,7 @@
       squares.forEach(sq => {
         const squareName = sq.dataset.square;
         sq.textContent = '';
-        sq.classList.remove('selected', 'valid-move', 'valid-capture', 'last-move');
+        sq.classList.remove('selected', 'valid-move', 'valid-capture', 'last-move-from', 'last-move-to');
 
         const piece = game.get(squareName);
         if (piece) {
@@ -417,7 +428,8 @@
         if (squareName === selectedSquare) sq.classList.add('selected');
         if (validMoves.some(m => m.to === squareName && !game.get(squareName))) sq.classList.add('valid-move');
         if (validMoves.some(m => m.to === squareName && game.get(squareName))) sq.classList.add('valid-capture');
-        if (lastMove.from === squareName || lastMove.to === squareName) sq.classList.add('last-move');
+        if (lastMove.from === squareName) sq.classList.add('last-move-from');
+        if (lastMove.to === squareName) sq.classList.add('last-move-to');
       });
     }
 
@@ -468,6 +480,18 @@
       promotionModal.classList.add('show');
     }
 
+    function cancelAi() {
+      if (aiDelayTimeout) {
+        clearTimeout(aiDelayTimeout);
+        aiDelayTimeout = null;
+      }
+      if (aiThinkingTimeout) {
+        clearTimeout(aiThinkingTimeout);
+        aiThinkingTimeout = null;
+      }
+      statusEl.classList.remove('thinking');
+    }
+
     function completePromotion(piece) {
       if (!pendingPromotion) return;
       const { move } = pendingPromotion;
@@ -475,9 +499,11 @@
       pendingPromotion = null;
       promotionModal.classList.remove('show');
       moveHistory.push(game.fen());
+      document.getElementById('difficulty').disabled = true;
       updateBoard();
       updateStatus();
-      setTimeout(aiMove, 500);
+      cancelAi();
+      aiDelayTimeout = setTimeout(aiMove, 500);
     }
 
     function makeMove(from, to, promotion = null) {
@@ -487,12 +513,14 @@
         moveHistory.push(game.fen());
         selectedSquare = null;
         validMoves = [];
+        document.getElementById('difficulty').disabled = true;
         updateBoard();
         updateStatus();
         document.getElementById('undoBtn').disabled = moveHistory.length < 3;
 
         if (!game.game_over() && game.turn() === 'b') {
-          setTimeout(aiMove, 400);
+          cancelAi();
+          aiDelayTimeout = setTimeout(aiMove, 400);
         }
       }
     }
@@ -575,11 +603,24 @@
     }
 
     function aiMove() {
+      const session = gameSessionId;
+      aiDelayTimeout = null;
       statusEl.classList.add('thinking');
       statusEl.textContent = 'IA pensando...';
 
-      setTimeout(() => {
+      aiThinkingTimeout = setTimeout(() => {
+        aiThinkingTimeout = null;
+        if (session !== gameSessionId) {
+          statusEl.classList.remove('thinking');
+          updateStatus();
+          return;
+        }
         const move = getBestMove();
+        if (session !== gameSessionId) {
+          statusEl.classList.remove('thinking');
+          updateStatus();
+          return;
+        }
         if (move) {
           if (move.promotion) {
             move.promotion = 'q';
@@ -596,12 +637,15 @@
     }
 
     function newGame() {
+      gameSessionId++;
+      cancelAi();
       game.reset();
       selectedSquare = null;
       validMoves = [];
       lastMove = { from: null, to: null };
       moveHistory = [game.fen()];
       pendingPromotion = null;
+      document.getElementById('difficulty').disabled = false;
       document.getElementById('undoBtn').disabled = true;
       updateBoard();
       updateStatus();

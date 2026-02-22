@@ -7,6 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
   <style>
     :root {
       --bg: #0c0e14;
@@ -200,6 +201,49 @@
       cursor: not-allowed;
     }
 
+    .btn-colunas {
+      padding: 0.5rem 1rem;
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+    }
+    .btn-colunas:hover { color: var(--accent); border-color: var(--accent); }
+    .colunas-dropdown {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 0;
+      margin-top: 0.35rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.3);
+      padding: 0.5rem;
+      z-index: 100;
+      min-width: 180px;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+    .colunas-dropdown.ativo { display: block; }
+    .colunas-dropdown label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.4rem 0.6rem;
+      cursor: pointer;
+      border-radius: 6px;
+      font-size: 0.9rem;
+    }
+    .colunas-dropdown label:hover { background: var(--surface-hover); }
+    .colunas-dropdown input[type="checkbox"] { cursor: pointer; }
+    .colunas-dropdown label.colunas-todos { border-bottom: 1px solid var(--border); margin-bottom: 0.35rem; padding-bottom: 0.5rem; }
+
     .table-wrap {
       background: var(--surface);
       border-radius: 12px;
@@ -230,6 +274,23 @@
     }
 
     th:hover { color: var(--accent); }
+
+    th.draggable-col {
+      cursor: grab;
+      padding-right: 1.5rem;
+      position: relative;
+    }
+    th.draggable-col::before {
+      content: '⋮⋮';
+      position: absolute;
+      right: 0.5rem;
+      font-size: 0.7rem;
+      opacity: 0.5;
+      letter-spacing: -0.2em;
+    }
+    th.draggable-col:active { cursor: grabbing; }
+    th.dragging-col { opacity: 0.5; background: var(--accent); }
+    th.drag-over { border-left: 2px solid var(--accent); }
 
     th.sorted-asc::after { content: ' ↑'; color: var(--accent); }
     th.sorted-desc::after { content: ' ↓'; color: var(--accent); }
@@ -276,6 +337,8 @@
       background: rgba(0, 200, 83, 0.15);
       color: var(--accent);
     }
+    .badge-bluechip { background: rgba(33, 150, 243, 0.2); color: #2196f3; }
+    .badge-smallcap { background: rgba(255, 152, 0, 0.2); color: #ff9800; }
 
     .loading {
       text-align: center;
@@ -380,9 +443,42 @@
 
     .modal-body {
       padding: 1.5rem;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem 0.75rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      max-height: 85vh;
+      overflow-y: auto;
+    }
+    .modal-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem 0.75rem; }
+    .modal-chart-section {
+      grid-column: 1 / -1;
+      margin-top: 0.5rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+    }
+    .modal-chart-filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .modal-chart-filters button {
+      padding: 0.4rem 0.75rem;
+      background: transparent;
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .modal-chart-filters button:hover { color: var(--accent); border-color: var(--accent); }
+    .modal-chart-filters button.ativo { background: var(--accent); color: var(--bg); border-color: var(--accent); }
+    .modal-chart-wrap {
+      position: relative;
+      height: 280px;
+      width: 100%;
     }
 
     .modal-item {
@@ -423,7 +519,7 @@
     .link-voltar:hover { color: var(--accent-dim); }
 
     @media (max-width: 768px) {
-      .modal-body { grid-template-columns: 1fr; }
+      .modal-body .modal-grid { grid-template-columns: 1fr; }
       th, td { padding: 0.75rem 1rem; font-size: 0.85rem; }
     }
   </style>
@@ -441,6 +537,10 @@
       <div class="header-info">
         <span>Última atualização: <strong id="lastUpdate">—</strong></span>
         <span>Total: <strong id="totalCount">0</strong> ativos</span>
+        <span style="display:flex;align-items:center;gap:0.5rem;">
+          <label for="brapiToken" style="font-size:0.8rem;">Token brapi:</label>
+          <input type="password" id="brapiToken" placeholder="Token (brapi.dev)" style="width:140px;padding:0.35rem 0.5rem;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.8rem;" title="Token gratuito em brapi.dev — necessário para indicadores P/L, Div.Yield">
+        </span>
       </div>
       <button type="button" class="btn-atualizar" id="btnAtualizar" title="Buscar dados atualizados da brapi.dev">
         <span>↻</span> Atualizar dados
@@ -472,12 +572,32 @@
           </select>
         </div>
         <div class="filtro-grupo">
+          <label for="filtroCap">Cap</label>
+          <select id="filtroCap">
+            <option value="">Todos</option>
+            <option value="bluechip">Blue Chip</option>
+            <option value="smallcap">Small Cap</option>
+          </select>
+        </div>
+        <div class="filtro-grupo">
           <label for="filtroPL">P/L máx.</label>
           <input type="number" id="filtroPL" placeholder="Ex: 15" min="0" step="0.1">
         </div>
         <div class="filtro-grupo">
           <label for="filtroDivYield">Div.Yield mín. %</label>
           <input type="number" id="filtroDivYield" placeholder="Ex: 5" min="0" step="0.1">
+        </div>
+        <div class="filtro-grupo">
+          <label for="filtroPVP">P/VP máx.</label>
+          <input type="number" id="filtroPVP" placeholder="Ex: 2" min="0" step="0.1">
+        </div>
+        <div class="filtro-grupo">
+          <label for="filtroROE">ROE mín. %</label>
+          <input type="number" id="filtroROE" placeholder="Ex: 15" min="-100" step="0.5">
+        </div>
+        <div class="filtro-grupo">
+          <label for="filtroPayout">Payout máx. %</label>
+          <input type="number" id="filtroPayout" placeholder="Ex: 60" min="0" step="1">
         </div>
     </div>
   </div>
@@ -486,6 +606,14 @@
     <div class="toolbar">
       <p class="contador">Exibindo <strong id="filteredCount">0</strong> de <strong id="totalDisplay">0</strong> ativos</p>
       <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+        <div style="position:relative;">
+          <button type="button" class="btn-colunas" id="btnColunas" title="Mostrar ou ocultar colunas">
+            Colunas
+          </button>
+          <div class="colunas-dropdown" id="colunasDropdown">
+            <!-- preenchido via JS -->
+          </div>
+        </div>
         <button type="button" class="btn-indicadores" id="btnIndicadores" title="Busca P/L, LPA e Div. Yield para os ativos exibidos">
           📊 Carregar indicadores (P/L, LPA, Div.Yield)
         </button>
@@ -496,24 +624,10 @@
     <div class="table-wrap">
       <div class="table-scroll">
         <table>
-          <thead>
-            <tr>
-              <th data-sort="stock">Ticker</th>
-              <th data-sort="name">Empresa</th>
-              <th data-sort="close" class="numero">Preço</th>
-              <th data-sort="change" class="numero">Variação %</th>
-              <th data-sort="volume" class="numero">Volume</th>
-              <th data-sort="market_cap" class="numero">Valor Mercado</th>
-              <th data-sort="priceEarnings" class="numero">P/L</th>
-              <th data-sort="earningsPerShare" class="numero">LPA</th>
-              <th data-sort="dividendYield" class="numero">Div.Yield</th>
-              <th data-sort="sector">Setor</th>
-              <th data-sort="type">Tipo</th>
-            </tr>
-          </thead>
+          <thead><tr id="tableHeaderRow"></tr></thead>
           <tbody id="tbody">
             <tr>
-              <td colspan="11" class="loading">
+              <td colspan="14" class="loading">
                 <div class="loading-spinner"></div>
                 Carregando dados da B3...
               </td>
@@ -543,9 +657,14 @@
   </div>
 
   <script>
-    const BRAPI_TOKEN = 'demo';
     const BRAPI_LIST = 'https://brapi.dev/api/quote/list';
     const BRAPI_QUOTE = 'https://brapi.dev/api/quote/';
+    const TOKEN_KEY = 'empresasb3_brapi_token';
+
+    function getToken() {
+      const el = document.getElementById('brapiToken');
+      return (el?.value || localStorage.getItem(TOKEN_KEY) || 'demo').trim() || 'demo';
+    }
 
     let dados = [];
     let dadosFiltrados = [];
@@ -559,6 +678,10 @@
     const filtroTipo = document.getElementById('filtroTipo');
     const filtroPL = document.getElementById('filtroPL');
     const filtroDivYield = document.getElementById('filtroDivYield');
+    const filtroPVP = document.getElementById('filtroPVP');
+    const filtroROE = document.getElementById('filtroROE');
+    const filtroPayout = document.getElementById('filtroPayout');
+    const filtroCap = document.getElementById('filtroCap');
     const lastUpdate = document.getElementById('lastUpdate');
     const totalCount = document.getElementById('totalCount');
     const filteredCount = document.getElementById('filteredCount');
@@ -612,9 +735,245 @@
       return Number(v).toFixed(2) + '%';
     }
 
+    function fmtPayout(v) {
+      if (v == null || v === '' || isNaN(v)) return '—';
+      return Number(v).toFixed(1) + '%';
+    }
+
+    function fmtRoe(v) {
+      if (v == null || v === '' || isNaN(v)) return '—';
+      const n = Number(v);
+      const pct = Math.abs(n) <= 1 ? n * 100 : n;
+      return pct.toFixed(2) + '%';
+    }
+
     const tipoDesc = { stock: 'Ação', fii: 'FII', etf: 'ETF', bdr: 'BDR', unit: 'Unit' };
     function tipoDescritivo(t) {
       return (t && tipoDesc[t.toLowerCase()]) || t || '—';
+    }
+
+    const setorDesc = {
+      'Energy Minerals': 'Petróleo e Gás',
+      'Non-Energy Minerals': 'Mineração',
+      'Finance': 'Financeiro',
+      'Retail Trade': 'Varejo',
+      'Transportation': 'Transporte',
+      'Utilities': 'Utilidades Públicas',
+      'Technology': 'Tecnologia',
+      'Health Services': 'Saúde',
+      'Consumer Non-Durables': 'Bens de Consumo',
+      'Industrial Services': 'Serviços Industriais',
+      'Consumer Durables': 'Bens Duráveis',
+      'Communication Services': 'Comunicações',
+      'Consumer Discretionary': 'Consumo Discricionário',
+      'Consumer Staples': 'Bens de Consumo Essenciais',
+      'Energy': 'Energia',
+      'Financials': 'Financeiro',
+      'Health Care': 'Saúde',
+      'Industrials': 'Industrial',
+      'Information Technology': 'Tecnologia da Informação',
+      'Materials': 'Materiais',
+      'Real Estate': 'Imobiliário',
+      'Process Industries': 'Indústria de Processos',
+      'Producer Manufacturing': 'Manufatura',
+      'Commercial Services': 'Serviços Comerciais',
+      'Electronic Technology': 'Tecnologia Eletrônica',
+      'Distribution Services': 'Distribuição',
+      'Miscellaneous': 'Diversos',
+      'Outros': 'Outros',
+      'Durable Goods': 'Bens Duráveis',
+      'Nondurable Goods': 'Bens Não Duráveis',
+      'Government': 'Governo',
+      'Agricultural': 'Agropecuário'
+    };
+    function setorDescritivo(s) {
+      if (!s) return '—';
+      return setorDesc[s] || s;
+    }
+
+    const BLUE_CHIP_MIN = 2e10;
+    const SMALL_CAP_MAX = 2e9;
+    function classificacaoCap(d) {
+      const mc = Number(d.market_cap);
+      if (!mc || isNaN(mc)) return null;
+      if (mc >= BLUE_CHIP_MIN) return 'bluechip';
+      if (mc < SMALL_CAP_MAX) return 'smallcap';
+      return null;
+    }
+    const COLUMN_KEYS = ['stock','name','close','change','volume','market_cap','priceEarnings','earningsPerShare','dividendYield','priceToBook','returnOnEquity','payout','sector','cap','type'];
+    const COLUMNS = {
+      stock: { label: 'Ticker', title: 'Código de negociação do ativo na B3 (ex: PETR4, VALE3)', sort: 'stock', cell: d => `<span class="ticker">${d.stock || '—'}</span>`, cls: '' },
+      name: { label: 'Empresa', title: 'Nome da empresa ou fundo', sort: 'name', cell: d => (d.name || '—').replace(/</g, '&lt;').replace(/"/g, '&quot;'), cls: 'nome-empresa', tdTitle: d => d.name || '' },
+      close: { label: 'Preço', title: 'Preço atual de fechamento da última cotação', sort: 'close', cell: d => fmtPreco(d.close), cls: 'numero' },
+      change: { label: 'Variação %', title: 'Variação percentual do preço em relação ao fechamento anterior', sort: 'change', cell: d => `<span class="numero ${classeVariacao(d.change != null ? Number(d.change) : null)}">${fmtPct(d.change)}</span>`, cls: 'numero' },
+      volume: { label: 'Volume', title: 'Quantidade de ações/cotas negociadas no período', sort: 'volume', cell: d => fmtNum(d.volume), cls: 'numero' },
+      market_cap: { label: 'Valor Mercado', title: 'Valor de mercado (preço × quantidade de ações em circulação)', sort: 'market_cap', cell: d => fmtMoeda(d.market_cap), cls: 'numero' },
+      priceEarnings: { label: 'P/L', title: 'Preço/Lucro: preço da ação dividido pelo lucro por ação. Clique em Carregar indicadores.', sort: 'priceEarnings', cell: d => fmtPL(d.priceEarnings), cls: 'numero' },
+      earningsPerShare: { label: 'LPA', title: 'Lucro por Ação: lucro líquido dividido pelo número de ações', sort: 'earningsPerShare', cell: d => fmtLPA(d.earningsPerShare), cls: 'numero' },
+      dividendYield: { label: 'Div.Yield', title: 'Dividend Yield: dividendos dos últimos 12 meses em % do preço', sort: 'dividendYield', cell: d => fmtDivYield(d.dividendYield), cls: 'numero' },
+      priceToBook: { label: 'P/VP', title: 'Preço/Valor Patrimonial: preço ÷ valor patrimonial por ação', sort: 'priceToBook', cell: d => d.priceToBook != null ? Number(d.priceToBook).toFixed(2) : '—', cls: 'numero' },
+      returnOnEquity: { label: 'ROE', title: 'Retorno sobre Patrimônio Líquido em %', sort: 'returnOnEquity', cell: d => fmtRoe(d.returnOnEquity), cls: 'numero' },
+      payout: { label: 'Payout', title: 'Payout: % do lucro distribuído como dividendo', sort: 'payout', cell: d => fmtPayout(d.payout), cls: 'numero' },
+      sector: { label: 'Setor', title: 'Setor de atuação da empresa (ex: Financeiro, Petróleo)', sort: 'sector', cell: d => setorDescritivo(d.sector), cls: '' },
+      cap: { label: 'Cap', title: 'Blue Chip: valor mercado ≥ R$ 20 bi. Small Cap: valor mercado < R$ 2 bi.', sort: 'cap', cell: d => { const c = classificacaoCap(d); if (c === 'bluechip') return '<span class="badge badge-bluechip">Blue Chip</span>'; if (c === 'smallcap') return '<span class="badge badge-smallcap">Small Cap</span>'; return '—'; }, cls: '' },
+      type: { label: 'Tipo', title: 'Tipo do ativo: Ação, FII, ETF, BDR ou Unit', sort: 'type', cell: d => `<span class="badge">${tipoDescritivo(d.type)}</span>`, cls: '' }
+    };
+    const COL_ORDER_KEY = 'empresasb3_column_order';
+    const COL_VIS_KEY = 'empresasb3_column_visibility';
+    function getColumnOrder() {
+      try {
+        const s = localStorage.getItem(COL_ORDER_KEY);
+        if (s) {
+          const arr = JSON.parse(s);
+          if (Array.isArray(arr) && arr.length === COLUMN_KEYS.length && arr.every(k => COLUMN_KEYS.includes(k))) return arr;
+        }
+      } catch (_) {}
+      return [...COLUMN_KEYS];
+    }
+    function setColumnOrder(order) {
+      localStorage.setItem(COL_ORDER_KEY, JSON.stringify(order));
+    }
+    function getColumnVisibility() {
+      try {
+        const s = localStorage.getItem(COL_VIS_KEY);
+        if (s) {
+          const o = JSON.parse(s);
+          if (o && typeof o === 'object') {
+            const out = {};
+            COLUMN_KEYS.forEach(k => { out[k] = o[k] !== false; });
+            return out;
+          }
+        }
+      } catch (_) {}
+      return Object.fromEntries(COLUMN_KEYS.map(k => [k, true]));
+    }
+    function setColumnVisibility(vis) {
+      localStorage.setItem(COL_VIS_KEY, JSON.stringify(vis));
+    }
+    let columnOrder = getColumnOrder();
+    let columnVisibility = getColumnVisibility();
+    function getVisibleColumnOrder() {
+      return columnOrder.filter(k => columnVisibility[k] !== false);
+    }
+    let visibleColumnOrder = getVisibleColumnOrder();
+    const headerRow = document.getElementById('tableHeaderRow');
+
+    function buildTableHeader() {
+      visibleColumnOrder = getVisibleColumnOrder();
+      headerRow.innerHTML = '';
+      if (visibleColumnOrder.length === 0) {
+        const th = document.createElement('th');
+        th.colSpan = columnOrder.length;
+        th.style.textAlign = 'center';
+        th.style.color = 'var(--text-muted)';
+        th.textContent = 'Nenhuma coluna selecionada — marque "Todos" ou escolha colunas';
+        headerRow.appendChild(th);
+        return;
+      }
+      visibleColumnOrder.forEach((key, idx) => {
+        const col = COLUMNS[key];
+        if (!col) return;
+        const th = document.createElement('th');
+        th.className = 'draggable-col' + (col.cls ? ' ' + col.cls : '');
+        th.dataset.sort = col.sort;
+        th.dataset.colKey = key;
+        th.title = col.title;
+        th.textContent = col.label;
+        th.draggable = true;
+        th.addEventListener('dragstart', onDragStart);
+        th.addEventListener('dragover', onDragOver);
+        th.addEventListener('drop', onDrop);
+        th.addEventListener('dragend', onDragEnd);
+        th.addEventListener('dragleave', onDragLeave);
+        headerRow.appendChild(th);
+      });
+      // sort click via delegation
+      headerRow.querySelectorAll('th[data-sort]').forEach(th => {
+        th.onclick = () => {
+          const col = th.dataset.sort;
+          if (sortCol === col) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+          else { sortCol = col; sortDir = 'asc'; }
+          ordenar();
+          renderizar();
+        };
+      });
+    }
+
+    let draggedKey = null;
+    function onDragStart(e) {
+      draggedKey = e.target.dataset.colKey;
+      e.target.classList.add('dragging-col');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', draggedKey);
+    }
+    function onDragOver(e) {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+      const t = e.currentTarget;
+      if (t !== e.target.closest('th')) return;
+      headerRow.querySelectorAll('th').forEach(h => h.classList.remove('drag-over'));
+      t.classList.add('drag-over');
+    }
+    function onDragLeave(e) {
+      if (!e.currentTarget.contains(e.relatedTarget)) e.currentTarget.classList.remove('drag-over');
+    }
+    function onDrop(e) {
+      e.preventDefault();
+      const targetKey = e.currentTarget.dataset.colKey;
+      e.currentTarget.classList.remove('drag-over');
+      if (!draggedKey || draggedKey === targetKey) return;
+      const newOrder = columnOrder.filter(k => k !== draggedKey);
+      const idx = newOrder.indexOf(targetKey);
+      newOrder.splice(idx, 0, draggedKey);
+      columnOrder = newOrder;
+      setColumnOrder(columnOrder);
+      buildTableHeader();
+      renderizar();
+    }
+    function onDragEnd(e) {
+      e.target.classList.remove('dragging-col');
+      headerRow.querySelectorAll('th').forEach(h => h.classList.remove('drag-over'));
+      draggedKey = null;
+    }
+
+    function buildColunasDropdown() {
+      const dd = document.getElementById('colunasDropdown');
+      if (!dd) return;
+      const visible = getVisibleColumnOrder();
+      const todosChecked = visible.length === columnOrder.length;
+      dd.innerHTML = '<label class="colunas-todos"><input type="checkbox" id="colunasTodos" ' + (todosChecked ? 'checked' : '') + '> <strong>Todos</strong></label>' +
+        columnOrder.map(key => {
+          const col = COLUMNS[key];
+          if (!col) return '';
+          const checked = columnVisibility[key] !== false;
+          return '<label><input type="checkbox" data-col="' + key + '" ' + (checked ? 'checked' : '') + '> ' + (col.label || key) + '</label>';
+        }).join('');
+      const cbTodos = dd.querySelector('#colunasTodos');
+      if (cbTodos) {
+        cbTodos.addEventListener('change', () => {
+          if (cbTodos.checked) {
+            columnOrder.forEach(k => { columnVisibility[k] = true; });
+          } else {
+            columnOrder.forEach(k => { columnVisibility[k] = false; });
+          }
+          setColumnVisibility(columnVisibility);
+          buildTableHeader();
+          renderizar();
+          buildColunasDropdown();
+        });
+      }
+      dd.querySelectorAll('input[type="checkbox"][data-col]').forEach(cb => {
+        cb.addEventListener('change', () => {
+          const key = cb.dataset.col;
+          columnVisibility[key] = cb.checked;
+          setColumnVisibility(columnVisibility);
+          const v = getVisibleColumnOrder();
+          if (cbTodos) cbTodos.checked = v.length === columnOrder.length;
+          buildTableHeader();
+          renderizar();
+          buildColunasDropdown();
+        });
+      });
     }
 
     function classeVariacao(v) {
@@ -622,12 +981,14 @@
       return Number(v) > 0 ? 'positivo' : Number(v) < 0 ? 'negativo' : 'neutro';
     }
 
+    const colCount = () => getVisibleColumnOrder().length;
+
     async function carregarDados() {
-      tbody.innerHTML = '<tr><td colspan="11" class="loading"><div class="loading-spinner"></div>Carregando dados da B3...</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="' + Math.max(colCount(), 1) + '" class="loading"><div class="loading-spinner"></div>Carregando dados da B3...</td></tr>';
       btnAtualizar.disabled = true;
 
       try {
-        const url = `${BRAPI_LIST}?token=${BRAPI_TOKEN}`;
+        const url = `${BRAPI_LIST}?token=${getToken()}`;
         const res = await fetch(url);
 
         if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
@@ -642,7 +1003,7 @@
         popularSetores();
         aplicarFiltros();
       } catch (e) {
-        tbody.innerHTML = '<tr><td colspan="11"><div class="erro"><p>Erro ao carregar dados</p><small>' + (e.message || 'Verifique sua conexão e tente novamente.') + '</small><br><small>Dados via brapi.dev — use token próprio para mais requisições.</small></div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="' + Math.max(colCount(), 1) + '"><div class="erro"><p>Erro ao carregar dados</p><small>' + (e.message || 'Verifique sua conexão e tente novamente.') + '</small><br><small>Dados via brapi.dev — use token próprio para mais requisições.</small></div></td></tr>';
       } finally {
         btnAtualizar.disabled = false;
       }
@@ -652,7 +1013,7 @@
       const setores = [...new Set(dados.map(d => d.sector || 'Outros').filter(Boolean))].sort();
       filtroSetor.innerHTML = '<option value="">Todos os setores</option>';
       setores.forEach(s => {
-        filtroSetor.innerHTML += `<option value="${s}">${s}</option>`;
+        filtroSetor.innerHTML += `<option value="${(s + '').replace(/"/g, '&quot;')}">${setorDescritivo(s)}</option>`;
       });
     }
 
@@ -663,6 +1024,10 @@
       const tipo = (filtroTipo.value || '').trim();
       const plMax = parseFloat(filtroPL?.value) || 0;
       const divMin = parseFloat(filtroDivYield?.value) || 0;
+      const pvpMax = parseFloat(filtroPVP?.value) || 0;
+      const roeMin = parseFloat(filtroROE?.value) || 0;
+      const payoutMax = parseFloat(filtroPayout?.value) || 0;
+      const capFiltro = (filtroCap?.value || '').trim();
 
       if (busca) {
         base = base.filter(d =>
@@ -680,6 +1045,22 @@
         const dy = Number(d.dividendYield);
         return !isNaN(dy) && dy >= divMin;
       });
+      if (pvpMax > 0) base = base.filter(d => {
+        const pvp = Number(d.priceToBook);
+        return !isNaN(pvp) && pvp > 0 && pvp <= pvpMax;
+      });
+      if (roeMin !== 0) base = base.filter(d => {
+        const roe = Number(d.returnOnEquity);
+        if (isNaN(roe)) return false;
+        const pct = Math.abs(roe) <= 1 ? roe * 100 : roe;
+        return pct >= roeMin;
+      });
+      if (payoutMax > 0) base = base.filter(d => {
+        const py = Number(d.payout);
+        return !isNaN(py) && py >= 0 && py <= payoutMax;
+      });
+      if (capFiltro === 'bluechip') base = base.filter(d => classificacaoCap(d) === 'bluechip');
+      if (capFiltro === 'smallcap') base = base.filter(d => classificacaoCap(d) === 'smallcap');
 
       dadosFiltrados = base;
       ordenar();
@@ -691,8 +1072,8 @@
       const dir = sortDir === 'asc' ? 1 : -1;
 
       dadosFiltrados.sort((a, b) => {
-        let va = a[col];
-        let vb = b[col];
+        let va = col === 'cap' ? (classificacaoCap(a) || 'mid') : a[col];
+        let vb = col === 'cap' ? (classificacaoCap(b) || 'mid') : b[col];
         if (typeof va === 'string') va = (va || '').toLowerCase();
         if (typeof vb === 'string') vb = (vb || '').toLowerCase();
         if (va == null) va = '';
@@ -707,34 +1088,31 @@
       totalDisplay.textContent = dados.length;
       if (btnIndicadores) btnIndicadores.disabled = dadosFiltrados.length === 0;
 
-      document.querySelectorAll('th[data-sort]').forEach(th => {
+      headerRow.querySelectorAll('th[data-sort]').forEach(th => {
         th.classList.remove('sorted-asc', 'sorted-desc');
         if (th.dataset.sort === sortCol) th.classList.add(sortDir === 'asc' ? 'sorted-asc' : 'sorted-desc');
       });
 
       if (!dadosFiltrados.length) {
-        tbody.innerHTML = '<tr><td colspan="11" class="loading">Nenhum ativo encontrado com os filtros aplicados.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="' + Math.max(colCount(), 1) + '" class="loading">Nenhum ativo encontrado com os filtros aplicados.</td></tr>';
+        return;
+      }
+
+      const visibleCols = getVisibleColumnOrder();
+      if (visibleCols.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="' + columnOrder.length + '" class="loading">Nenhuma coluna selecionada. Marque "Todos" ou escolha colunas no menu Colunas.</td></tr>';
         return;
       }
 
       tbody.innerHTML = dadosFiltrados.map(d => {
-        const change = d.change != null ? Number(d.change) : null;
-        const changeClass = classeVariacao(change);
-        return `
-          <tr data-ticker="${(d.stock || '').replace(/"/g, '&quot;')}">
-            <td><span class="ticker">${d.stock || '—'}</span></td>
-            <td class="nome-empresa" title="${(d.name || '').replace(/"/g, '&quot;')}">${d.name || '—'}</td>
-            <td class="numero">${fmtPreco(d.close)}</td>
-            <td class="numero ${changeClass}">${fmtPct(change)}</td>
-            <td class="numero">${fmtNum(d.volume)}</td>
-            <td class="numero">${fmtMoeda(d.market_cap)}</td>
-            <td class="numero">${fmtPL(d.priceEarnings)}</td>
-            <td class="numero">${fmtLPA(d.earningsPerShare)}</td>
-            <td class="numero">${fmtDivYield(d.dividendYield)}</td>
-            <td>${d.sector || '—'}</td>
-            <td><span class="badge">${tipoDescritivo(d.type)}</span></td>
-          </tr>
-        `;
+        const cells = visibleCols.map(key => {
+          const col = COLUMNS[key];
+          if (!col) return '';
+          const cls = col.cls ? ' class="' + col.cls + '"' : '';
+          const title = col.tdTitle ? ' title="' + (col.tdTitle(d) || '').replace(/"/g, '&quot;') + '"' : '';
+          return '<td' + cls + title + '>' + col.cell(d) + '</td>';
+        }).join('');
+        return '<tr data-ticker="' + (d.stock || '').replace(/"/g, '&quot;') + '">' + cells + '</tr>';
       }).join('');
 
       tbody.querySelectorAll('tr[data-ticker]').forEach(tr => {
@@ -742,27 +1120,38 @@
       });
     }
 
-    document.querySelectorAll('th[data-sort]').forEach(th => {
-      th.addEventListener('click', () => {
-        const col = th.dataset.sort;
-        if (sortCol === col) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
-        else { sortCol = col; sortDir = 'asc'; }
-        ordenar();
-        renderizar();
-      });
-    });
+    buildTableHeader();
+    buildColunasDropdown();
 
     const btnIndicadores = document.getElementById('btnIndicadores');
+    const btnColunas = document.getElementById('btnColunas');
+    const colunasDropdown = document.getElementById('colunasDropdown');
+
+    if (btnColunas && colunasDropdown) {
+      btnColunas.addEventListener('click', (e) => {
+        e.stopPropagation();
+        colunasDropdown.classList.toggle('ativo');
+      });
+      document.addEventListener('click', () => colunasDropdown.classList.remove('ativo'));
+      colunasDropdown.addEventListener('click', (e) => e.stopPropagation());
+    }
+
     const indicadoresStatus = document.getElementById('indicadoresStatus');
 
     async function fetchComCors(url) {
-      try {
-        const res = await fetch(url);
+      const tryFetch = async (u) => {
+        const res = await fetch(u);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
         return res;
+      };
+      try {
+        return await tryFetch(url);
       } catch (e) {
-        if (e.name === 'TypeError' && e.message.includes('fetch')) {
-          const proxyUrl = 'https://api.allorigins.win/raw?url=' + encodeURIComponent(url);
-          return await fetch(proxyUrl);
+        const proxies = ['https://api.allorigins.win/raw?url=', 'https://corsproxy.io/?'];
+        for (const pre of proxies) {
+          try {
+            return await tryFetch(pre + encodeURIComponent(url));
+          } catch (_) { continue; }
         }
         throw e;
       }
@@ -772,15 +1161,18 @@
       if (!d) return;
       d.priceEarnings = r.priceEarnings;
       d.earningsPerShare = r.earningsPerShare;
+      let div12m = 0;
       if (r.dividendsData?.cashDividends?.length && r.regularMarketPrice) {
         const umAnoAtras = Date.now() - 365 * 24 * 60 * 60 * 1000;
-        const div12m = r.dividendsData.cashDividends
+        div12m = r.dividendsData.cashDividends
           .filter(x => new Date(x.paymentDate).getTime() > umAnoAtras)
           .reduce((s, x) => s + (Number(x.rate) || 0), 0);
         d.dividendYield = div12m > 0 ? (div12m / r.regularMarketPrice) * 100 : null;
       } else {
         d.dividendYield = null;
       }
+      d.payout = (r.earningsPerShare > 0 && div12m > 0)
+        ? (div12m / r.earningsPerShare) * 100 : null;
       if (r.priceToBook != null) d.priceToBook = r.priceToBook;
       if (r.returnOnEquity != null) d.returnOnEquity = r.returnOnEquity;
     }
@@ -790,12 +1182,12 @@
       btnIndicadores.disabled = true;
       btnIndicadores.textContent = 'Carregando...';
       if (indicadoresStatus) indicadoresStatus.textContent = 'Buscando P/L, LPA e Div.Yield...';
-      const tickers = dadosFiltrados.slice(0, 45).map(d => (d.stock || d.symbol || '')).filter(Boolean);
+      const tickers = dadosFiltrados.slice(0, 20).map(d => (d.stock || d.symbol || '')).filter(Boolean);
       let totalOk = 0;
-      const BATCH = 5;
+      const BATCH = 3;
       for (let i = 0; i < tickers.length; i += BATCH) {
         const batch = tickers.slice(i, i + BATCH);
-        const url = `${BRAPI_QUOTE}${batch.map(t => encodeURIComponent(t)).join(',')}?token=${BRAPI_TOKEN}&fundamental=true&dividends=true`;
+        const url = `${BRAPI_QUOTE}${batch.map(t => encodeURIComponent(t)).join(',')}?token=${getToken()}&fundamental=true&dividends=true`;
         try {
           const res = await fetchComCors(url);
           if (!res.ok) throw new Error('HTTP ' + res.status);
@@ -815,7 +1207,7 @@
           } else {
             for (const t of batch) {
               try {
-                const rUrl = `${BRAPI_QUOTE}${encodeURIComponent(t)}?token=${BRAPI_TOKEN}&fundamental=true&dividends=true`;
+                const rUrl = `${BRAPI_QUOTE}${encodeURIComponent(t)}?token=${getToken()}&fundamental=true&dividends=true`;
                 const rRes = await fetchComCors(rUrl);
                 if (!rRes.ok) continue;
                 const rJson = await rRes.json();
@@ -834,8 +1226,8 @@
       btnIndicadores.disabled = false;
       btnIndicadores.textContent = 'Carregar indicadores (P/L, LPA, Div.Yield)';
       if (indicadoresStatus) {
-        indicadoresStatus.textContent = totalOk > 0 ? '✓ ' + totalOk + ' ativos com indicadores' : '⚠ Nenhum obtido. Use token brapi.dev para mais requisições.';
-        setTimeout(() => { if (indicadoresStatus) indicadoresStatus.textContent = ''; }, 8000);
+        indicadoresStatus.textContent = totalOk > 0 ? '✓ ' + totalOk + ' ativos com indicadores' : '⚠ Nenhum obtido. Cole um token gratuito de brapi.dev no campo acima.';
+        setTimeout(() => { if (indicadoresStatus) indicadoresStatus.textContent = ''; }, 10000);
       }
     }
 
@@ -846,6 +1238,12 @@
     filtroPL?.addEventListener('change', aplicarFiltros);
     filtroDivYield?.addEventListener('input', aplicarFiltros);
     filtroDivYield?.addEventListener('change', aplicarFiltros);
+    filtroPVP?.addEventListener('input', aplicarFiltros);
+    filtroPVP?.addEventListener('change', aplicarFiltros);
+    filtroROE?.addEventListener('input', aplicarFiltros);
+    filtroROE?.addEventListener('change', aplicarFiltros);
+    filtroPayout?.addEventListener('input', aplicarFiltros);
+    filtroPayout?.addEventListener('change', aplicarFiltros);
     btnAtualizar.addEventListener('click', carregarDados);
     btnIndicadores.addEventListener('click', carregarIndicadores);
 
@@ -859,7 +1257,7 @@
       modalBody.innerHTML = '<div class="modal-loading">Carregando detalhes...</div>';
 
       try {
-        const url = `${BRAPI_QUOTE}${encodeURIComponent(ticker)}?token=${BRAPI_TOKEN}&fundamental=true&dividends=true`;
+        const url = `${BRAPI_QUOTE}${encodeURIComponent(ticker)}?token=${getToken()}&fundamental=true&dividends=true`;
         const res = await fetch(url);
         if (!res.ok) throw new Error('Falha ao buscar detalhes');
 
@@ -867,46 +1265,158 @@
         const r = json.results?.[0];
         if (!r) throw new Error('Sem dados');
 
-        let divYield = '—';
-        if (r.dividendsData?.cashDividends?.length && r.regularMarketPrice) {
-          const div12m = r.dividendsData.cashDividends
-            .filter(x => new Date(x.paymentDate) > new Date(Date.now() - 365*24*60*60*1000))
-            .reduce((s, x) => s + (x.rate || 0), 0);
-          if (div12m > 0) divYield = ((div12m / r.regularMarketPrice) * 100).toFixed(2) + '%';
+        const preco = r.regularMarketPrice || 0;
+        let div12m = 0;
+        if (r.dividendsData?.cashDividends?.length) {
+          const umAnoAtras = Date.now() - 365 * 24 * 60 * 60 * 1000;
+          div12m = r.dividendsData.cashDividends
+            .filter(x => new Date(x.paymentDate).getTime() > umAnoAtras)
+            .reduce((s, x) => s + (Number(x.rate) || 0), 0);
         }
+        const divYield = preco > 0 && div12m > 0 ? ((div12m / preco) * 100).toFixed(2) + '%' : '—';
         const pl = r.priceEarnings != null ? r.priceEarnings.toFixed(2) : '—';
         const lpa = r.earningsPerShare != null ? 'R$ ' + r.earningsPerShare.toFixed(2) : '—';
         const pvp = (r.priceToBook ?? r.priceToBookValue) != null ? Number(r.priceToBook ?? r.priceToBookValue).toFixed(2) : '—';
         const roeVal = r.returnOnEquity ?? r.roe;
         const roe = roeVal != null ? (Math.abs(roeVal) <= 1 ? Number(roeVal) * 100 : Number(roeVal)).toFixed(2) + '%' : '—';
+        const payout = r.earningsPerShare > 0 && div12m > 0 ? ((div12m / r.earningsPerShare) * 100).toFixed(1) + '%' : '—';
+        const min52 = r.fiftyTwoWeekLow; const max52 = r.fiftyTwoWeekHigh;
+        const pos52 = (min52 != null && max52 != null && max52 > min52 && preco > 0)
+          ? (((preco - min52) / (max52 - min52)) * 100).toFixed(1) + '%' : '—';
+        const potAlta = (max52 != null && preco > 0 && max52 > preco)
+          ? (((max52 - preco) / preco) * 100).toFixed(1) + '%' : '—';
+        const potBaixa = (min52 != null && preco > 0 && min52 < preco)
+          ? (((preco - min52) / preco) * 100).toFixed(1) + '%' : '—';
+        const proxDiv = r.dividendsData?.cashDividends?.find(x => new Date(x.paymentDate) > new Date());
+        const proxDivStr = proxDiv ? 'R$ ' + Number(proxDiv.rate).toFixed(4) + ' em ' + new Date(proxDiv.paymentDate).toLocaleDateString('pt-BR') : '—';
 
-        modalBody.innerHTML = `
-          <div class="modal-item"><label>Preço atual</label><span>${fmtPreco(r.regularMarketPrice)}</span></div>
-          <div class="modal-item"><label>Variação %</label><span class="${classeVariacao(r.regularMarketChangePercent)}">${fmtPct(r.regularMarketChangePercent)}</span></div>
-          <div class="modal-item"><label>P/L</label><span>${pl}</span></div>
-          <div class="modal-item"><label>P/VP</label><span>${pvp}</span></div>
-          <div class="modal-item"><label>ROE</label><span>${roe}</span></div>
-          <div class="modal-item"><label>LPA</label><span>${lpa}</span></div>
-          <div class="modal-item"><label>Div. Yield</label><span>${divYield}</span></div>
-          <div class="modal-item"><label>Preço abertura</label><span>${fmtPreco(r.regularMarketOpen)}</span></div>
-          <div class="modal-item"><label>Fechamento anterior</label><span>${fmtPreco(r.regularMarketPreviousClose)}</span></div>
-          <div class="modal-item"><label>Máxima do dia</label><span>${fmtPreco(r.regularMarketDayHigh)}</span></div>
-          <div class="modal-item"><label>Mínima do dia</label><span>${fmtPreco(r.regularMarketDayLow)}</span></div>
-          <div class="modal-item"><label>Faixa 52 semanas</label><span>${r.fiftyTwoWeekRange || '—'}</span></div>
-          <div class="modal-item"><label>Volume</label><span>${fmtNum(r.regularMarketVolume)}</span></div>
-          <div class="modal-item"><label>Valor de mercado</label><span>${fmtMoeda(r.marketCap)}</span></div>
-          <div class="modal-item"><label>Moeda</label><span>${r.currency || 'BRL'}</span></div>
-          <div class="modal-item"><label>Última atualização</label><span>${r.regularMarketTime ? new Date(r.regularMarketTime).toLocaleString('pt-BR') : '—'}</span></div>
+        const v = (val, fmt) => val != null && val !== '' ? (fmt ? fmt(val) : val) : '—';
+
+        const indicatorsHtml = `
+          <div class="modal-grid">
+            <div class="modal-item"><label>Preço atual</label><span>${fmtPreco(preco)}</span></div>
+            <div class="modal-item"><label>Variação %</label><span class="${classeVariacao(r.regularMarketChangePercent)}">${fmtPct(r.regularMarketChangePercent)}</span></div>
+            <div class="modal-item"><label>P/L</label><span>${pl}</span></div>
+            <div class="modal-item"><label>P/VP</label><span>${pvp}</span></div>
+            <div class="modal-item"><label>ROE</label><span>${roe}</span></div>
+            <div class="modal-item"><label>LPA</label><span>${lpa}</span></div>
+            <div class="modal-item"><label>Div. Yield</label><span>${divYield}</span></div>
+            <div class="modal-item"><label>Payout</label><span>${payout}</span></div>
+            <div class="modal-item"><label>Dividendos 12m</label><span>${div12m > 0 ? 'R$ ' + div12m.toFixed(2) : '—'}</span></div>
+            <div class="modal-item"><label>Próx. dividendo</label><span>${proxDivStr}</span></div>
+            <div class="modal-item"><label>Posição 52 sem</label><span>${pos52}</span></div>
+            <div class="modal-item"><label>Pot. alta 52 sem</label><span>${potAlta}</span></div>
+            <div class="modal-item"><label>Pot. baixa 52 sem</label><span>${potBaixa}</span></div>
+            <div class="modal-item"><label>Preço abertura</label><span>${fmtPreco(r.regularMarketOpen)}</span></div>
+            <div class="modal-item"><label>Máx./Mín. dia</label><span>${fmtPreco(r.regularMarketDayHigh)} / ${fmtPreco(r.regularMarketDayLow)}</span></div>
+            <div class="modal-item"><label>Faixa 52 semanas</label><span>${r.fiftyTwoWeekRange || '—'}</span></div>
+            <div class="modal-item"><label>Volume</label><span>${fmtNum(r.regularMarketVolume)}</span></div>
+            <div class="modal-item"><label>Valor de mercado</label><span>${fmtMoeda(r.marketCap)}</span></div>
+            <div class="modal-item"><label>Beta</label><span>${v(r.beta)}</span></div>
+            <div class="modal-item"><label>Moeda</label><span>${r.currency || 'BRL'}</span></div>
+            <div class="modal-item"><label>Atualização</label><span>${r.regularMarketTime ? new Date(r.regularMarketTime).toLocaleString('pt-BR') : '—'}</span></div>
+          </div>
+          <div class="modal-chart-section">
+            <label style="display:block;margin-bottom:0.5rem;font-size:0.8rem;color:var(--text-muted);">Gráfico de cotação</label>
+            <div class="modal-chart-filters">
+              <button type="button" data-range="1d" data-interval="5m">Hoje</button>
+              <button type="button" data-range="5d" data-interval="15m">Semana</button>
+              <button type="button" data-range="1mo" data-interval="1d">Mês</button>
+              <button type="button" data-range="1y" data-interval="1d">Ano</button>
+              <button type="button" data-range="ytd" data-interval="1d">Anualizado</button>
+              <button type="button" data-range="5y" data-interval="1d">5 anos</button>
+              <button type="button" data-range="max" data-interval="1d" class="ativo">Tudo</button>
+            </div>
+            <div class="modal-chart-wrap"><canvas id="modalChart"></canvas></div>
+          </div>
         `;
+        modalBody.innerHTML = indicatorsHtml;
+        loadChartData(ticker, 'max', '1d');
+        modalBody.querySelectorAll('.modal-chart-filters button').forEach(btn => {
+          btn.addEventListener('click', () => loadChartData(ticker, btn.dataset.range, btn.dataset.interval));
+        });
       } catch (e) {
         modalBody.innerHTML = '<div class="modal-loading">Erro ao carregar detalhes. Tente novamente.</div>';
+      }
+    }
+
+    let modalChartInstance = null;
+
+    async function loadChartData(ticker, range, interval) {
+      const wrap = document.querySelector('.modal-chart-wrap');
+      const canvas = document.getElementById('modalChart');
+      if (!canvas || !ticker) return;
+      const ctx = canvas.getContext('2d');
+      if (modalChartInstance) { modalChartInstance.destroy(); modalChartInstance = null; }
+      const filters = wrap?.parentElement?.querySelector('.modal-chart-filters');
+      filters?.querySelectorAll('button').forEach(b => b.classList.remove('ativo'));
+      const btn = filters?.querySelector(`button[data-range="${range}"]`);
+      if (btn) btn.classList.add('ativo');
+      const prevErr = wrap?.querySelector('.chart-error');
+      if (prevErr) prevErr.remove();
+      canvas.style.display = '';
+
+      const url = `${BRAPI_QUOTE}${encodeURIComponent(ticker)}?token=${getToken()}&range=${range}&interval=${interval}`;
+      try {
+        const res = await fetchComCors(url);
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const json = await res.json();
+        let points = [];
+        const h = json.results?.[0]?.historicalDataPrice || json.historical || json.prices || (Array.isArray(json) ? json : []);
+        if (h && h.length) {
+          points = h.map(x => {
+            const dt = x.date || x.timestamp || x.t;
+            const ts = typeof dt === 'number' ? dt * (dt < 1e10 ? 1000 : 1) : new Date(dt).getTime();
+            const close = x.close ?? x.adjustedClose ?? x.adjClose ?? x.c;
+            return { x: ts, y: close != null ? Number(close) : null };
+          }).filter(p => p.y != null);
+        }
+        if (points.length === 0) throw new Error('Sem dados de histórico');
+        points.sort((a, b) => a.x - b.x);
+        const labels = points.map(p => new Date(p.x).toLocaleDateString('pt-BR', { day: '2-digit', month: '2-digit', year: range === '1d' || range === '5d' ? undefined : '2-digit' }));
+        const cor = points[points.length - 1]?.y >= (points[0]?.y || 0) ? 'rgba(0, 200, 83, 0.8)' : 'rgba(255, 82, 82, 0.8)';
+        modalChartInstance = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels,
+            datasets: [{ label: 'Preço (R$)', data: points.map(p => p.y), borderColor: cor, backgroundColor: cor + '22', fill: true, tension: 0.2 }]
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+              x: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#8b9199', maxTicksLimit: 8 } },
+              y: { grid: { color: 'rgba(255,255,255,0.06)' }, ticks: { color: '#8b9199', callback: v => 'R$ ' + Number(v).toFixed(2) } }
+            }
+          }
+        });
+      } catch (err) {
+        canvas.style.display = 'none';
+        const noData = document.createElement('div');
+        noData.className = 'modal-loading chart-error';
+        noData.style.padding = '2rem';
+        noData.textContent = 'Gráfico indisponível. Use token brapi.dev (histórico exige plano pago em alguns casos).';
+        wrap?.appendChild(noData);
       }
     }
 
     modalFechar.addEventListener('click', () => modalOverlay.classList.remove('ativo'));
     modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) modalOverlay.classList.remove('ativo'); });
 
+    const brapiTokenEl = document.getElementById('brapiToken');
+    if (brapiTokenEl) {
+      const saved = localStorage.getItem(TOKEN_KEY);
+      if (saved) brapiTokenEl.value = saved;
+      brapiTokenEl.addEventListener('change', () => {
+        const v = brapiTokenEl.value.trim();
+        if (v) localStorage.setItem(TOKEN_KEY, v);
+        else localStorage.removeItem(TOKEN_KEY);
+      });
+    }
+
     carregarDados();
+    setInterval(carregarDados, 30000);
   </script>
 </body>
 </html>

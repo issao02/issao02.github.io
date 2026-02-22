@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AquaVida | Peixes Ornamentais e Aquarios</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&family=Quicksand:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --aqua-deep: #0a1628;
+      --aqua-mid: #0d2137;
+      --aqua-light: #1a4a6e;
+      --accent: #0ea5e9;
+      --accent-light: #38bdf8;
+      --coral: #f472b6;
+      --surface: rgba(13, 33, 55, 0.85);
+      --text: #e0f2fe;
+      --text-muted: #94a3b8;
+      --border: rgba(56, 189, 248, 0.2);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: Nunito, sans-serif;
+      background: var(--aqua-deep);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+      cursor: none;
+    }
+    body.show-cursor { cursor: default; }
+    .loader {
+      position: fixed;
+      inset: 0;
+      background: linear-gradient(180deg, var(--aqua-deep) 0%, var(--aqua-mid) 100%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      transition: opacity 0.6s ease, visibility 0.6s;
+    }
+    .loader.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+    .loader-fish { width: 80px; height: 40px; animation: loaderSwim 1.5s ease-in-out infinite; }
+    .loader-fish svg { width: 100%; height: 100%; fill: var(--accent); }
+    .loader-bubbles { display: flex; gap: 8px; margin-top: 1.5rem; }
+    .loader-bubbles span { width: 10px; height: 10px; background: var(--accent-light); border-radius: 50%; animation: loaderBubble 0.8s ease-in-out infinite; }
+    .loader-bubbles span:nth-child(2) { animation-delay: 0.2s; }
+    .loader-bubbles span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes loaderSwim { 0%, 100% { transform: translateX(0) scaleX(1); } 50% { transform: translateX(30px) scaleX(1); } }
+    @keyframes loaderBubble { 0%, 100% { opacity: 0.3; transform: scale(0.8); } 50% { opacity: 1; transform: scale(1.2); } }
+    .fish-bg { position: fixed; inset: 0; pointer-events: none; z-index: 0; overflow: hidden; }
+    .fish-bg .fish { position: absolute; font-size: 2rem; opacity: 0.25; animation: fishFloat 20s linear infinite; }
+    .fish-bg .fish:nth-child(1) { top: 10%; left: 0; animation-duration: 25s; }
+    .fish-bg .fish:nth-child(2) { top: 30%; right: 0; animation-duration: 22s; animation-direction: reverse; animation-delay: 3s; }
+    .fish-bg .fish:nth-child(3) { top: 50%; left: 0; animation-duration: 28s; animation-delay: 6s; }
+    .fish-bg .fish:nth-child(4) { top: 70%; right: 0; animation-duration: 24s; animation-direction: reverse; animation-delay: 2s; }
+    .fish-bg .fish:nth-child(5) { top: 85%; left: 0; animation-duration: 26s; animation-delay: 4s; }
+    @keyframes fishFloat { 0% { transform: translateX(-50px); } 100% { transform: translateX(calc(100vw + 50px)); } }
+    .bubbles { position: fixed; inset: 0; pointer-events: none; z-index: 1; overflow: hidden; }
+    .bubble { position: absolute; bottom: -20px; width: 8px; height: 8px; background: rgba(56, 189, 248, 0.4); border-radius: 50%; animation: bubbleRise 8s ease-in infinite; }
+    .bubble:nth-child(1) { left: 10%; animation-duration: 6s; }
+    .bubble:nth-child(2) { left: 25%; animation-duration: 7s; animation-delay: 1s; }
+    .bubble:nth-child(3) { left: 40%; animation-duration: 5s; animation-delay: 2s; }
+    .bubble:nth-child(4) { left: 55%; animation-duration: 8s; animation-delay: 0.5s; }
+    .bubble:nth-child(5) { left: 70%; animation-duration: 6.5s; animation-delay: 3s; }
+    .bubble:nth-child(6) { left: 85%; animation-duration: 7.5s; animation-delay: 1.5s; }
+    @keyframes bubbleRise { 0% { transform: translateY(0) scale(1); opacity: 0.6; } 100% { transform: translateY(-100vh) scale(0.3); opacity: 0; } }
+    .cursor-fish { position: fixed; width: 32px; height: 16px; pointer-events: none; z-index: 9998; transition: transform 0.05s ease-out; }
+    .cursor-fish svg { width: 100%; height: 100%; fill: var(--accent); }
+    body.show-cursor .cursor-fish { display: none; }
+    header { position: fixed; top: 0; left: 0; right: 0; z-index: 100; padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; background: rgba(10, 22, 40, 0.9); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border); }
+    .logo { font-family: Quicksand, sans-serif; font-size: 1.75rem; font-weight: 700; color: var(--accent-light); display: flex; align-items: center; gap: 0.5rem; }
+    nav { display: flex; gap: 2rem; }
+    nav a { color: var(--text-muted); text-decoration: none; font-weight: 600; transition: color 0.2s; }
+    nav a:hover { color: var(--accent-light); }
+    main { position: relative; z-index: 2; }
+    .hero { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 6rem 2rem 4rem; }
+    .submarine { font-size: clamp(4rem, 15vw, 10rem); margin-bottom: 1rem; animation: subBob 3s ease-in-out infinite; }
+    @keyframes subBob { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-15px) rotate(2deg); } }
+    .hero h1 { font-family: Quicksand, sans-serif; font-size: clamp(2rem, 6vw, 3.5rem); font-weight: 800; margin-bottom: 0.5rem; background: linear-gradient(135deg, var(--accent-light), var(--coral)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .hero p { font-size: 1.2rem; color: var(--text-muted); max-width: 500px; margin-bottom: 2rem; line-height: 1.6; }
+    .btn-hero { padding: 0.9rem 2rem; background: linear-gradient(135deg, var(--accent), var(--aqua-light)); color: #fff; border: none; border-radius: 12px; font-family: inherit; font-weight: 700; font-size: 1rem; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
+    .btn-hero:hover { transform: translateY(-3px); box-shadow: 0 10px 30px rgba(14, 165, 233, 0.4); }
+    section { max-width: 1100px; margin: 0 auto; padding: 4rem 2rem; }
+    section h2 { font-family: Quicksand, sans-serif; font-size: clamp(1.75rem, 4vw, 2.25rem); margin-bottom: 2rem; text-align: center; color: var(--accent-light); }
+    .intro-section { text-align: center; padding: 3rem 2rem; position: relative; }
+    .intro-section .intro-text { font-size: 1.15rem; color: var(--text-muted); max-width: 600px; margin: 0 auto 1.5rem; line-height: 1.7; }
+    .intro-deco { width: 80px; height: 4px; background: linear-gradient(90deg, transparent, var(--accent), transparent); margin: 0 auto; border-radius: 2px; animation: introPulse 2s ease-in-out infinite; }
+    @keyframes introPulse { 0%, 100% { opacity: 0.5; } 50% { opacity: 1; } }
+    .cuidados-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.5rem; }
+    .cuidado-card { background: var(--surface); backdrop-filter: blur(10px); border: 1px solid var(--border); border-radius: 16px; padding: 1.5rem; transition: transform 0.3s, border-color 0.3s; }
+    .cuidado-card:hover { transform: translateY(-5px); border-color: var(--accent); }
+    .cuidado-card .icon { font-size: 2rem; margin-bottom: 0.75rem; }
+    .cuidado-card h3 { font-size: 1.15rem; margin-bottom: 0.5rem; }
+    .cuidado-card p { font-size: 0.95rem; color: var(--text-muted); line-height: 1.5; }
+    #aquarios-section .aquarios-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.5rem; }
+    .aquario-card { background: var(--surface); backdrop-filter: blur(10px); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; transition: transform 0.3s, border-color 0.3s; }
+    .aquario-card:hover { transform: translateY(-5px); border-color: var(--accent); }
+    .aquario-card img { width: 100%; height: 180px; object-fit: cover; display: block; }
+    .aquario-card .card-body { padding: 1.25rem; }
+    .aquario-card h3 { font-size: 1.2rem; margin-bottom: 0.5rem; color: var(--accent-light); }
+    .aquario-card p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; }
+    .especies-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; }
+    .especie-tag { padding: 0.6rem 1.25rem; background: var(--surface); border: 1px solid var(--border); border-radius: 30px; font-weight: 600; transition: all 0.2s; }
+    .especie-tag:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+    #contato-section { text-align: center; padding-bottom: 5rem; }
+    #contato-section form { max-width: 450px; margin: 0 auto 2rem; display: flex; flex-direction: column; gap: 1rem; }
+    #contato-section input, #contato-section textarea { padding: 1rem 1.25rem; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); color: var(--text); font-family: inherit; font-size: 1rem; }
+    #contato-section textarea { min-height: 120px; resize: vertical; }
+    #contato-section button { padding: 1rem 2rem; background: linear-gradient(135deg, var(--accent), var(--aqua-light)); color: #fff; border: none; border-radius: 12px; font-family: inherit; font-weight: 700; cursor: pointer; }
+    .contato-info { display: flex; flex-wrap: wrap; justify-content: center; gap: 2rem; margin-top: 2rem; color: var(--text-muted); }
+    .aquario-card, .especie-card { cursor: pointer; }
+    .gallery-overlay { position: fixed; inset: 0; background: rgba(10, 22, 40, 0.97); z-index: 1000; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s; }
+    .gallery-overlay.active { opacity: 1; visibility: visible; }
+    .gallery-main { max-width: 90vw; max-height: 70vh; object-fit: contain; border-radius: 12px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); transition: opacity 0.3s; }
+    .gallery-nav { display: flex; align-items: center; gap: 1.5rem; margin-top: 1.5rem; }
+    .gallery-btn { width: 48px; height: 48px; border-radius: 50%; background: var(--surface); border: 2px solid var(--border); color: var(--accent-light); font-size: 1.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+    .gallery-btn:hover { background: var(--accent); border-color: var(--accent); transform: scale(1.05); }
+    .gallery-close { position: absolute; top: 1.5rem; right: 1.5rem; width: 44px; height: 44px; border-radius: 50%; background: var(--surface); border: 2px solid var(--border); color: var(--text); font-size: 1.25rem; cursor: pointer; transition: all 0.2s; }
+    .gallery-close:hover { background: var(--coral); border-color: var(--coral); }
+    .gallery-title { margin-top: 1rem; font-family: Quicksand, sans-serif; font-size: 1.25rem; color: var(--accent-light); }
+    .gallery-counter { font-size: 0.9rem; color: var(--text-muted); margin-top: 0.25rem; }
+    .especies-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1.25rem; }
+    .especie-card { background: var(--surface); backdrop-filter: blur(10px); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; transition: transform 0.3s, border-color 0.3s; }
+    .especie-card:hover { transform: translateY(-5px); border-color: var(--accent); }
+    .especie-card img { width: 100%; height: 140px; object-fit: cover; display: block; }
+    .especie-card .card-body { padding: 1rem; text-align: center; }
+    .especie-card h3 { font-size: 1rem; color: var(--accent-light); }
+    .cuidados-animated .cuidado-card { animation: cardFloat 4s ease-in-out infinite; }
+    .cuidados-animated .cuidado-card:nth-child(1) { animation-delay: 0s; }
+    .cuidados-animated .cuidado-card:nth-child(2) { animation-delay: 0.5s; }
+    .cuidados-animated .cuidado-card:nth-child(3) { animation-delay: 1s; }
+    .cuidados-animated .cuidado-card:nth-child(4) { animation-delay: 1.5s; }
+    @keyframes cardFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+    .cuidado-card .icon { display: inline-block; animation: iconBounce 2s ease-in-out infinite; }
+    .cuidado-card:nth-child(1) .icon { animation-delay: 0s; }
+    .cuidado-card:nth-child(2) .icon { animation-delay: 0.3s; }
+    .cuidado-card:nth-child(3) .icon { animation-delay: 0.6s; }
+    .cuidado-card:nth-child(4) .icon { animation-delay: 0.9s; }
+    @keyframes iconBounce { 0%, 100% { transform: scale(1) rotate(0deg); } 50% { transform: scale(1.1) rotate(5deg); } }
+    .cuidado-card .care-img { width: 100%; height: 100px; object-fit: cover; border-radius: 12px; margin-bottom: 1rem; opacity: 0.9; transition: transform 0.3s; }
+    .cuidado-card:hover .care-img { transform: scale(1.05); }
+    .care-mini-fish { font-size: 1.25rem; position: absolute; opacity: 0.4; animation: miniFloat 6s linear infinite; }
+    .cuidado-card { position: relative; overflow: hidden; }
+    .care-mini-fish:nth-child(1) { top: 10%; left: 5%; animation-delay: 0s; }
+    .care-mini-fish:nth-child(2) { top: 20%; right: 10%; animation-delay: 2s; animation-direction: reverse; }
+    .care-mini-fish:nth-child(3) { bottom: 15%; left: 15%; animation-delay: 4s; }
+    @keyframes miniFloat { 0% { transform: translate(0,0); } 25% { transform: translate(5px,-5px); } 50% { transform: translate(-3px,3px); } 100% { transform: translate(0,0); } }
+    #montagem-section { padding: 4rem 2rem; }
+    .montagem-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem; margin-top: 2rem; }
+    .montagem-card { background: var(--surface); backdrop-filter: blur(10px); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; transition: transform 0.3s, border-color 0.3s; }
+    .montagem-card:hover { transform: translateY(-5px); border-color: var(--accent); }
+    .montagem-card .media-wrap { position: relative; width: 100%; padding-bottom: 56.25%; background: var(--aqua-mid); overflow: hidden; }
+    .montagem-card .media-wrap img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+    .montagem-card .media-wrap iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+    .montagem-card .card-body { padding: 1.25rem; }
+    .montagem-card h3 { font-size: 1.15rem; margin-bottom: 0.5rem; color: var(--accent-light); }
+    .montagem-card p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <div class="loader" id="loader">
+    <div class="loader-fish"><svg viewBox="0 0 100 50"><ellipse cx="60" cy="25" rx="35" ry="22" fill="currentColor"/><path d="M25 15 Q20 25 25 35 L30 25 Z" fill="currentColor"/><circle cx="72" cy="22" r="4" fill="#0a1628"/><path d="M85 18 Q95 25 85 32" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round"/></svg></div>
+    <div class="loader-bubbles"><span></span><span></span><span></span></div>
+  </div>
+  <div class="fish-bg">
+    <span class="fish">&#128032;</span>
+    <span class="fish">&#128031;</span>
+    <span class="fish">&#128033;</span>
+    <span class="fish">&#128032;</span>
+    <span class="fish">&#128031;</span>
+  </div>
+  <div class="bubbles">
+    <span class="bubble"></span><span class="bubble"></span><span class="bubble"></span>
+    <span class="bubble"></span><span class="bubble"></span><span class="bubble"></span>
+  </div>
+  <div class="cursor-fish" id="cursorFish">
+    <svg viewBox="0 0 100 50"><ellipse cx="60" cy="25" rx="35" ry="22" fill="currentColor"/><path d="M25 15 Q20 25 25 35 L30 25 Z" fill="currentColor"/><circle cx="72" cy="22" r="4" fill="#0a1628"/><path d="M85 18 Q95 25 85 32" stroke="currentColor" stroke-width="3" fill="none" stroke-linecap="round"/></svg>
+  </div>
+  <header>
+    <a href="#" class="logo">&#128032; AquaVida</a>
+    <nav>
+      <a href="#intro-section">Um aquário em casa</a>
+      <a href="#montagem-section">Montagem</a>
+      <a href="#cuidados-section">Cuidados</a>
+      <a href="#aquarios-section">Estilos</a>
+      <a href="#especies-section">Especies</a>
+      <a href="#contato-section">Contato</a>
+    </nav>
+  </header>
+  <main>
+    <section class="hero">
+      <div class="submarine">&#128674;</div>
+      <h1>AquaVida</h1>
+      <p>Seu guia completo para aquarios e peixes ornamentais. Cuidados, estilos e dicas para comecar.</p>
+      <a href="#intro-section"><button class="btn-hero">Descobrir</button></a>
+    </section>
+    <section id="intro-section" class="intro-section">
+      <h2>Um aquário em casa</h2>
+      <p class="intro-text">Peixes ornamentais trazem vida e tranquilidade. Descubra espécies que se adaptam ao seu espaço e criam um ambiente único e relaxante.</p>
+      <div class="intro-deco"></div>
+    </section>
+    <section id="montagem-section">
+      <h2>Montagem de aquário</h2>
+      <p class="intro-text" style="margin-bottom: 0;">Inspire-se com GIFs animados de montagem e manutenção. Veja o processo em ação.</p>
+      <div class="montagem-grid">
+        <div class="montagem-card">
+          <div class="media-wrap">
+            <img src="https://media.giphy.com/media/HrGJOSnKBLV5RQZviS/giphy.gif" alt="Peixes no aquário">
+          </div>
+          <div class="card-body"><h3>Aquário em ação</h3><p>Peixes nadando em um aquário saudável e bem montado.</p></div>
+        </div>
+        <div class="montagem-card">
+          <div class="media-wrap">
+            <img src="https://media.giphy.com/media/Z9afx21K3QUxi/giphy.gif" alt="Aquário animado">
+          </div>
+          <div class="card-body"><h3>Vida no aquário</h3><p>Ambiente aquático colorido com peixes e plantas.</p></div>
+        </div>
+        <div class="montagem-card">
+          <div class="media-wrap">
+            <img src="https://media.giphy.com/media/8kVIqoekDi9UzLNAx7/giphy.gif" alt="Montagem de aquário">
+          </div>
+          <div class="card-body"><h3>Como montar um aquário</h3><p>Tutorial completo para iniciantes. Passo a passo da montagem.</p></div>
+        </div>
+        <div class="montagem-card">
+          <div class="media-wrap">
+            <img src="https://media.giphy.com/media/VOpAngC09ucJKVjNQy/giphy.gif" alt="Aquário plantado">
+          </div>
+          <div class="card-body"><h3>Aquário plantado nano</h3><p>Montando um nano aquário low-tech com plantas.</p></div>
+        </div>
+      </div>
+    </section>
+    <section id="cuidados-section">
+      <h2>Como cuidar dos peixes</h2>
+      <div class="cuidados-grid cuidados-animated">
+        <div class="cuidado-card">
+          <span class="care-mini-fish">&#128032;</span><span class="care-mini-fish">&#128031;</span><span class="care-mini-fish">&#128033;</span>
+          <img class="care-img" src="https://images.pexels.com/photos/2156311/pexels-photo-2156311.jpeg?auto=compress&w=400" alt="Troca de água">
+          <div class="icon">&#128167;</div><h3>Troca de água</h3><p>Troque 20-30% da água semanalmente. Use condicionador para remover cloro.</p>
+        </div>
+        <div class="cuidado-card">
+          <span class="care-mini-fish">&#128032;</span><span class="care-mini-fish">&#128031;</span><span class="care-mini-fish">&#128033;</span>
+          <img class="care-img" src="https://images.unsplash.com/photo-1559827291-72ee739d0d9a?w=400" alt="Temperatura">
+          <div class="icon">&#127777;</div><h3>Temperatura</h3><p>Mantenha entre 24-28°C para a maioria das espécies tropicais.</p>
+        </div>
+        <div class="cuidado-card">
+          <span class="care-mini-fish">&#128032;</span><span class="care-mini-fish">&#128031;</span><span class="care-mini-fish">&#128033;</span>
+          <img class="care-img" src="https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400" alt="Testes de água">
+          <div class="icon">&#129514;</div><h3>Testes</h3><p>Monitore pH, amônia, nitrito e nitrato regularmente.</p>
+        </div>
+        <div class="cuidado-card">
+          <span class="care-mini-fish">&#128032;</span><span class="care-mini-fish">&#128031;</span><span class="care-mini-fish">&#128033;</span>
+          <img class="care-img" src="https://images.pexels.com/photos/1288555/pexels-photo-1288555.jpeg?auto=compress&w=400" alt="Filtração">
+          <div class="icon">&#127811;</div><h3>Filtração</h3><p>Filtro adequado ao tamanho do aquário. Ciclagem antes de adicionar peixes.</p>
+        </div>
+      </div>
+    </section>
+    <section id="aquarios-section">
+      <h2>Estilos de aquários</h2>
+      <div class="aquarios-grid">
+        <div class="aquario-card" data-gallery='["https://images.pexels.com/photos/2156311/pexels-photo-2156311.jpeg?auto=compress&w=800","https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800"]' data-title="Água doce tropical">
+          <img class="card-img" src="https://images.pexels.com/photos/2156311/pexels-photo-2156311.jpeg?auto=compress&w=600" alt="Aquário de água doce tropical com plantas e peixes">
+          <div class="card-body"><h3>Água doce tropical</h3><p>Ideal para iniciantes. Espécies como tetra, molly, platy e guppy. Plantas naturais e decoração versátil.</p></div>
+        </div>
+        <div class="aquario-card" data-gallery='["https://images.unsplash.com/photo-1559827291-72ee739d0d9a?w=800","https://images.pexels.com/photos/1288555/pexels-photo-1288555.jpeg?auto=compress&w=800"]' data-title="Marinho / Reef">
+          <img class="card-img" src="https://images.unsplash.com/photo-1559827291-72ee739d0d9a?w=600" alt="Aquário marinho com corais e peixes coloridos">
+          <div class="card-body"><h3>Marinho / Reef</h3><p>Peixes coloridos e corais. Exige mais equipamentos (skimmer, refratômetro) e conhecimento avançado.</p></div>
+        </div>
+        <div class="aquario-card" data-gallery='["https://images.pexels.com/photos/325044/pexels-photo-325044.jpeg?auto=compress&w=800","https://images.unsplash.com/photo-1535591273668-578e31182c4f?w=800"]' data-title="Betta">
+          <img class="card-img" src="https://images.pexels.com/photos/325044/pexels-photo-325044.jpeg?auto=compress&w=600" alt="Betta em aquário compacto">
+          <div class="card-body"><h3>Betta</h3><p>Aquário compacto para um betta. Mínimo 20 litros, plantas e esconderijos. Um peixe por aquário.</p></div>
+        </div>
+        <div class="aquario-card" data-gallery='["https://images.unsplash.com/photo-1524704654690-b56c05c78a00?w=800","https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800"]' data-title="Nano aquário">
+          <img class="card-img" src="https://images.unsplash.com/photo-1524704654690-b56c05c78a00?w=600" alt="Nano aquário com peixes pequenos">
+          <div class="card-body"><h3>Nano aquário</h3><p>Pequenos (10-30 litros), perfeitos para ambientes reduzidos. Camarões e peixes pequenos como rasboras.</p></div>
+        </div>
+        <div class="aquario-card" data-gallery='["https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800","https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800"]' data-title="Aquascape / Plantado">
+          <img class="card-img" src="https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=600" alt="Aquascape plantado">
+          <div class="card-body"><h3>Aquascape / Plantado</h3><p>Foco em plantas aquáticas e paisagismo. Layouts naturais com musgo, troncos e rochas. CO2 e fertilização.</p></div>
+        </div>
+        <div class="aquario-card" data-gallery='["https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800","https://images.pexels.com/photos/2156311/pexels-photo-2156311.jpeg?auto=compress&w=800"]' data-title="Ciclídeos Africanos">
+          <img class="card-img" src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600" alt="Ciclídeos africanos">
+          <div class="card-body"><h3>Ciclídeos Africanos</h3><p>Lagos Malawi e Tanganyika. Peixes coloridos e territoriais. Muitas rochas, pH alcalino e água dura.</p></div>
+        </div>
+        <div class="aquario-card" data-gallery='["https://images.unsplash.com/photo-1524704654690-b56c05c78a00?w=800","https://images.pexels.com/photos/2156311/pexels-photo-2156311.jpeg?auto=compress&w=800"]' data-title="Goldfish / Koi">
+          <img class="card-img" src="https://images.unsplash.com/photo-1524704654690-b56c05c78a00?w=600" alt="Aquário de goldfish">
+          <div class="card-body"><h3>Goldfish / Koi</h3><p>Água fria, sem aquecimento. Goldfish precisam de bastante espaço. Koi em lagos ou aquários grandes.</p></div>
+        </div>
+        <div class="aquario-card" data-gallery='["https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800","https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800"]' data-title="Paludário">
+          <img class="card-img" src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600" alt="Paludário">
+          <div class="card-body"><h3>Paludário</h3><p>Metade aquático, metade emerso. Plantas terrestres e aquáticas. Ideal para anfíbios e espécies de transição.</p></div>
+        </div>
+        <div class="aquario-card" data-gallery='["https://images.pexels.com/photos/1288555/pexels-photo-1288555.jpeg?auto=compress&w=800","https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800"]' data-title="Shrimp / Camarões">
+          <img class="card-img" src="https://images.pexels.com/photos/1288555/pexels-photo-1288555.jpeg?auto=compress&w=600" alt="Aquário de camarões">
+          <div class="card-body"><h3>Shrimp / Camarões</h3><p>Dedicado a camarões ornamentais (Red Cherry, Crystal, Amano). Plantas densas e água estável.</p></div>
+        </div>
+        <div class="aquario-card" data-gallery='["https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800","https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800"]' data-title="Holandês (Dutch)">
+          <img class="card-img" src="https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=600" alt="Aquário estilo holandês">
+          <div class="card-body"><h3>Holandês (Dutch)</h3><p>Foco total em plantas coloridas e densas. Efeito de jardim submerso com camadas e contrastes de verde e vermelho.</p></div>
+        </div>
+        <div class="aquario-card" data-gallery='["https://images.pexels.com/photos/2156311/pexels-photo-2156311.jpeg?auto=compress&w=800","https://images.unsplash.com/photo-1559827291-72ee739d0d9a?w=800"]' data-title="Comunitário">
+          <img class="card-img" src="https://images.pexels.com/photos/2156311/pexels-photo-2156311.jpeg?auto=compress&w=600" alt="Aquário comunitário">
+          <div class="card-body"><h3>Comunitário</h3><p>Mistura harmoniosa de espécies pacíficas. Tetra, corydoras, rasboras e mollys em um só aquário.</p></div>
+        </div>
+        <div class="aquario-card" data-gallery='["https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800","https://images.pexels.com/photos/2156311/pexels-photo-2156311.jpeg?auto=compress&w=800"]' data-title="Biótopo">
+          <img class="card-img" src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=600" alt="Biótopo Amazônico">
+          <div class="card-body"><h3>Biótopo</h3><p>Recriação de habitat natural (Amazônia, África, Ásia). Espécies e decoração autênticas da região.</p></div>
+        </div>
+        <div class="aquario-card" data-gallery='["https://images.unsplash.com/photo-1559827291-72ee739d0d9a?w=800","https://images.unsplash.com/photo-1524704654690-b56c05c78a00?w=800"]' data-title="Brackish (Salobra)">
+          <img class="card-img" src="https://images.unsplash.com/photo-1559827291-72ee739d0d9a?w=600" alt="Aquário de água salobra">
+          <div class="card-body"><h3>Brackish (Salobra)</h3><p>Água com salinidade intermediária. Peixes como molinésia black, baiacu e gobies. Manguezal em miniatura.</p></div>
+        </div>
+        <div class="aquario-card" data-gallery='["https://images.unsplash.com/photo-1524704654690-b56c05c78a00?w=800","https://images.pexels.com/photos/2156311/pexels-photo-2156311.jpeg?auto=compress&w=800"]' data-title="Reprodução">
+          <img class="card-img" src="https://images.unsplash.com/photo-1524704654690-b56c05c78a00?w=600" alt="Tanque de reprodução">
+          <div class="card-body"><h3>Reprodução</h3><p>Configurado para criação de peixes ou camarões. Separação de pais e filhotes, alimentos vivos e água estável.</p></div>
+        </div>
+      </div>
+    </section>
+    <section id="especies-section">
+      <h2>Espécies populares</h2>
+      <div class="especies-grid">
+        <div class="especie-card" data-gallery='["https://images.pexels.com/photos/2156311/pexels-photo-2156311.jpeg?auto=compress&w=800","https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800"]' data-title="Tetra Neon">
+          <img class="card-img" src="https://images.pexels.com/photos/2156311/pexels-photo-2156311.jpeg?auto=compress&w=400" alt="Tetra Neon">
+          <div class="card-body"><h3>Tetra Neon</h3></div>
+        </div>
+        <div class="especie-card" data-gallery='["https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800","https://images.pexels.com/photos/1288555/pexels-photo-1288555.jpeg?auto=compress&w=800"]' data-title="Guppy">
+          <img class="card-img" src="https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=400" alt="Guppy">
+          <div class="card-body"><h3>Guppy</h3></div>
+        </div>
+        <div class="especie-card" data-gallery='["https://images.unsplash.com/photo-1524704654690-b56c05c78a00?w=800","https://images.unsplash.com/photo-1559827291-72ee739d0d9a?w=800"]' data-title="Molly">
+          <img class="card-img" src="https://images.unsplash.com/photo-1524704654690-b56c05c78a00?w=400" alt="Molly">
+          <div class="card-body"><h3>Molly</h3></div>
+        </div>
+        <div class="especie-card" data-gallery='["https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800","https://images.pexels.com/photos/1288555/pexels-photo-1288555.jpeg?auto=compress&w=800"]' data-title="Platy">
+          <img class="card-img" src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=400" alt="Platy">
+          <div class="card-body"><h3>Platy</h3></div>
+        </div>
+        <div class="especie-card" data-gallery='["https://images.pexels.com/photos/325044/pexels-photo-325044.jpeg?auto=compress&w=800","https://images.unsplash.com/photo-1535591273668-578e31182c4f?w=800"]' data-title="Betta">
+          <img class="card-img" src="https://images.pexels.com/photos/325044/pexels-photo-325044.jpeg?auto=compress&w=400" alt="Betta">
+          <div class="card-body"><h3>Betta</h3></div>
+        </div>
+        <div class="especie-card" data-gallery='["https://images.pexels.com/photos/2156311/pexels-photo-2156311.jpeg?auto=compress&w=800","https://images.unsplash.com/photo-1524704654690-b56c05c78a00?w=800"]' data-title="Rasbora">
+          <img class="card-img" src="https://images.pexels.com/photos/2156311/pexels-photo-2156311.jpeg?auto=compress&w=400" alt="Rasbora">
+          <div class="card-body"><h3>Rasbora</h3></div>
+        </div>
+        <div class="especie-card" data-gallery='["https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800","https://images.pexels.com/photos/2156311/pexels-photo-2156311.jpeg?auto=compress&w=800"]' data-title="Discus">
+          <img class="card-img" src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=400" alt="Discus">
+          <div class="card-body"><h3>Discus</h3></div>
+        </div>
+        <div class="especie-card" data-gallery='["https://images.unsplash.com/photo-1559827291-72ee739d0d9a?w=800","https://images.pexels.com/photos/2156311/pexels-photo-2156311.jpeg?auto=compress&w=800"]' data-title="Corydora">
+          <img class="card-img" src="https://images.unsplash.com/photo-1559827291-72ee739d0d9a?w=400" alt="Corydora">
+          <div class="card-body"><h3>Corydora</h3></div>
+        </div>
+        <div class="especie-card" data-gallery='["https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=800","https://images.pexels.com/photos/1288555/pexels-photo-1288555.jpeg?auto=compress&w=800"]' data-title="Acará">
+          <img class="card-img" src="https://images.unsplash.com/photo-1582719478250-c89cae4dc85b?w=400" alt="Acará">
+          <div class="card-body"><h3>Acará</h3></div>
+        </div>
+        <div class="especie-card" data-gallery='["https://images.pexels.com/photos/1288555/pexels-photo-1288555.jpeg?auto=compress&w=800","https://images.unsplash.com/photo-1544551763-46a013bb70d5?w=800"]' data-title="Camarão Red Cherry">
+          <img class="card-img" src="https://images.pexels.com/photos/1288555/pexels-photo-1288555.jpeg?auto=compress&w=400" alt="Camarão Red Cherry">
+          <div class="card-body"><h3>Camarão Red Cherry</h3></div>
+        </div>
+      </div>
+    </section>
+    <section id="contato-section">
+      <h2>Contato</h2>
+      <form onsubmit="event.preventDefault(); alert('Mensagem enviada! (demonstracao)');">
+        <input type="text" placeholder="Seu nome" required>
+        <input type="email" placeholder="Seu e-mail" required>
+        <textarea placeholder="Sua mensagem" required></textarea>
+        <button type="submit">Enviar</button>
+      </form>
+      <div class="contato-info"><span>&#128231; contato@aquavida.com.br</span><span>&#128241; (11) 99999-9999</span></div>
+    </section>
+  </main>
+  <div class="gallery-overlay" id="galleryOverlay">
+    <button class="gallery-close" id="galleryClose" aria-label="Fechar">&times;</button>
+    <img class="gallery-main" id="galleryImg" src="" alt="">
+    <div class="gallery-title" id="galleryTitle"></div>
+    <div class="gallery-counter" id="galleryCounter"></div>
+    <div class="gallery-nav">
+      <button class="gallery-btn" id="galleryPrev" aria-label="Anterior">&#9664;</button>
+      <button class="gallery-btn" id="galleryNext" aria-label="Próximo">&#9654;</button>
+    </div>
+  </div>
+  <script>
+    window.addEventListener('load', function() { setTimeout(function() { document.getElementById('loader').classList.add('hidden'); }, 1200); });
+    var cursor = document.getElementById('cursorFish');
+    var mx = 0, my = 0, cx = 0, cy = 0;
+    document.addEventListener('mousemove', function(e) { mx = e.clientX; my = e.clientY; });
+    function animateCursor() { cx += (mx - cx) * 0.15; cy += (my - cy) * 0.15; cursor.style.left = cx + 'px'; cursor.style.top = cy + 'px'; cursor.style.transform = 'translate(-50%, -50%) scaleX(' + (mx > cx ? 1 : -1) + ')'; requestAnimationFrame(animateCursor); }
+    animateCursor();
+    if ('ontouchstart' in window) { cursor.style.display = 'none'; document.body.classList.add('show-cursor'); }
+
+    var gallery = { overlay: null, img: null, titleEl: null, counterEl: null, images: [], index: 0, card: null };
+    gallery.overlay = document.getElementById('galleryOverlay');
+    gallery.img = document.getElementById('galleryImg');
+    gallery.titleEl = document.getElementById('galleryTitle');
+    gallery.counterEl = document.getElementById('galleryCounter');
+    function openGallery(card) {
+      var g = card.getAttribute('data-gallery');
+      if (!g) return;
+      gallery.images = JSON.parse(g);
+      gallery.index = 0;
+      gallery.card = card;
+      gallery.titleEl.textContent = card.getAttribute('data-title') || '';
+      gallery.overlay.classList.add('active');
+      updateGalleryImg();
+    }
+    function updateGalleryImg() {
+      gallery.img.src = gallery.images[gallery.index];
+      gallery.counterEl.textContent = (gallery.index + 1) + ' / ' + gallery.images.length;
+      if (gallery.card) {
+        var cardImg = gallery.card.querySelector('.card-img');
+        if (cardImg) cardImg.src = gallery.images[gallery.index].replace(/w=\d+/, 'w=600');
+      }
+    }
+    function prevImg() { gallery.index = (gallery.index - 1 + gallery.images.length) % gallery.images.length; updateGalleryImg(); }
+    function nextImg() { gallery.index = (gallery.index + 1) % gallery.images.length; updateGalleryImg(); }
+    function closeGallery() { gallery.overlay.classList.remove('active'); }
+    document.querySelectorAll('.aquario-card, .especie-card').forEach(function(c) {
+      c.addEventListener('click', function() { openGallery(c); });
+    });
+    document.getElementById('galleryClose').addEventListener('click', closeGallery);
+    document.getElementById('galleryPrev').addEventListener('click', prevImg);
+    document.getElementById('galleryNext').addEventListener('click', nextImg);
+    gallery.overlay.addEventListener('click', function(e) { if (e.target === gallery.overlay) closeGallery(); });
+    document.addEventListener('keydown', function(e) {
+      if (!gallery.overlay.classList.contains('active')) return;
+      if (e.key === 'Escape') closeGallery();
+      if (e.key === 'ArrowLeft') prevImg();
+      if (e.key === 'ArrowRight') nextImg();
+    });
+  </script>
+</body>
+</html>
