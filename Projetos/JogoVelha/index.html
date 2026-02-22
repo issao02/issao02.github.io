@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Jogo da Velha vs IA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0f0f12;
+      --bg-card: #18181d;
+      --accent: #6366f1;
+      --accent-hover: #818cf8;
+      --text: #e4e4e7;
+      --text-muted: #a1a1aa;
+      --border: #27272a;
+      --x-color: #22d3ee;
+      --o-color: #f472b6;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2rem;
+      max-width: 420px;
+      width: 100%;
+    }
+
+    /* Tela de seleção de dificuldade */
+    .screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2rem;
+      width: 100%;
+    }
+
+    .screen.hidden {
+      display: none;
+    }
+
+    h1 {
+      font-size: clamp(1.75rem, 4vw, 2.25rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #fff 0%, var(--text-muted) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-align: center;
+    }
+
+    .difficulty-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      width: 100%;
+    }
+
+    .difficulty-btn {
+      padding: 1rem 1.5rem;
+      font-family: inherit;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      background: var(--bg-card);
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.25s ease;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .difficulty-btn:hover {
+      border-color: var(--accent);
+      background: rgba(99, 102, 241, 0.1);
+      transform: translateX(4px);
+    }
+
+    .difficulty-btn .icon {
+      font-size: 1.5rem;
+    }
+
+    .difficulty-btn .desc {
+      font-size: 0.85rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    .difficulty-btn .label {
+      flex: 1;
+    }
+
+    /* Jogo */
+    .game-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      padding: 0 0.5rem;
+    }
+
+    .turn-indicator {
+      font-size: 1rem;
+      color: var(--text-muted);
+    }
+
+    .turn-indicator .player {
+      color: var(--x-color);
+      font-weight: 600;
+    }
+
+    .turn-indicator .ai {
+      color: var(--o-color);
+      font-weight: 600;
+    }
+
+    .btn-restart {
+      padding: 0.5rem 1rem;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-card);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-restart:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .board {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 6px;
+      width: 300px;
+      height: 300px;
+      background: var(--border);
+      padding: 6px;
+      border-radius: 16px;
+    }
+
+    .cell {
+      background: var(--bg-card);
+      border: none;
+      border-radius: 10px;
+      font-size: 3rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      aspect-ratio: 1;
+      min-width: 0;
+      min-height: 0;
+    }
+
+    .cell:hover:not(.taken) {
+      background: rgba(99, 102, 241, 0.15);
+    }
+
+    .cell.taken {
+      cursor: default;
+    }
+
+    .cell.x {
+      color: var(--x-color);
+    }
+
+    .cell.o {
+      color: var(--o-color);
+    }
+
+    .cell.winner {
+      position: relative;
+    }
+
+    .board-wrapper {
+      position: relative;
+      width: 300px;
+      height: 300px;
+    }
+
+    .win-line {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      display: none;
+    }
+
+    .win-line line {
+      stroke: var(--accent);
+      stroke-width: 5;
+      stroke-linecap: round;
+      fill: none;
+      stroke-dasharray: 400;
+      stroke-dashoffset: 400;
+      animation: drawLine 0.5s ease-out forwards;
+    }
+
+    @keyframes drawLine {
+      to { stroke-dashoffset: 0; }
+    }
+
+    .result-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.65);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      z-index: 100;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.4s ease, visibility 0.4s ease;
+    }
+
+    .result-overlay.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .result-text {
+      font-size: 2rem;
+      font-weight: 700;
+      text-align: center;
+      padding: 0 2rem;
+      max-width: 90%;
+    }
+
+    .result-overlay .overlay-buttons {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .result-overlay .btn-restart,
+    .result-overlay .btn-back {
+      background: var(--bg-card);
+      color: var(--text);
+    }
+
+    .result-overlay .btn-restart:hover,
+    .result-overlay .btn-back:hover {
+      background: rgba(99, 102, 241, 0.2);
+    }
+
+    .result-text.win {
+      color: #22c55e;
+    }
+
+    .result-text.lose {
+      color: #ef4444;
+    }
+
+    .result-text.draw {
+      color: var(--text-muted);
+    }
+
+    .message {
+      font-size: 1.25rem;
+      font-weight: 600;
+      text-align: center;
+      min-height: 2rem;
+    }
+
+    .message.win {
+      color: var(--x-color);
+    }
+
+    .message.lose {
+      color: var(--o-color);
+    }
+
+    .message.draw {
+      color: var(--text-muted);
+    }
+
+    .btn-back {
+      padding: 0.5rem 1rem;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+    }
+
+    .btn-back:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Tela de seleção de dificuldade -->
+    <div id="screenDifficulty" class="screen">
+      <h1>Jogo da Velha</h1>
+      <p style="color: var(--text-muted); text-align: center;">Escolha a dificuldade da IA</p>
+      <div class="difficulty-buttons">
+        <button class="difficulty-btn" data-level="easy">
+          <span class="icon">😊</span>
+          <span class="label">
+            <strong>Fácil</strong>
+            <div class="desc">IA joga aleatoriamente. Bom para começar.</div>
+          </span>
+        </button>
+        <button class="difficulty-btn" data-level="medium">
+          <span class="icon">🤔</span>
+          <span class="label">
+            <strong>Médio</strong>
+            <div class="desc">IA mistura jogadas aleatórias e inteligentes.</div>
+          </span>
+        </button>
+        <button class="difficulty-btn" data-level="hard">
+          <span class="icon">😤</span>
+          <span class="label">
+            <strong>Difícil</strong>
+            <div class="desc">IA usa minimax. Quase impossível vencer.</div>
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Tela do jogo -->
+    <div id="screenGame" class="screen hidden">
+      <div class="game-header">
+        <span class="turn-indicator" id="turnIndicator">Sua vez (X)</span>
+        <button class="btn-restart" id="btnRestart">Reiniciar</button>
+      </div>
+      <div class="board-wrapper">
+        <div class="board" id="board">
+          <button class="cell" data-index="0"></button>
+          <button class="cell" data-index="1"></button>
+          <button class="cell" data-index="2"></button>
+          <button class="cell" data-index="3"></button>
+          <button class="cell" data-index="4"></button>
+          <button class="cell" data-index="5"></button>
+          <button class="cell" data-index="6"></button>
+          <button class="cell" data-index="7"></button>
+          <button class="cell" data-index="8"></button>
+        </div>
+        <svg class="win-line" id="winLine" viewBox="0 0 300 300" preserveAspectRatio="none">
+          <line id="winLinePath" x1="0" y1="0" x2="0" y2="0" />
+        </svg>
+      </div>
+      <div class="result-overlay" id="resultOverlay">
+        <div class="result-text" id="resultText"></div>
+        <div class="overlay-buttons">
+          <button class="btn-restart" id="overlayRestart">Reiniciar</button>
+          <button class="btn-restart" id="overlayNewGame">Nova partida</button>
+        </div>
+      </div>
+      <div class="message" id="message"></div>
+      <div style="display: flex; gap: 1rem;">
+        <button class="btn-restart" id="btnNewGame">Nova partida</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const PLAYER = 'X';
+    const AI = 'O';
+
+    let board = ['', '', '', '', '', '', '', '', ''];
+    let currentPlayer = PLAYER;
+    let gameOver = false;
+    let difficulty = 'easy';
+
+    const screenDifficulty = document.getElementById('screenDifficulty');
+    const screenGame = document.getElementById('screenGame');
+    const boardEl = document.getElementById('board');
+    const turnIndicator = document.getElementById('turnIndicator');
+    const messageEl = document.getElementById('message');
+    const winLineEl = document.getElementById('winLinePath');
+    const winLineSvg = document.getElementById('winLine');
+    const resultOverlay = document.getElementById('resultOverlay');
+    const resultText = document.getElementById('resultText');
+
+    const CELL_CENTERS = [
+      [52, 52], [150, 52], [248, 52],
+      [52, 150], [150, 150], [248, 150],
+      [52, 248], [150, 248], [248, 248]
+    ];
+
+    // Seleção de dificuldade
+    document.querySelectorAll('.difficulty-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        difficulty = btn.dataset.level;
+        screenDifficulty.classList.add('hidden');
+        screenGame.classList.remove('hidden');
+        initGame();
+      });
+    });
+
+    function initGame() {
+      board = ['', '', '', '', '', '', '', '', ''];
+      currentPlayer = PLAYER;
+      gameOver = false;
+      messageEl.textContent = '';
+      messageEl.className = 'message';
+      turnIndicator.textContent = 'Sua vez (X)';
+      resultOverlay.classList.remove('visible');
+      winLineSvg.style.display = 'none';
+
+      boardEl.querySelectorAll('.cell').forEach((cell, i) => {
+        cell.textContent = '';
+        cell.classList.remove('x', 'o', 'taken', 'winner');
+        cell.disabled = false;
+      });
+
+      // Se IA começa (para dificuldade hard, às vezes)
+      if (difficulty === 'hard' && Math.random() < 0.5) {
+        currentPlayer = AI;
+        turnIndicator.textContent = 'Vez da IA (O)';
+        setTimeout(aiMove, 500);
+      }
+    }
+
+    function checkWinnerForBoard(b) {
+      const lines = [
+        [0, 1, 2], [3, 4, 5], [6, 7, 8],
+        [0, 3, 6], [1, 4, 7], [2, 5, 8],
+        [0, 4, 8], [2, 4, 6]
+      ];
+      for (const [a, b1, c] of lines) {
+        if (b[a] && b[a] === b[b1] && b[a] === b[c]) {
+          return { winner: b[a], line: [a, b1, c] };
+        }
+      }
+      if (b.every(cell => cell)) return { winner: 'draw' };
+      return null;
+    }
+
+    function checkWinner() {
+      return checkWinnerForBoard(board);
+    }
+
+    function drawWinLine(line) {
+      const [a, b, c] = line;
+      const [x1, y1] = CELL_CENTERS[a];
+      const [x2, y2] = CELL_CENTERS[c];
+      winLineEl.setAttribute('x1', x1);
+      winLineEl.setAttribute('y1', y1);
+      winLineEl.setAttribute('x2', x2);
+      winLineEl.setAttribute('y2', y2);
+      winLineSvg.style.display = 'block';
+    }
+
+    function showResultOverlay(text, type) {
+      resultText.textContent = text;
+      resultText.className = 'result-text ' + type;
+      resultOverlay.classList.add('visible');
+    }
+
+    function endGame(result) {
+      gameOver = true;
+      boardEl.querySelectorAll('.cell').forEach(cell => cell.disabled = true);
+
+      const showOverlay = () => {
+        if (result.winner === 'draw') {
+          showResultOverlay('Empate!', 'draw');
+        } else if (result.winner === PLAYER) {
+          showResultOverlay('Você venceu! 🎉', 'win');
+        } else {
+          showResultOverlay('Você perdeu!', 'lose');
+        }
+      };
+
+      if (result.line) {
+        result.line.forEach(i => boardEl.children[i].classList.add('winner'));
+        drawWinLine(result.line);
+        setTimeout(showOverlay, 1000);
+      } else {
+        setTimeout(showOverlay, 500);
+      }
+    }
+
+    function getEmptyCells() {
+      return board.map((v, i) => v === '' ? i : -1).filter(i => i >= 0);
+    }
+
+    function aiMoveEasy() {
+      const empty = getEmptyCells();
+      return empty[Math.floor(Math.random() * empty.length)];
+    }
+
+    function aiMoveMedium() {
+      if (Math.random() < 0.5) {
+        return aiMoveEasy();
+      }
+      return minimaxMove();
+    }
+
+    function minimaxMove() {
+      let bestScore = -Infinity;
+      let bestMove = -1;
+
+      const empty = getEmptyCells();
+      for (const move of empty) {
+        board[move] = AI;
+        let score = minimax(board, 0, false);
+        board[move] = '';
+
+        if (score > bestScore) {
+          bestScore = score;
+          bestMove = move;
+        }
+      }
+
+      return bestMove;
+    }
+
+    function minimax(boardState, depth, isMaximizing) {
+      const result = checkWinnerForBoard(boardState);
+      if (result) {
+        if (result.winner === AI) return 10 - depth;
+        if (result.winner === PLAYER) return depth - 10;
+        return 0;
+      }
+
+      const empty = boardState.map((v, i) => v === '' ? i : -1).filter(i => i >= 0);
+      if (empty.length === 0) return 0;
+
+      if (isMaximizing) {
+        let best = -Infinity;
+        for (const i of empty) {
+          boardState[i] = AI;
+          best = Math.max(best, minimax([...boardState], depth + 1, false));
+          boardState[i] = '';
+        }
+        return best;
+      } else {
+        let best = Infinity;
+        for (const i of empty) {
+          boardState[i] = PLAYER;
+          best = Math.min(best, minimax([...boardState], depth + 1, true));
+          boardState[i] = '';
+        }
+        return best;
+      }
+    }
+
+    function doAiMove() {
+      let move;
+      if (difficulty === 'easy') move = aiMoveEasy();
+      else if (difficulty === 'medium') move = aiMoveMedium();
+      else move = minimaxMove();
+
+      if (move >= 0) {
+        board[move] = AI;
+        const cell = boardEl.children[move];
+        cell.textContent = 'O';
+        cell.classList.add('o', 'taken');
+        cell.disabled = true;
+
+        const result = checkWinner();
+        if (result) {
+          endGame(result);
+          return;
+        }
+
+        currentPlayer = PLAYER;
+        turnIndicator.textContent = 'Sua vez (X)';
+      }
+    }
+
+    boardEl.addEventListener('click', (e) => {
+      const cell = e.target.closest('.cell');
+      if (!cell || gameOver || currentPlayer !== PLAYER || cell.classList.contains('taken')) return;
+
+      const index = parseInt(cell.dataset.index);
+      board[index] = PLAYER;
+      cell.textContent = 'X';
+      cell.classList.add('x', 'taken');
+      cell.disabled = true;
+
+      const result = checkWinner();
+      if (result) {
+        endGame(result);
+        return;
+      }
+
+      currentPlayer = AI;
+      turnIndicator.textContent = 'Vez da IA (O)';
+      setTimeout(aiMove, 400);
+    });
+
+    function aiMove() {
+      if (gameOver || currentPlayer !== AI) return;
+      doAiMove();
+    }
+
+    document.getElementById('btnRestart').addEventListener('click', initGame);
+    document.getElementById('btnNewGame').addEventListener('click', () => {
+      resultOverlay.classList.remove('visible');
+      screenGame.classList.add('hidden');
+      screenDifficulty.classList.remove('hidden');
+    });
+
+    document.getElementById('overlayRestart').addEventListener('click', initGame);
+    document.getElementById('overlayNewGame').addEventListener('click', () => {
+      resultOverlay.classList.remove('visible');
+      screenGame.classList.add('hidden');
+      screenDifficulty.classList.remove('hidden');
+    });
+  </script>
+</body>
+</html>

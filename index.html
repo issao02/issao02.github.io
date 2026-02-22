@@ -130,6 +130,23 @@
       margin-bottom: 1rem;
     }
 
+    .projeto-velha-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.15em;
+      font-weight: 700;
+      font-size: 2rem;
+    }
+
+    .projeto-velha-icon .velha-x {
+      color: #22d3ee;
+    }
+
+    .projeto-velha-icon .velha-o {
+      color: #f472b6;
+    }
+
     .project-card h2 {
       font-size: 1.35rem;
       font-weight: 600;
@@ -395,6 +412,18 @@
         <div class="project-icon">🐦</div>
         <h2>Flappy Bird</h2>
         <p>Jogo clássico! Clique ou toque para fazer o pássaro voar e evite os canos. Quanto mais passar, maior sua pontuação.</p>
+        <span class="project-link">
+          Abrir projeto
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </span>
+      </a>
+
+      <a href="Projetos/JogoVelha/" class="project-card" target="_self">
+        <div class="project-icon projeto-velha-icon"><span class="velha-x">X</span><span class="velha-o">O</span></div>
+        <h2>Jogo da Velha</h2>
+        <p>Jogue contra a IA. Escolha entre fácil, médio ou difícil. No difícil, a IA usa minimax e é quase imbatível.</p>
         <span class="project-link">
           Abrir projeto
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
