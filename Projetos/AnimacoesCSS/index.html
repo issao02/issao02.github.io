@@ -704,16 +704,13 @@
       height: 100%;
       object-fit: cover;
       border-radius: 8px;
-      transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), width 0.45s, height 0.45s, box-shadow 0.45s;
+      transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1), border-radius 0.45s, box-shadow 0.45s;
       transform-origin: center bottom;
     }
     .gallery-25 .thumb:hover {
       z-index: 100;
     }
     .gallery-25 .thumb:hover img {
-      width: 360px;
-      height: 270px;
-      object-fit: cover;
       border-radius: 12px;
       box-shadow: 0 20px 56px rgba(0,0,0,0.5);
       transform: translate(var(--tx, 0px), var(--ty, 0px)) scale(var(--s, 1));
@@ -984,11 +981,11 @@
         const gCy = gRect.top + gRect.height / 2;
         const tCx = tRect.left + tRect.width / 2;
         const tBottom = tRect.bottom;
-        const imgH = 270;
+        const imgH = 312;
         const imgCy = tBottom - imgH / 2;
         img.style.setProperty('--tx', (gCx - tCx) + 'px');
         img.style.setProperty('--ty', (gCy - imgCy) + 'px');
-        img.style.setProperty('--s', '5.625');
+        img.style.setProperty('--s', '6.5');
       });
       thumb.addEventListener('mouseleave', function() {
         const img = this.querySelector('img');

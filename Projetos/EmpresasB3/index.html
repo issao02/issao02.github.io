@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Empresas B3 | Lista Completa com Filtros</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0c0e14;
+      --surface: #151922;
+      --surface-hover: #1c2029;
+      --accent: #00c853;
+      --accent-dim: #00a843;
+      --negative: #ff5252;
+      --text: #e8eaed;
+      --text-muted: #8b9199;
+      --border: #2a2f3a;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'IBM Plex Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--surface) 0%, #0f1319 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 1.5rem 2rem;
+    }
+
+    .header-inner {
+      max-width: 1600px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .logo-icon {
+      width: 40px;
+      height: 40px;
+      background: var(--accent);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--bg);
+    }
+
+    .logo h1 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .logo span {
+      color: var(--text-muted);
+      font-weight: 400;
+      font-size: 0.95rem;
+    }
+
+    .header-info {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .header-info strong { color: var(--accent); font-weight: 600; }
+
+    .btn-atualizar {
+      padding: 0.6rem 1.25rem;
+      background: var(--accent);
+      color: var(--bg);
+      border: none;
+      border-radius: 10px;
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: background 0.2s;
+    }
+
+    .btn-atualizar:hover { background: var(--accent-dim); }
+    .btn-atualizar:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .filtros {
+      background: var(--surface);
+      padding: 1.25rem 2rem;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .filtros-inner {
+      max-width: 1600px;
+      margin: 0 auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: flex-end;
+    }
+
+    .filtro-grupo {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .filtro-grupo label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .filtro-grupo input,
+    .filtro-grupo select {
+      padding: 0.6rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.95rem;
+      background: var(--bg);
+      color: var(--text);
+      min-width: 160px;
+    }
+
+    .filtro-grupo input:focus,
+    .filtro-grupo select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 1.5rem 2rem 2rem;
+    }
+
+    .toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      gap: 1rem;
+    }
+
+    .contador {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+
+    .contador strong { color: var(--text); }
+
+    .table-wrap {
+      background: var(--surface);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .table-scroll {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    th {
+      background: var(--surface-hover);
+      padding: 1rem 1.25rem;
+      text-align: left;
+      font-weight: 600;
+      color: var(--text-muted);
+      white-space: nowrap;
+      cursor: pointer;
+      user-select: none;
+      transition: color 0.2s;
+    }
+
+    th:hover { color: var(--accent); }
+
+    th.sorted-asc::after { content: ' ↑'; color: var(--accent); }
+    th.sorted-desc::after { content: ' ↓'; color: var(--accent); }
+
+    td {
+      padding: 0.85rem 1.25rem;
+      border-top: 1px solid var(--border);
+      transition: background 0.15s;
+    }
+
+    tr:hover td { background: var(--surface-hover); }
+
+    tr.ativo td { background: rgba(0, 200, 83, 0.08); }
+    tr.ativo:hover td { background: rgba(0, 200, 83, 0.12); }
+
+    .ticker {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 600;
+      color: var(--accent);
+      cursor: pointer;
+    }
+
+    .ticker:hover { text-decoration: underline; }
+
+    .nome-empresa {
+      max-width: 220px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .positivo { color: var(--accent); }
+    .negativo { color: var(--negative); }
+    .neutro { color: var(--text-muted); }
+
+    .numero { font-family: 'JetBrains Mono', monospace; text-align: right; }
+
+    .badge {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 6px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      background: rgba(0, 200, 83, 0.15);
+      color: var(--accent);
+    }
+
+    .loading {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text-muted);
+    }
+
+    .loading-spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .erro {
+      text-align: center;
+      padding: 3rem 2rem;
+      color: var(--negative);
+      background: rgba(255, 82, 82, 0.1);
+      border-radius: 12px;
+      margin: 2rem 0;
+    }
+
+    .erro p { margin-bottom: 0.5rem; }
+    .erro small { color: var(--text-muted); }
+
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      overflow-y: auto;
+    }
+
+    .modal-overlay.ativo { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border-radius: 16px;
+      max-width: 560px;
+      width: 100%;
+      border: 1px solid var(--border);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .modal-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .modal-logo {
+      width: 56px;
+      height: 56px;
+      border-radius: 12px;
+      object-fit: contain;
+      background: var(--bg);
+    }
+
+    .modal-ticker {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .modal-nome {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    .modal-fechar {
+      margin-left: auto;
+      width: 40px;
+      height: 40px;
+      border: none;
+      background: var(--border);
+      color: var(--text);
+      border-radius: 10px;
+      font-size: 1.25rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+
+    .modal-fechar:hover { background: var(--negative); }
+
+    .modal-body {
+      padding: 1.5rem;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem 0.75rem;
+    }
+
+    .modal-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.2rem;
+    }
+
+    .modal-item label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-muted);
+    }
+
+    .modal-item span {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 500;
+    }
+
+    .modal-loading {
+      padding: 2rem;
+      text-align: center;
+      color: var(--text-muted);
+    }
+
+    .link-voltar {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 500;
+      margin-top: 1rem;
+      transition: color 0.2s;
+    }
+
+    .link-voltar:hover { color: var(--accent-dim); }
+
+    @media (max-width: 768px) {
+      .modal-body { grid-template-columns: 1fr; }
+      th, td { padding: 0.75rem 1rem; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-icon">B3</div>
+        <div>
+          <h1>Empresas B3</h1>
+          <span>Lista completa com dados em tempo real</span>
+        </div>
+      </div>
+      <div class="header-info">
+        <span>Última atualização: <strong id="lastUpdate">—</strong></span>
+        <span>Total: <strong id="totalCount">0</strong> ativos</span>
+      </div>
+      <button type="button" class="btn-atualizar" id="btnAtualizar" title="Buscar dados atualizados da brapi.dev">
+        <span>↻</span> Atualizar dados
+      </button>
+    </div>
+  </header>
+
+  <div class="filtros">
+    <div class="filtros-inner">
+      <div class="filtro-grupo">
+        <label for="filtroBusca">Buscar</label>
+        <input type="text" id="filtroBusca" placeholder="Ticker ou nome da empresa...">
+      </div>
+      <div class="filtro-grupo">
+        <label for="filtroSetor">Setor</label>
+        <select id="filtroSetor">
+          <option value="">Todos os setores</option>
+        </select>
+      </div>
+      <div class="filtro-grupo">
+        <label for="filtroTipo">Tipo</label>
+        <select id="filtroTipo">
+          <option value="">Todos</option>
+          <option value="stock">Ações</option>
+          <option value="fii">FIIs</option>
+          <option value="etf">ETFs</option>
+          <option value="bdr">BDRs</option>
+          <option value="unit">Units</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <main class="container">
+    <div class="toolbar">
+      <p class="contador">Exibindo <strong id="filteredCount">0</strong> de <strong id="totalDisplay">0</strong> ativos</p>
+    </div>
+
+    <div class="table-wrap">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th data-sort="stock">Ticker</th>
+              <th data-sort="name">Empresa</th>
+              <th data-sort="close" class="numero">Preço</th>
+              <th data-sort="change" class="numero">Variação %</th>
+              <th data-sort="volume" class="numero">Volume</th>
+              <th data-sort="market_cap" class="numero">Valor de Mercado</th>
+              <th data-sort="sector">Setor</th>
+              <th data-sort="type">Tipo</th>
+            </tr>
+          </thead>
+          <tbody id="tbody">
+            <tr>
+              <td colspan="8" class="loading">
+                <div class="loading-spinner"></div>
+                Carregando dados da B3...
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <a href="../" class="link-voltar">← Voltar aos projetos</a>
+  </main>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal">
+      <div class="modal-header">
+        <img class="modal-logo" id="modalLogo" src="" alt="">
+        <div>
+          <div class="modal-ticker" id="modalTicker">—</div>
+          <div class="modal-nome" id="modalNome">—</div>
+        </div>
+        <button type="button" class="modal-fechar" id="modalFechar">×</button>
+      </div>
+      <div class="modal-body" id="modalBody">
+        <div class="modal-loading">Carregando detalhes...</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const BRAPI_TOKEN = 'demo';
+    const BRAPI_LIST = 'https://brapi.dev/api/quote/list';
+    const BRAPI_QUOTE = 'https://brapi.dev/api/quote/';
+
+    let dados = [];
+    let dadosFiltrados = [];
+    let sortCol = 'market_cap';
+    let sortDir = 'desc';
+
+    const tbody = document.getElementById('tbody');
+    const btnAtualizar = document.getElementById('btnAtualizar');
+    const filtroBusca = document.getElementById('filtroBusca');
+    const filtroSetor = document.getElementById('filtroSetor');
+    const filtroTipo = document.getElementById('filtroTipo');
+    const lastUpdate = document.getElementById('lastUpdate');
+    const totalCount = document.getElementById('totalCount');
+    const filteredCount = document.getElementById('filteredCount');
+    const totalDisplay = document.getElementById('totalDisplay');
+    const modalOverlay = document.getElementById('modalOverlay');
+    const modalBody = document.getElementById('modalBody');
+    const modalLogo = document.getElementById('modalLogo');
+    const modalTicker = document.getElementById('modalTicker');
+    const modalNome = document.getElementById('modalNome');
+    const modalFechar = document.getElementById('modalFechar');
+
+    function fmtMoeda(v) {
+      if (v == null || v === '' || isNaN(v)) return '—';
+      if (v >= 1e12) return 'R$ ' + (v / 1e12).toFixed(2) + ' tri';
+      if (v >= 1e9) return 'R$ ' + (v / 1e9).toFixed(2) + ' bi';
+      if (v >= 1e6) return 'R$ ' + (v / 1e6).toFixed(2) + ' mi';
+      if (v >= 1e3) return 'R$ ' + (v / 1e3).toFixed(2) + ' mil';
+      return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function fmtNum(v) {
+      if (v == null || v === '' || isNaN(v)) return '—';
+      return Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+    }
+
+    function fmtPct(v) {
+      if (v == null || v === '' || isNaN(v)) return '—';
+      const n = Number(v);
+      const s = n >= 0 ? '+' : '';
+      return s + n.toFixed(2) + '%';
+    }
+
+    function fmtPreco(v) {
+      if (v == null || v === '' || isNaN(v)) return '—';
+      return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function classeVariacao(v) {
+      if (v == null || v === '' || isNaN(v)) return 'neutro';
+      return Number(v) > 0 ? 'positivo' : Number(v) < 0 ? 'negativo' : 'neutro';
+    }
+
+    async function carregarDados() {
+      tbody.innerHTML = '<tr><td colspan="8" class="loading"><div class="loading-spinner"></div>Carregando dados da B3...</td></tr>';
+      btnAtualizar.disabled = true;
+
+      try {
+        const url = `${BRAPI_LIST}?token=${BRAPI_TOKEN}`;
+        const res = await fetch(url);
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+
+        const json = await res.json();
+        const stocks = json.stocks || [];
+
+        dados = stocks;
+        lastUpdate.textContent = new Date().toLocaleString('pt-BR');
+        totalCount.textContent = dados.length;
+
+        popularSetores();
+        aplicarFiltros();
+      } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="8"><div class="erro"><p>Erro ao carregar dados</p><small>' + (e.message || 'Verifique sua conexão e tente novamente.') + '</small><br><small>Dados via brapi.dev — use token próprio para mais requisições.</small></div></td></tr>';
+      } finally {
+        btnAtualizar.disabled = false;
+      }
+    }
+
+    function popularSetores() {
+      const setores = [...new Set(dados.map(d => d.sector || 'Outros').filter(Boolean))].sort();
+      filtroSetor.innerHTML = '<option value="">Todos os setores</option>';
+      setores.forEach(s => {
+        filtroSetor.innerHTML += `<option value="${s}">${s}</option>`;
+      });
+    }
+
+    function aplicarFiltros() {
+      let base = [...dados];
+      const busca = (filtroBusca.value || '').trim().toLowerCase();
+      const setor = (filtroSetor.value || '').trim();
+      const tipo = (filtroTipo.value || '').trim();
+
+      if (busca) {
+        base = base.filter(d =>
+          (d.stock || '').toLowerCase().includes(busca) ||
+          (d.name || '').toLowerCase().includes(busca)
+        );
+      }
+      if (setor) base = base.filter(d => (d.sector || '') === setor);
+      if (tipo) base = base.filter(d => (d.type || '') === tipo);
+
+      dadosFiltrados = base;
+      ordenar();
+      renderizar();
+    }
+
+    function ordenar() {
+      const col = sortCol;
+      const dir = sortDir === 'asc' ? 1 : -1;
+
+      dadosFiltrados.sort((a, b) => {
+        let va = a[col];
+        let vb = b[col];
+        if (typeof va === 'string') va = (va || '').toLowerCase();
+        if (typeof vb === 'string') vb = (vb || '').toLowerCase();
+        if (va == null) va = '';
+        if (vb == null) vb = '';
+        if (typeof va === 'number' && typeof vb === 'number') return dir * (va - vb);
+        return dir * String(va).localeCompare(String(vb));
+      });
+    }
+
+    function renderizar() {
+      filteredCount.textContent = dadosFiltrados.length;
+      totalDisplay.textContent = dados.length;
+
+      document.querySelectorAll('th[data-sort]').forEach(th => {
+        th.classList.remove('sorted-asc', 'sorted-desc');
+        if (th.dataset.sort === sortCol) th.classList.add(sortDir === 'asc' ? 'sorted-asc' : 'sorted-desc');
+      });
+
+      if (!dadosFiltrados.length) {
+        tbody.innerHTML = '<tr><td colspan="8" class="loading">Nenhum ativo encontrado com os filtros aplicados.</td></tr>';
+        return;
+      }
+
+      tbody.innerHTML = dadosFiltrados.map(d => {
+        const change = d.change != null ? Number(d.change) : null;
+        const changeClass = classeVariacao(change);
+        return `
+          <tr data-ticker="${(d.stock || '').replace(/"/g, '&quot;')}">
+            <td><span class="ticker">${d.stock || '—'}</span></td>
+            <td class="nome-empresa" title="${(d.name || '').replace(/"/g, '&quot;')}">${d.name || '—'}</td>
+            <td class="numero">${fmtPreco(d.close)}</td>
+            <td class="numero ${changeClass}">${fmtPct(change)}</td>
+            <td class="numero">${fmtNum(d.volume)}</td>
+            <td class="numero">${fmtMoeda(d.market_cap)}</td>
+            <td>${d.sector || '—'}</td>
+            <td><span class="badge">${d.type || '—'}</span></td>
+          </tr>
+        `;
+      }).join('');
+
+      tbody.querySelectorAll('tr[data-ticker]').forEach(tr => {
+        tr.addEventListener('click', () => abrirDetalhes(tr.dataset.ticker));
+      });
+    }
+
+    document.querySelectorAll('th[data-sort]').forEach(th => {
+      th.addEventListener('click', () => {
+        const col = th.dataset.sort;
+        if (sortCol === col) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+        else { sortCol = col; sortDir = 'asc'; }
+        ordenar();
+        renderizar();
+      });
+    });
+
+    filtroBusca.addEventListener('input', aplicarFiltros);
+    filtroSetor.addEventListener('change', aplicarFiltros);
+    filtroTipo.addEventListener('change', aplicarFiltros);
+    btnAtualizar.addEventListener('click', carregarDados);
+
+    async function abrirDetalhes(ticker) {
+      if (!ticker) return;
+      modalOverlay.classList.add('ativo');
+      modalTicker.textContent = ticker;
+      modalNome.textContent = dados.find(d => d.stock === ticker)?.name || '—';
+      modalLogo.src = dados.find(d => d.stock === ticker)?.logo || 'https://icons.brapi.dev/icons/BRAPI.svg';
+      modalLogo.onerror = () => { modalLogo.src = 'https://icons.brapi.dev/icons/BRAPI.svg'; };
+      modalBody.innerHTML = '<div class="modal-loading">Carregando detalhes...</div>';
+
+      try {
+        const url = `${BRAPI_QUOTE}${encodeURIComponent(ticker)}?token=${BRAPI_TOKEN}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error('Falha ao buscar detalhes');
+
+        const json = await res.json();
+        const r = json.results?.[0];
+        if (!r) throw new Error('Sem dados');
+
+        modalBody.innerHTML = `
+          <div class="modal-item"><label>Preço atual</label><span>${fmtPreco(r.regularMarketPrice)}</span></div>
+          <div class="modal-item"><label>Variação %</label><span class="${classeVariacao(r.regularMarketChangePercent)}">${fmtPct(r.regularMarketChangePercent)}</span></div>
+          <div class="modal-item"><label>Preço abertura</label><span>${fmtPreco(r.regularMarketOpen)}</span></div>
+          <div class="modal-item"><label>Fechamento anterior</label><span>${fmtPreco(r.regularMarketPreviousClose)}</span></div>
+          <div class="modal-item"><label>Máxima do dia</label><span>${fmtPreco(r.regularMarketDayHigh)}</span></div>
+          <div class="modal-item"><label>Mínima do dia</label><span>${fmtPreco(r.regularMarketDayLow)}</span></div>
+          <div class="modal-item"><label>Faixa 52 semanas</label><span>${r.fiftyTwoWeekRange || '—'}</span></div>
+          <div class="modal-item"><label>Volume</label><span>${fmtNum(r.regularMarketVolume)}</span></div>
+          <div class="modal-item"><label>Valor de mercado</label><span>${fmtMoeda(r.marketCap)}</span></div>
+          <div class="modal-item"><label>P/L</label><span>${r.priceEarnings != null ? r.priceEarnings.toFixed(2) : '—'}</span></div>
+          <div class="modal-item"><label>LPA</label><span>${r.earningsPerShare != null ? 'R$ ' + r.earningsPerShare.toFixed(2) : '—'}</span></div>
+          <div class="modal-item"><label>Moeda</label><span>${r.currency || 'BRL'}</span></div>
+          <div class="modal-item"><label>Última atualização</label><span>${r.regularMarketTime ? new Date(r.regularMarketTime).toLocaleString('pt-BR') : '—'}</span></div>
+        `;
+      } catch (e) {
+        modalBody.innerHTML = '<div class="modal-loading">Erro ao carregar detalhes. Tente novamente.</div>';
+      }
+    }
+
+    modalFechar.addEventListener('click', () => modalOverlay.classList.remove('ativo'));
+    modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) modalOverlay.classList.remove('ativo'); });
+
+    carregarDados();
+  </script>
+</body>
+</html>

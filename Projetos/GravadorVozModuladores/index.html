@@ -1,0 +1,807 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gravador de Voz com Moduladores</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0a0a0d;
+      --bg-card: #14141a;
+      --accent: #a855f7;
+      --accent-hover: #c084fc;
+      --record: #ef4444;
+      --record-active: #f87171;
+      --text: #e4e4e7;
+      --text-muted: #a1a1aa;
+      --border: #27272a;
+      --success: #22c55e;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(168, 85, 247, 0.15), transparent);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+      padding: 2rem 1.5rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, var(--accent), #ec4899);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      margin-top: 0.5rem;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .section-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 1rem;
+    }
+
+    /* Gravação */
+    .record-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .record-btn {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      border: 3px solid var(--record);
+      background: var(--record);
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
+    }
+
+    .record-btn:hover {
+      transform: scale(1.05);
+      border-color: var(--record-active);
+      background: var(--record-active);
+      box-shadow: 0 6px 25px rgba(239, 68, 68, 0.5);
+    }
+
+    .record-btn.recording {
+      animation: pulse 1.5s infinite;
+      border-color: white;
+      background: var(--record-active);
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.6); }
+      50% { box-shadow: 0 0 0 15px rgba(248, 113, 113, 0); }
+    }
+
+    .record-btn.stop {
+      background: var(--border);
+      border-color: var(--text-muted);
+    }
+
+    .record-status {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .record-status.recording {
+      color: var(--record-active);
+      font-weight: 500;
+    }
+
+    /* Efeitos */
+    .effects-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.75rem;
+    }
+
+    .effect-btn {
+      padding: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--bg-dark);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+
+    .effect-btn:hover {
+      border-color: var(--accent);
+      background: rgba(168, 85, 247, 0.1);
+    }
+
+    .effect-btn.active {
+      border-color: var(--accent);
+      background: rgba(168, 85, 247, 0.2);
+      color: var(--accent-hover);
+    }
+
+    .effect-btn .icon {
+      display: block;
+      font-size: 1.5rem;
+      margin-bottom: 0.35rem;
+    }
+
+    /* Reprodução */
+    .playback-area {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .playback-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .control-row {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .control-row label {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .control-row label span {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--accent);
+    }
+
+    .control-row input[type="range"] {
+      width: 100%;
+      height: 6px;
+      -webkit-appearance: none;
+      appearance: none;
+      background: var(--border);
+      border-radius: 3px;
+      outline: none;
+    }
+
+    .control-row input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--accent);
+      cursor: pointer;
+      transition: transform 0.15s;
+    }
+
+    .control-row input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+    }
+
+    .control-row select {
+      padding: 0.5rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-dark);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.95rem;
+    }
+
+    .play-btn {
+      width: 100%;
+      padding: 1rem 1.5rem;
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(135deg, var(--accent), #ec4899);
+      color: white;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .play-btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(168, 85, 247, 0.4);
+    }
+
+    .play-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      margin-top: 1rem;
+      transition: color 0.2s;
+    }
+
+    .back-link:hover {
+      color: var(--accent);
+    }
+
+    /* Gráfico de modulação */
+    .viz-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .viz-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .viz-wrapper {
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+      height: 120px;
+    }
+
+    .viz-wrapper canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .viz-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 0.5rem;
+      text-align: center;
+    }
+
+    @media (max-width: 500px) {
+      .effects-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Gravador de Voz</h1>
+      <p class="subtitle">Grave, escolha um efeito e reproduza</p>
+    </header>
+
+    <div class="section">
+      <div class="section-title">1. Gravar voz</div>
+      <div class="record-area">
+        <button id="recordBtn" class="record-btn" title="Clique para gravar">🎙️</button>
+        <span id="recordStatus" class="record-status">Clique para começar a gravar</span>
+      </div>
+    </div>
+
+    <div class="section viz-section">
+      <div class="section-title">Gráficos de modulação</div>
+      <div class="viz-grid">
+        <div>
+          <div class="viz-wrapper">
+            <canvas id="vizCanvas"></canvas>
+          </div>
+          <p class="viz-label">Ondas (tempo)</p>
+        </div>
+        <div>
+          <div class="viz-wrapper">
+            <canvas id="vizSpectrum"></canvas>
+          </div>
+          <p class="viz-label">Espectro (frequência) — linha central</p>
+        </div>
+      </div>
+      <p id="vizLabel" class="viz-label" style="margin-top: 0.75rem;">Aparece durante gravação ou reprodução</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">2. Escolher modulador / distorção</div>
+      <div class="effects-grid">
+        <button class="effect-btn" data-effect="none">
+          <span class="icon">🔊</span> Normal
+        </button>
+        <button class="effect-btn active" data-effect="distortion">
+          <span class="icon">🔊</span> Distorção
+        </button>
+        <button class="effect-btn" data-effect="robot">
+          <span class="icon">🤖</span> Robot
+        </button>
+        <button class="effect-btn" data-effect="pitch-up">
+          <span class="icon">↗️</span> Agudo
+        </button>
+        <button class="effect-btn" data-effect="pitch-down">
+          <span class="icon">↘️</span> Grave
+        </button>
+        <button class="effect-btn" data-effect="reverb">
+          <span class="icon">🏛️</span> Reverb
+        </button>
+        <button class="effect-btn" data-effect="echo">
+          <span class="icon">🔁</span> Echo
+        </button>
+        <button class="effect-btn" data-effect="alien">
+          <span class="icon">👽</span> Alienígena
+        </button>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">3. Reproduzir</div>
+      <div class="playback-area">
+        <div class="playback-controls">
+          <div class="control-row">
+            <label>Velocidade <span id="speedVal">1x</span></label>
+            <select id="speedSelect">
+              <option value="0.25">0.25x</option>
+              <option value="0.5">0.5x</option>
+              <option value="0.75">0.75x</option>
+              <option value="1" selected>1x</option>
+              <option value="1.25">1.25x</option>
+              <option value="1.5">1.5x</option>
+              <option value="2">2x</option>
+            </select>
+          </div>
+          <div class="control-row">
+            <label>Volume <span id="volumeVal">100%</span></label>
+            <input type="range" id="volumeSlider" min="0" max="100" value="100">
+          </div>
+        </div>
+        <button id="playBtn" class="play-btn" disabled>
+          ▶ Reproduzir com efeito
+        </button>
+      </div>
+    </div>
+
+    <a href="../../index.html" class="back-link">← Voltar aos projetos</a>
+  </div>
+
+  <script>
+    const recordBtn = document.getElementById('recordBtn');
+    const recordStatus = document.getElementById('recordStatus');
+    const playBtn = document.getElementById('playBtn');
+    const effectBtns = document.querySelectorAll('.effect-btn');
+    const vizCanvas = document.getElementById('vizCanvas');
+    const vizSpectrum = document.getElementById('vizSpectrum');
+    const vizLabel = document.getElementById('vizLabel');
+    const speedSelect = document.getElementById('speedSelect');
+    const speedVal = document.getElementById('speedVal');
+    const volumeSlider = document.getElementById('volumeSlider');
+    const volumeVal = document.getElementById('volumeVal');
+
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let selectedEffect = 'distortion';
+    let vizAnimationId = null;
+    let vizSpectrumAnimationId = null;
+    let vizAudioContext = null;
+    let vizAnalyser = null;
+
+    // Configurar canvas
+    function setupCanvas() {
+      const dpr = window.devicePixelRatio || 1;
+      [vizCanvas, vizSpectrum].forEach(canvas => {
+        const rect = canvas.getBoundingClientRect();
+        canvas.width = rect.width * dpr;
+        canvas.height = rect.height * dpr;
+        const ctx = canvas.getContext('2d');
+        ctx.scale(dpr, dpr);
+      });
+    }
+
+    // Desenhar forma de onda
+    function drawWaveform(analyser) {
+      if (!analyser) return;
+      const ctx = vizCanvas.getContext('2d');
+      const w = vizCanvas.width / (window.devicePixelRatio || 1);
+      const h = vizCanvas.height / (window.devicePixelRatio || 1);
+      const bufferLength = analyser.fftSize;
+      const dataArray = new Uint8Array(bufferLength);
+
+      function draw() {
+        vizAnimationId = requestAnimationFrame(draw);
+        analyser.getByteTimeDomainData(dataArray);
+
+        ctx.fillStyle = 'rgba(10, 10, 13, 0.4)';
+        ctx.fillRect(0, 0, w, h);
+
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = '#a855f7';
+        ctx.beginPath();
+
+        const sliceWidth = w / bufferLength;
+        let x = 0;
+
+        for (let i = 0; i < bufferLength; i++) {
+          const v = dataArray[i] / 128;
+          const y = (v * h) / 2 + h / 2;
+          if (i === 0) ctx.moveTo(x, y);
+          else ctx.lineTo(x, y);
+          x += sliceWidth;
+        }
+
+        ctx.lineTo(w, h / 2);
+        ctx.stroke();
+
+        // Linha central
+        ctx.strokeStyle = 'rgba(168, 85, 247, 0.2)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(0, h / 2);
+        ctx.lineTo(w, h / 2);
+        ctx.stroke();
+      }
+      draw();
+    }
+
+    // Espectro de frequência — linha fixa no meio, barras para cima e para baixo
+    function drawSpectrum(analyser) {
+      if (!analyser) return;
+      const ctx = vizSpectrum.getContext('2d');
+      const w = vizSpectrum.width / (window.devicePixelRatio || 1);
+      const h = vizSpectrum.height / (window.devicePixelRatio || 1);
+      const centerY = h / 2;
+      const barCount = 64;
+      const dataArray = new Uint8Array(analyser.frequencyBinCount);
+
+      function draw() {
+        vizSpectrumAnimationId = requestAnimationFrame(draw);
+        analyser.getByteFrequencyData(dataArray);
+
+        ctx.fillStyle = 'rgba(10, 10, 13, 0.4)';
+        ctx.fillRect(0, 0, w, h);
+
+        // Linha central fixa
+        ctx.strokeStyle = 'rgba(168, 85, 247, 0.5)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([4, 4]);
+        ctx.beginPath();
+        ctx.moveTo(0, centerY);
+        ctx.lineTo(w, centerY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        const step = Math.max(1, Math.floor(analyser.frequencyBinCount / barCount));
+        const barWidth = (w / barCount) * 0.85;
+        const gap = (w / barCount) * 0.15;
+        const maxHeight = centerY - 4;
+
+        for (let i = 0; i < barCount; i++) {
+          const idx = Math.min(i * step, dataArray.length - 1);
+          const value = dataArray[idx] / 255;
+          const barHeight = value * maxHeight;
+          const x = i * (barWidth + gap) + gap / 2;
+
+          ctx.fillStyle = `rgba(168, 85, 247, ${0.4 + value * 0.6})`;
+          ctx.fillRect(x, centerY - barHeight, barWidth, barHeight);
+          ctx.fillRect(x, centerY, barWidth, barHeight);
+        }
+      }
+      draw();
+    }
+
+    function stopViz() {
+      if (vizAnimationId) {
+        cancelAnimationFrame(vizAnimationId);
+        vizAnimationId = null;
+      }
+      if (vizSpectrumAnimationId) {
+        cancelAnimationFrame(vizSpectrumAnimationId);
+        vizSpectrumAnimationId = null;
+      }
+      [vizCanvas, vizSpectrum].forEach(canvas => {
+        const ctx = canvas.getContext('2d');
+        const w = canvas.width / (window.devicePixelRatio || 1);
+        const h = canvas.height / (window.devicePixelRatio || 1);
+        ctx.fillStyle = '#0a0a0d';
+        ctx.fillRect(0, 0, w, h);
+      });
+    }
+
+    // Seleção de efeito
+    effectBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        effectBtns.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        selectedEffect = btn.dataset.effect;
+      });
+    });
+
+    // Controles de velocidade e volume
+    speedSelect.addEventListener('change', () => { speedVal.textContent = speedSelect.value + 'x'; });
+    volumeSlider.addEventListener('input', () => { volumeVal.textContent = volumeSlider.value + '%'; });
+
+    // Gravação
+    recordBtn.addEventListener('click', async () => {
+      if (mediaRecorder && mediaRecorder.state === 'recording') {
+        mediaRecorder.stop();
+        return;
+      }
+
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        mediaRecorder = new MediaRecorder(stream);
+
+        audioChunks = [];
+
+        // Visualização durante gravação
+        vizAudioContext = new (window.AudioContext || window.webkitAudioContext)();
+        vizAnalyser = vizAudioContext.createAnalyser();
+        vizAnalyser.fftSize = 2048;
+        const source = vizAudioContext.createMediaStreamSource(stream);
+        source.connect(vizAnalyser);
+        vizLabel.textContent = 'Gravando...';
+        drawWaveform(vizAnalyser);
+        drawSpectrum(vizAnalyser);
+
+        mediaRecorder.ondataavailable = (e) => {
+          if (e.data.size > 0) audioChunks.push(e.data);
+        };
+
+        mediaRecorder.onstop = () => {
+          stream.getTracks().forEach(t => t.stop());
+          stopViz();
+          if (vizAudioContext) vizAudioContext.close();
+          vizLabel.textContent = 'Aparece durante gravação ou reprodução';
+          recordBtn.classList.remove('recording');
+          recordBtn.classList.remove('stop');
+          recordBtn.textContent = '🎙️';
+          recordStatus.textContent = 'Gravação finalizada. Escolha um efeito e reproduza (ou grave novamente).';
+          recordStatus.classList.remove('recording');
+          playBtn.disabled = false;
+        };
+
+        mediaRecorder.start();
+        recordBtn.classList.add('recording');
+        recordBtn.classList.remove('stop');
+        recordBtn.textContent = '⏹';
+        recordBtn.title = 'Clique para parar de gravar';
+        recordStatus.textContent = 'Gravando... Clique para parar.';
+        recordStatus.classList.add('recording');
+      } catch (err) {
+        recordStatus.textContent = 'Erro: permita acesso ao microfone.';
+        console.error(err);
+      }
+    });
+
+    // Aplicar efeitos via Web Audio API
+    async function applyEffect(audioBlob) {
+      const arrayBuffer = await audioBlob.arrayBuffer();
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+      const source = audioContext.createBufferSource();
+      source.buffer = audioBuffer;
+
+      const userSpeed = parseFloat(speedSelect.value) || 1;
+      const userVolume = parseFloat(volumeSlider.value) / 100 || 1;
+
+      let lastNode = source;
+      let effectPlaybackRate = 1;
+
+      const createDistortion = () => {
+        const distortion = audioContext.createWaveShaper();
+        const curve = makeDistortionCurve(200);
+        distortion.curve = curve;
+        distortion.oversample = '4x';
+        return distortion;
+      };
+
+      const makeDistortionCurve = (amount) => {
+        const k = typeof amount === 'number' ? amount : 50;
+        const samples = 44100;
+        const curve = new Float32Array(samples);
+        const deg = Math.PI / 180;
+        for (let i = 0; i < samples; i++) {
+          const x = (i * 2) / samples - 1;
+          curve[i] = ((3 + k) * x * 20 * deg) / (Math.PI + k * Math.abs(x));
+        }
+        return curve;
+      };
+
+      const createReverb = () => {
+        const convolver = audioContext.createConvolver();
+        const length = audioContext.sampleRate * 2;
+        const impulse = audioContext.createBuffer(2, length, audioContext.sampleRate);
+        const left = impulse.getChannelData(0);
+        const right = impulse.getChannelData(1);
+        for (let i = 0; i < length; i++) {
+          left[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, 2);
+          right[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / length, 2);
+        }
+        convolver.buffer = impulse;
+        return convolver;
+      };
+
+      const createEcho = () => {
+        const delay = audioContext.createDelay(2);
+        delay.delayTime.value = 0.3;
+        const gain = audioContext.createGain();
+        gain.gain.value = 0.5;
+        delay.connect(gain);
+        gain.connect(audioContext.destination);
+        return { delay, feedback: gain };
+      };
+
+      switch (selectedEffect) {
+        case 'distortion':
+          lastNode = createDistortion();
+          source.connect(lastNode);
+          break;
+        case 'robot':
+          lastNode = createDistortion();
+          source.connect(lastNode);
+          const robotFilter = audioContext.createBiquadFilter();
+          robotFilter.type = 'lowpass';
+          robotFilter.frequency.value = 800;
+          lastNode.connect(robotFilter);
+          lastNode = robotFilter;
+          break;
+        case 'pitch-up':
+          effectPlaybackRate = 1.5;
+          break;
+        case 'pitch-down':
+          effectPlaybackRate = 0.7;
+          break;
+        case 'alien':
+          effectPlaybackRate = 0.85;
+          const alienFilter = audioContext.createBiquadFilter();
+          alienFilter.type = 'bandpass';
+          alienFilter.frequency.value = 1200;
+          alienFilter.Q.value = 2;
+          source.connect(alienFilter);
+          lastNode = alienFilter;
+          break;
+        case 'reverb':
+          lastNode = createReverb();
+          source.connect(lastNode);
+          break;
+        case 'echo':
+          const delay = audioContext.createDelay(2);
+          delay.delayTime.value = 0.25;
+          const feedback = audioContext.createGain();
+          feedback.gain.value = 0.4;
+          const mix = audioContext.createGain();
+          mix.gain.value = 0.7;
+          source.connect(delay);
+          source.connect(mix);
+          delay.connect(feedback);
+          feedback.connect(delay);
+          delay.connect(mix);
+          lastNode = mix;
+          break;
+        default:
+          break;
+      }
+
+      if (selectedEffect !== 'echo' && selectedEffect !== 'alien') {
+        if (lastNode !== source) source.connect(lastNode);
+      }
+
+      source.playbackRate.value = effectPlaybackRate * userSpeed;
+
+      // Volume e analyser para visualização durante reprodução
+      const gainNode = audioContext.createGain();
+      gainNode.gain.value = userVolume;
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 2048;
+      lastNode.connect(analyser);
+      analyser.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      const effectLabels = { none: 'Normal', distortion: 'Distorção', robot: 'Robot', 'pitch-up': 'Agudo', 'pitch-down': 'Grave', reverb: 'Reverb', echo: 'Echo', alien: 'Alienígena' };
+      vizLabel.textContent = 'Reproduzindo com efeito: ' + (effectLabels[selectedEffect] || selectedEffect);
+      drawWaveform(analyser);
+      drawSpectrum(analyser);
+
+      return new Promise((resolve) => {
+        source.onended = () => {
+          stopViz();
+          vizLabel.textContent = 'Aparece durante gravação ou reprodução';
+          audioContext.close();
+          resolve();
+        };
+        source.start(0);
+      });
+    }
+
+    // Inicializar canvas
+    setupCanvas();
+    window.addEventListener('resize', setupCanvas);
+
+    // Reprodução
+    playBtn.addEventListener('click', async () => {
+      if (audioChunks.length === 0) return;
+      playBtn.disabled = true;
+      playBtn.textContent = '⏳ Processando...';
+
+      const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+
+      try {
+        await applyEffect(audioBlob);
+      } catch (err) {
+        console.error(err);
+        recordStatus.textContent = 'Erro ao reproduzir. Tente gravar novamente.';
+      }
+
+      playBtn.disabled = false;
+      playBtn.textContent = '▶ Reproduzir com efeito';
+    });
+  </script>
+</body>
+</html>
