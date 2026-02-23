@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Conferência de Status</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <style>
+    :root {
+      --bg: #0a0c10;
+      --surface: #12151c;
+      --surface-hover: #1a1e28;
+      --accent: #0ea5e9;
+      --accent-dim: #0284c7;
+      --success: #22c55e;
+      --warning: #eab308;
+      --danger: #ef4444;
+      --text: #e8eaed;
+      --text-muted: #8b9199;
+      --border: #252a35;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'IBM Plex Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background-image:
+        linear-gradient(rgba(14, 165, 233, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(14, 165, 233, 0.03) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+      position: relative;
+      z-index: 1;
+      flex: 1;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+      padding-top: 1rem;
+    }
+
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 56px;
+      height: 56px;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dim) 100%);
+      border-radius: 14px;
+      font-size: 1.75rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 8px 24px rgba(14, 165, 233, 0.3);
+    }
+
+    h1 {
+      font-size: clamp(1.5rem, 4vw, 2rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 1rem;
+    }
+
+    .busca-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .busca-card label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .busca-input-wrapper {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    .busca-input-wrapper input {
+      flex: 1;
+      min-width: 200px;
+      padding: 1rem 1.25rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.1rem;
+      letter-spacing: 0.05em;
+    }
+
+    .busca-input-wrapper input::placeholder {
+      color: var(--text-muted);
+      opacity: 0.7;
+    }
+
+    .busca-input-wrapper input:focus {
+      outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2);
+    }
+
+    .btn-buscar {
+      padding: 1rem 1.75rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-family: inherit;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .btn-buscar:hover {
+      background: var(--accent-dim);
+      transform: translateY(-1px);
+    }
+
+    .btn-buscar:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-buscar .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .resultado-area {
+      display: none;
+    }
+
+    .resultado-area.visivel {
+      display: block;
+    }
+
+    .resultado-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .resultado-header h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .codigo-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.4rem 0.9rem;
+      background: rgba(14, 165, 233, 0.15);
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: var(--accent);
+    }
+
+    .resumo-etapas {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1.5rem;
+    }
+
+    .resumo-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 0.75rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .resumo-item .numero {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent);
+    }
+
+    .resumo-item .label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .etapas-tabela {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .etapas-tabela th,
+    .etapas-tabela td {
+      padding: 1rem 1.25rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .etapas-tabela th {
+      background: rgba(14, 165, 233, 0.08);
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .etapas-tabela tr:last-child td {
+      border-bottom: none;
+    }
+
+    .etapas-tabela tr:hover td {
+      background: var(--surface-hover);
+    }
+
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.35rem 0.75rem;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .status-badge.feito {
+      background: rgba(34, 197, 94, 0.2);
+      color: var(--success);
+      border: 1px solid rgba(34, 197, 94, 0.4);
+    }
+
+    .status-badge.nao {
+      background: rgba(239, 68, 68, 0.15);
+      color: var(--danger);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .status-badge.pendente {
+      background: rgba(234, 179, 8, 0.15);
+      color: var(--warning);
+      border: 1px solid rgba(234, 179, 8, 0.3);
+    }
+
+    .data-cell {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 3rem 2rem;
+      background: var(--surface);
+      border: 1px dashed var(--border);
+      border-radius: 12px;
+    }
+
+    .empty-state .icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    .empty-state p {
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .erro-msg {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      border-radius: 10px;
+      padding: 1rem;
+      color: var(--danger);
+      margin-top: 1rem;
+      display: none;
+    }
+
+    .erro-msg.visivel {
+      display: block;
+    }
+
+    .link-voltar {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+      transition: color 0.2s;
+    }
+
+    .link-voltar:hover {
+      color: var(--accent);
+    }
+
+    @media (max-width: 600px) {
+      .container { padding: 1rem; }
+      .etapas-tabela th, .etapas-tabela td { padding: 0.75rem; font-size: 0.85rem; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="../../" class="link-voltar">← Voltar aos projetos</a>
+
+    <header>
+      <div class="logo">📋</div>
+      <h1>Conferência de Status</h1>
+      <p class="subtitle">Digite o código de controle para consultar as etapas</p>
+    </header>
+
+    <div class="busca-card">
+      <label for="codigo">Código de Controle</label>
+      <div class="busca-input-wrapper">
+        <input type="text" id="codigo" placeholder="Ex: 123123 (deixe em branco para ver todos)" autocomplete="off" autofocus>
+        <button type="button" class="btn-buscar" id="btnBuscar">
+          Consultar
+        </button>
+      </div>
+      <div class="erro-msg" id="erroMsg"></div>
+    </div>
+
+    <div class="resultado-area" id="resultadoArea">
+      <div class="resultado-header">
+        <h2>Etapas do processo</h2>
+        <span class="codigo-badge" id="codigoBadge"></span>
+      </div>
+      <div class="resumo-etapas" id="resumoEtapas"></div>
+      <div class="tabela-wrapper">
+        <table class="etapas-tabela">
+          <thead>
+            <tr>
+              <th>Data</th>
+              <th>Descrição da Etapa</th>
+              <th>Data de Conclusão</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="tbodyEtapas"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="empty-state" id="emptyState">
+      <div class="icon">🔍</div>
+      <p>Informe o código de controle e clique em Consultar para ver as etapas.</p>
+      <p style="font-size: 0.85rem;">Dados carregados de Planilha Status.xlsx (na pasta do projeto).</p>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      const EXCEL_FILE = 'Planilha Status.xlsx';
+      let dadosCache = null;
+
+      const input = document.getElementById('codigo');
+      const btnBuscar = document.getElementById('btnBuscar');
+      const erroMsg = document.getElementById('erroMsg');
+      const resultadoArea = document.getElementById('resultadoArea');
+      const emptyState = document.getElementById('emptyState');
+      const codigoBadge = document.getElementById('codigoBadge');
+      const resumoEtapas = document.getElementById('resumoEtapas');
+      const tbodyEtapas = document.getElementById('tbodyEtapas');
+
+      function normalizar(s) {
+        if (!s || typeof s !== 'string') return '';
+        return s.toLowerCase()
+          .normalize('NFD').replace(/\p{Diacritic}/gu, '')
+          .replace(/\s+/g, '_')
+          .replace(/[^a-z0-9_]/g, '');
+      }
+
+      function parseExcelData(rows) {
+        if (!rows || rows.length < 2) return [];
+        const header = (rows[0] || []).map(h => normalizar(String(h || '')));
+        const idx = (keys) => {
+          for (const k of keys) {
+            const i = header.indexOf(k);
+            if (i >= 0) return i;
+          }
+          return null;
+        };
+        const colCodigo = idx(['codigo_controle', 'codigo', 'codigocontrole']) ?? 0;
+        const colData = idx(['data']) ?? 1;
+        const colDescricao = idx(['descricao_etapa', 'descricao', 'descricaoetapa']) ?? 2;
+        const colDataConclusao = idx(['data_conclusao', 'dataconclusao', 'conclusao']) ?? 3;
+        const colStatus = idx(['status']) ?? 4;
+
+        const out = [];
+        for (let i = 1; i < rows.length; i++) {
+          const row = rows[i] || [];
+          const codigo = String(row[colCodigo] ?? '').trim();
+          if (!codigo) continue;
+          let dataConclusao = String(row[colDataConclusao] ?? '').trim();
+          let status = String(row[colStatus] ?? '').trim();
+          if (!status && /^nao|não$/i.test(dataConclusao)) {
+            status = 'nao';
+            dataConclusao = '';
+          }
+          out.push({
+            codigo,
+            data: String(row[colData] ?? '').trim(),
+            descricao: String(row[colDescricao] ?? '').trim(),
+            dataConclusao,
+            status
+          });
+        }
+        return out;
+      }
+
+      async function carregarPlanilha() {
+        if (dadosCache) return dadosCache;
+        const res = await fetch(EXCEL_FILE);
+        if (!res.ok) throw new Error('Planilha Status.xlsx não encontrada na pasta do projeto.');
+        const buf = await res.arrayBuffer();
+        const wb = XLSX.read(buf, { type: 'array' });
+        const firstSheet = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
+        dadosCache = parseExcelData(rows);
+        return dadosCache;
+      }
+
+      function buscarEtapas(codigo) {
+        const dados = dadosCache || [];
+        if (!codigo) return dados;
+        const norm = normalizar(codigo);
+        return dados.filter(e => normalizar(e.codigo) === norm);
+      }
+
+      function formatarStatus(s) {
+        const v = (s || '').toLowerCase();
+        if (v.includes('sim') || v.includes('feito') || v.includes('concluido') || v === 's' || v === '1') return 'feito';
+        if (v.includes('nao') || v.includes('não') || v.includes('pendente') || v === 'n' || v === '0') return 'nao';
+        return 'pendente';
+      }
+
+      function formatarData(d) {
+        if (!d) return '—';
+        if (d instanceof Date) {
+          return d.toLocaleDateString('pt-BR');
+        }
+        const s = String(d);
+        const parts = s.replace(/\D/g, ' ').trim().split(/\s+/).filter(Boolean);
+        if (parts.length >= 3) {
+          const [a, b, c] = parts;
+          if (a.length === 4 && b.length <= 2 && c.length <= 2) return `${c.padStart(2,'0')}/${b.padStart(2,'0')}/${a}`;
+          if (c.length === 4) return `${a.padStart(2,'0')}/${b.padStart(2,'0')}/${c}`;
+        }
+        return s;
+      }
+
+      function mostrarErro(msg) {
+        erroMsg.textContent = msg;
+        erroMsg.classList.add('visivel');
+      }
+
+      function ocultarErro() {
+        erroMsg.classList.remove('visivel');
+      }
+
+      function renderizar(etapas, codigo) {
+        emptyState.style.display = 'none';
+        resultadoArea.classList.add('visivel');
+        codigoBadge.textContent = codigo;
+
+        const total = etapas.length;
+        const feitos = etapas.filter(e => formatarStatus(e.status) === 'feito').length;
+        const pendentes = total - feitos;
+
+        resumoEtapas.innerHTML = `
+          <div class="resumo-item"><span class="numero">${total}</span><span class="label">Total de etapas</span></div>
+          <div class="resumo-item"><span class="numero">${feitos}</span><span class="label">Concluídas</span></div>
+          <div class="resumo-item"><span class="numero">${pendentes}</span><span class="label">Pendentes</span></div>
+        `;
+
+        tbodyEtapas.innerHTML = etapas.map(e => {
+          const status = formatarStatus(e.status);
+          const labelStatus = status === 'feito' ? 'Feito' : status === 'nao' ? 'Não feito' : 'Pendente';
+          return `
+            <tr>
+              <td class="data-cell">${formatarData(e.data)}</td>
+              <td>${e.descricao || '—'}</td>
+              <td class="data-cell">${formatarData(e.dataConclusao)}</td>
+              <td><span class="status-badge ${status}">${labelStatus}</span></td>
+            </tr>
+          `;
+        }).join('');
+      }
+
+      async function buscar() {
+        const codigo = (input.value || '').trim();
+        ocultarErro();
+        btnBuscar.disabled = true;
+        btnBuscar.innerHTML = '<span class="spinner"></span> Consultando...';
+
+        try {
+          await carregarPlanilha();
+          const etapas = buscarEtapas(codigo);
+          if (!etapas || etapas.length === 0) {
+            mostrarErro(codigo ? 'Nenhuma etapa encontrada para este código de controle.' : 'Planilha vazia ou sem dados.');
+            resultadoArea.classList.remove('visivel');
+            emptyState.style.display = 'block';
+          } else {
+            renderizar(etapas, codigo || 'Todos');
+          }
+        } catch (e) {
+          mostrarErro(e.message || 'Erro ao carregar a planilha.');
+          console.error(e);
+        } finally {
+          btnBuscar.disabled = false;
+          btnBuscar.innerHTML = 'Consultar';
+        }
+      }
+
+      btnBuscar.addEventListener('click', buscar);
+      input.addEventListener('keydown', e => { if (e.key === 'Enter') buscar(); });
+    })();
+  </script>
+</body>
+</html>
