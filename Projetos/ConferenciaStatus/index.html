@@ -25,6 +25,10 @@
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
+    html {
+      overflow-x: hidden;
+    }
+
     body {
       font-family: 'IBM Plex Sans', sans-serif;
       background: var(--bg);
@@ -32,6 +36,8 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
+      overflow-x: hidden;
+      -webkit-text-size-adjust: 100%;
     }
 
     body::before {
@@ -48,11 +54,13 @@
 
     .container {
       max-width: 800px;
+      width: 100%;
       margin: 0 auto;
       padding: 2rem;
       position: relative;
       z-index: 1;
       flex: 1;
+      min-width: 0;
     }
 
     header {
@@ -113,7 +121,7 @@
 
     .busca-input-wrapper input {
       flex: 1;
-      min-width: 200px;
+      min-width: 0;
       padding: 1rem 1.25rem;
       background: var(--bg);
       border: 1px solid var(--border);
@@ -240,13 +248,18 @@
       color: var(--text-muted);
     }
 
+    .tabela-wrapper {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
     .etapas-tabela {
       width: 100%;
+      min-width: 400px;
       border-collapse: collapse;
       background: var(--surface);
       border: 1px solid var(--border);
       border-radius: 12px;
-      overflow: hidden;
     }
 
     .etapas-tabela th,
@@ -354,16 +367,37 @@
       color: var(--accent);
     }
 
-    @media (max-width: 600px) {
-      .container { padding: 1rem; }
-      .etapas-tabela th, .etapas-tabela td { padding: 0.75rem; font-size: 0.85rem; }
+    @media (max-width: 768px) {
+      .container { padding: 1rem; max-width: 100%; }
+      header { margin-bottom: 1.25rem; padding-top: 0.5rem; }
+      .logo { width: 44px; height: 44px; font-size: 1.4rem; }
+      h1 { font-size: 1.35rem; }
+      .subtitle { font-size: 0.9rem; }
+      .busca-card { padding: 1.25rem; margin-bottom: 1.25rem; }
+      .busca-input-wrapper { flex-direction: column; gap: 0.6rem; }
+      .busca-input-wrapper input { width: 100%; font-size: 1rem; padding: 0.85rem 1rem; }
+      .btn-buscar { width: 100%; justify-content: center; padding: 0.85rem 1rem; }
+      .resultado-header { flex-direction: column; align-items: flex-start; gap: 0.6rem; }
+      .resultado-header h2 { font-size: 1.1rem; }
+      .resumo-etapas { gap: 0.6rem; margin-bottom: 1rem; }
+      .resumo-item { padding: 0.6rem 1rem; }
+      .resumo-item .numero { font-size: 1.25rem; }
+      .etapas-tabela { min-width: 320px; }
+      .etapas-tabela th, .etapas-tabela td {
+        padding: 0.6rem 0.5rem;
+        font-size: 0.75rem;
+      }
+      .etapas-tabela th { font-size: 0.65rem; }
+      .data-cell { font-size: 0.7rem; }
+      .status-badge { padding: 0.25rem 0.5rem; font-size: 0.7rem; }
+      .empty-state { padding: 2rem 1rem; }
+      .empty-state .icon { font-size: 2.5rem; }
+      .empty-state p { font-size: 0.9rem; }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <a href="../../" class="link-voltar">← Voltar aos projetos</a>
-
     <header>
       <div class="logo">📋</div>
       <h1>Conferência de Status</h1>
@@ -452,17 +486,19 @@
           const row = rows[i] || [];
           const codigo = String(row[colCodigo] ?? '').trim();
           if (!codigo) continue;
-          let dataConclusao = String(row[colDataConclusao] ?? '').trim();
+          let dataConclusao = row[colDataConclusao];
           let status = String(row[colStatus] ?? '').trim();
-          if (!status && /^nao|não$/i.test(dataConclusao)) {
+          if (!status && (typeof dataConclusao === 'string' && /^nao|não$/i.test(dataConclusao))) {
             status = 'nao';
-            dataConclusao = '';
+            dataConclusao = null;
+          } else if (typeof dataConclusao === 'string') {
+            dataConclusao = dataConclusao.trim() || null;
           }
           out.push({
             codigo,
-            data: String(row[colData] ?? '').trim(),
+            data: row[colData],
             descricao: String(row[colDescricao] ?? '').trim(),
-            dataConclusao,
+            dataConclusao: dataConclusao == null || dataConclusao === '' ? null : dataConclusao,
             status
           });
         }
@@ -474,7 +510,7 @@
         const res = await fetch(EXCEL_FILE);
         if (!res.ok) throw new Error('Planilha Status.xlsx não encontrada na pasta do projeto.');
         const buf = await res.arrayBuffer();
-        const wb = XLSX.read(buf, { type: 'array' });
+        const wb = XLSX.read(buf, { type: 'array', cellDates: true });
         const firstSheet = wb.Sheets[wb.SheetNames[0]];
         const rows = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
         dadosCache = parseExcelData(rows);
@@ -496,9 +532,15 @@
       }
 
       function formatarData(d) {
-        if (!d) return '—';
+        if (d == null || d === '') return '—';
         if (d instanceof Date) {
-          return d.toLocaleDateString('pt-BR');
+          const pad = (n) => String(n).padStart(2, '0');
+          return `${pad(d.getDate())}/${pad(d.getMonth()+1)}/${d.getFullYear()} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`;
+        }
+        if (typeof d === 'number' && d > 0) {
+          const date = new Date((d - 25569) * 86400000);
+          const pad = (n) => String(n).padStart(2, '0');
+          return `${pad(date.getDate())}/${pad(date.getMonth()+1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
         }
         const s = String(d);
         const parts = s.replace(/\D/g, ' ').trim().split(/\s+/).filter(Boolean);
