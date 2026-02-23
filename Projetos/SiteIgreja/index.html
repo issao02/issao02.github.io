@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Paróquia São José | Comunidade de Fé</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --cream: #fdfcf9;
+      --warm-white: #f8f6f1;
+      --burgundy: #722f37;
+      --burgundy-dark: #5a252c;
+      --gold: #b8860b;
+      --gold-light: #d4a84b;
+      --charcoal: #2c2c2c;
+      --text-muted: #6b5e59;
+      --border: rgba(114, 47, 55, 0.15);
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Source Sans 3', sans-serif;
+      background: var(--cream);
+      color: var(--charcoal);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      padding: 1rem 2rem;
+      background: rgba(253, 252, 249, 0.98);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--border);
+      z-index: 100;
+    }
+    .header-inner {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: relative;
+    }
+    .logo {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.75rem;
+      font-weight: 700;
+      color: var(--burgundy);
+      text-decoration: none;
+      letter-spacing: 0.03em;
+    }
+    .nav-tabs {
+      display: flex;
+      gap: 0.25rem;
+      flex-wrap: wrap;
+    }
+    .nav-tabs a {
+      padding: 0.6rem 1.2rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-weight: 500;
+      font-size: 0.95rem;
+      border-radius: 8px;
+      transition: all 0.25s ease;
+    }
+    .nav-tabs a:hover {
+      color: var(--burgundy);
+      background: rgba(114, 47, 55, 0.06);
+    }
+    .nav-tabs a.active {
+      color: var(--burgundy);
+      background: rgba(114, 47, 55, 0.1);
+      font-weight: 600;
+    }
+    .menu-toggle {
+      display: none;
+      flex-direction: column;
+      gap: 6px;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 8px;
+    }
+    .menu-toggle span {
+      width: 24px;
+      height: 2px;
+      background: var(--burgundy);
+    }
+    main { padding-top: 80px; min-height: calc(100vh - 80px); }
+    .tab-panel { display: none; }
+    .tab-panel.active { display: block; }
+    .hero {
+      min-height: 70vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 4rem 2rem;
+      background: linear-gradient(135deg, rgba(114, 47, 55, 0.75) 0%, rgba(90, 37, 44, 0.6) 100%),
+        url('https://images.pexels.com/photos/25975196/pexels-photo-25975196.jpeg?auto=compress&cs=tinysrgb&w=1920') center/cover no-repeat;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+    }
+    .hero h1, .hero p { position: relative; z-index: 1; }
+    .hero h1 { color: #fff; text-shadow: 0 2px 12px rgba(0,0,0,0.4); }
+    .hero h1 span { color: var(--gold-light); }
+    .hero p { color: rgba(255,255,255,0.95); }
+    .hero h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.5rem, 6vw, 4rem);
+      font-weight: 700;
+      color: var(--charcoal);
+      margin-bottom: 0.75rem;
+    }
+    .hero p {
+      font-size: 1.2rem;
+      max-width: 520px;
+    }
+    .section {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 3rem 2rem;
+    }
+    .section h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.9rem;
+      color: var(--burgundy);
+      margin-bottom: 1.5rem;
+      padding-bottom: 0.5rem;
+      border-bottom: 2px solid rgba(114, 47, 55, 0.2);
+    }
+    .section p {
+      line-height: 1.8;
+      color: var(--charcoal);
+      margin-bottom: 1rem;
+    }
+    .galeria-igreja {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+      margin: 2rem 0;
+    }
+    .galeria-igreja img {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+    @media (max-width: 600px) {
+      .galeria-igreja { grid-template-columns: 1fr; }
+      .galeria-igreja img { height: 220px; }
+    }
+    .horarios-grid {
+      display: grid;
+      gap: 1.5rem;
+      margin-top: 1.5rem;
+    }
+    .horario-card {
+      background: var(--warm-white);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+    }
+    .horario-card .dia {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 700;
+      font-size: 1.3rem;
+      color: var(--burgundy);
+      min-width: 100px;
+    }
+    .horario-card .hora { font-weight: 600; color: var(--charcoal); }
+    .horario-card .local { color: var(--text-muted); font-size: 0.95rem; }
+    .contato-list {
+      list-style: none;
+    }
+    .contato-list li {
+      padding: 1rem 0;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+    }
+    .contato-list li:last-child { border-bottom: none; }
+    .contato-list .icon { font-size: 1.5rem; color: var(--burgundy); }
+    .contato-list a { color: var(--burgundy); text-decoration: none; font-weight: 500; }
+    .contato-list a:hover { text-decoration: underline; }
+    .folhetos-intro { margin-bottom: 1rem; }
+    .folhetos-filtro {
+      margin-bottom: 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem 1.25rem;
+      align-items: center;
+    }
+    .folhetos-filtro-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-shrink: 0;
+    }
+    .folhetos-filtro label {
+      font-weight: 500;
+      color: var(--charcoal);
+      flex-shrink: 0;
+    }
+    .folhetos-filtro select {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      font-family: inherit;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--warm-white);
+      color: var(--charcoal);
+      cursor: pointer;
+      min-width: 160px;
+    }
+    @media (max-width: 500px) {
+      .folhetos-filtro-item { flex: 1 1 100%; }
+      .folhetos-filtro select { flex: 1; min-width: 0; }
+    }
+    .folhetos-lista {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+    .folheto-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      padding: 1rem 1.25rem;
+      background: var(--warm-white);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      transition: all 0.2s ease;
+    }
+    .folheto-item:hover {
+      background: rgba(114, 47, 55, 0.04);
+      border-color: rgba(114, 47, 55, 0.25);
+    }
+    .folheto-item .folheto-info {
+      display: flex;
+      align-items: baseline;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    .folheto-item .folheto-data {
+      font-weight: 600;
+      color: var(--burgundy);
+      font-size: 0.9rem;
+    }
+    .folheto-item .folheto-nome { font-weight: 500; color: var(--charcoal); }
+    .folheto-item .btn-abrir {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.5rem 1rem;
+      background: var(--burgundy);
+      color: white !important;
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      border-radius: 8px;
+      transition: background 0.2s;
+    }
+    .folheto-item .btn-abrir:hover { background: var(--burgundy-dark); }
+    #loading-folhetos { color: var(--text-muted); padding: 2rem; }
+    .folheto-vazio { color: var(--text-muted); padding: 2rem; text-align: center; list-style: none; }
+    @media (max-width: 768px) {
+      .nav-tabs {
+        display: none;
+        position: absolute;
+        top: 100%;
+        right: 1rem;
+        flex-direction: column;
+        background: var(--cream);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: 0.5rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      }
+      .nav-tabs a { padding: 0.75rem 1rem; }
+      .menu-toggle { display: flex; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <a href="index.html" class="logo">Paróquia São José</a>
+      <nav class="nav-tabs">
+        <a href="#inicio" class="nav-link active" data-tab="inicio">Início</a>
+        <a href="#sobre" class="nav-link" data-tab="sobre">Sobre a Igreja</a>
+        <a href="#contatos" class="nav-link" data-tab="contatos">Contatos</a>
+        <a href="#horarios" class="nav-link" data-tab="horarios">Horários das Missas</a>
+        <a href="#folheto" class="nav-link" data-tab="folheto">Folheto</a>
+      </nav>
+      <button class="menu-toggle" aria-label="Menu"><span></span><span></span><span></span></button>
+    </div>
+  </header>
+
+  <main>
+    <!-- Aba Início -->
+    <section id="inicio" class="tab-panel active">
+      <div class="hero">
+        <h1>Bem-vindo à <span>Paróquia São José</span></h1>
+        <p>Uma comunidade de fé, esperança e amor. Encontre aqui informações sobre nossas celebrações, folhetos dominicais e como nos contactar.</p>
+      </div>
+    </section>
+
+    <!-- Aba Sobre a Igreja -->
+    <section id="sobre" class="tab-panel">
+      <div class="section">
+        <h2>Sobre a Igreja</h2>
+        <div class="galeria-igreja">
+          <img src="https://images.pexels.com/photos/4437833/pexels-photo-4437833.jpeg?auto=compress&cs=tinysrgb&w=600" alt="Interior de igreja católica no Brasil" loading="lazy">
+          <img src="https://images.pexels.com/photos/4364649/pexels-photo-4364649.jpeg?auto=compress&cs=tinysrgb&w=600" alt="Igreja católica - exterior" loading="lazy">
+          <img src="https://images.pexels.com/photos/3091607/pexels-photo-3091607.jpeg?auto=compress&cs=tinysrgb&w=600" alt="Interior - altar e nave" loading="lazy">
+        </div>
+        <p>A Paróquia São José é uma comunidade católica dedicada a acolher todos os fiéis em espírito de fraternidade e serviço. Nossa igreja foi fundada com o propósito de ser um espaço de oração, formação e caridade.</p>
+        <p>Buscamos viver o evangelho através das obras, acolhendo os que buscam Deus e contribuindo para a transformação da sociedade. Nossas atividades incluem celebrações eucarísticas, catequese, grupos de oração e ações solidárias.</p>
+        <div class="galeria-igreja">
+          <img src="https://images.pexels.com/photos/31792594/pexels-photo-31792594.jpeg?auto=compress&cs=tinysrgb&w=600" alt="Fachada de igreja no Brasil" loading="lazy">
+          <img src="https://images.pexels.com/photos/35610525/pexels-photo-35610525.jpeg?auto=compress&cs=tinysrgb&w=600" alt="Interior de igreja católica" loading="lazy">
+          <img src="https://images.pexels.com/photos/10887151/pexels-photo-10887151.jpeg?auto=compress&cs=tinysrgb&w=600" alt="Igreja católica - arquitetura" loading="lazy">
+        </div>
+        <p>Venha nos visitar e participe de nossa comunidade de fé!</p>
+      </div>
+    </section>
+
+    <!-- Aba Contatos -->
+    <section id="contatos" class="tab-panel">
+      <div class="section">
+        <h2>Contatos</h2>
+        <ul class="contato-list">
+          <li>
+            <span class="icon">📍</span>
+            <div>
+              <strong>Endereço</strong><br>
+              Rua das Flores, 123 – Centro<br>
+              CEP 12345-678
+            </div>
+          </li>
+          <li>
+            <span class="icon">📞</span>
+            <div>
+              <strong>Telefone</strong><br>
+              <a href="tel:+5511999999999">(11) 99999-9999</a>
+            </div>
+          </li>
+          <li>
+            <span class="icon">✉️</span>
+            <div>
+              <strong>E-mail</strong><br>
+              <a href="mailto:contato@paroquiasaojose.org.br">contato@paroquiasaojose.org.br</a>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- Aba Horários das Missas -->
+    <section id="horarios" class="tab-panel">
+      <div class="section">
+        <h2>Horários das Missas</h2>
+        <div class="horarios-grid">
+          <div class="horario-card">
+            <span class="dia">Domingo</span>
+            <div>
+              <span class="hora">07h00</span> e <span class="hora">19h00</span>
+              <div class="local">Igreja matriz</div>
+            </div>
+          </div>
+          <div class="horario-card">
+            <span class="dia">Sábado</span>
+            <div>
+              <span class="hora">18h00</span>
+              <div class="local">Missa vespertina – Igreja matriz</div>
+            </div>
+          </div>
+          <div class="horario-card">
+            <span class="dia">Quarta</span>
+            <div>
+              <span class="hora">19h30</span>
+              <div class="local">Missa com novena – Igreja matriz</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Aba Folheto -->
+    <section id="folheto" class="tab-panel">
+      <div class="section">
+        <h2>Folhetos Dominicais</h2>
+        <p class="folhetos-intro">Confira os folhetos ordenados pela data mais recente. Clique para abrir e navegar pelas páginas do PDF.</p>
+        <div class="folhetos-filtro" id="folhetos-filtro" style="display:none">
+          <div class="folhetos-filtro-item">
+            <label for="filtro-mes">Mês:</label>
+            <select id="filtro-mes">
+              <option value="">Carregando...</option>
+            </select>
+          </div>
+          <div class="folhetos-filtro-item">
+            <label for="filtro-dias">Dias:</label>
+            <select id="filtro-dias">
+              <option value="">Todos</option>
+              <option value="1-10">1 a 10</option>
+              <option value="11-20">11 a 20</option>
+              <option value="21-31">21 a 31</option>
+            </select>
+          </div>
+        </div>
+        <div id="loading-folhetos">Carregando folhetos...</div>
+        <ul id="folhetos-lista" class="folhetos-lista" style="display:none"></ul>
+        <div id="folheto-vazio" class="folheto-vazio" style="display:none">Nenhum folheto disponível no momento.</div>
+      </div>
+    </section>
+  </main>
+
+  <script src="folhetos/lista.js"></script>
+  <script>
+    (function () {
+      const links = document.querySelectorAll('.nav-link');
+      const panels = document.querySelectorAll('.tab-panel');
+      const menuToggle = document.querySelector('.menu-toggle');
+      const navTabs = document.querySelector('.nav-tabs');
+
+      function ativarTab(id) {
+        links.forEach(l => {
+          l.classList.toggle('active', l.dataset.tab === id);
+        });
+        panels.forEach(p => {
+          p.classList.toggle('active', p.id === id);
+        });
+      }
+      function fecharMenuMobile() {
+        if (menuToggle && navTabs && window.innerWidth <= 768) {
+          menuToggle.classList.remove('active');
+          navTabs.style.display = 'none';
+        }
+      }
+      links.forEach(l => {
+        l.addEventListener('click', e => {
+          e.preventDefault();
+          ativarTab(l.dataset.tab);
+          history.replaceState(null, '', '#' + l.dataset.tab);
+          fecharMenuMobile();
+        });
+      });
+      const hash = location.hash.slice(1) || 'inicio';
+      if (['inicio','sobre','contatos','horarios','folheto'].includes(hash)) ativarTab(hash);
+
+      if (menuToggle && navTabs) {
+        menuToggle.addEventListener('click', () => {
+          menuToggle.classList.toggle('active');
+          navTabs.style.display = navTabs.style.display === 'flex' ? 'none' : 'flex';
+        });
+      }
+
+      // Carregar folhetos
+      const loading = document.getElementById('loading-folhetos');
+      const lista = document.getElementById('folhetos-lista');
+      const vazio = document.getElementById('folheto-vazio');
+      const filtroContainer = document.getElementById('folhetos-filtro');
+      const filtroMes = document.getElementById('filtro-mes');
+      const filtroDias = document.getElementById('filtro-dias');
+      const folhetos = window.LISTA_FOLHETOS || [];
+      const ordenados = [...folhetos].sort((a, b) => new Date(b.data) - new Date(a.data));
+
+      const hoje = new Date();
+      const mesAtual = String(hoje.getFullYear()) + '-' + String(hoje.getMonth() + 1).padStart(2, '0');
+
+      function diaNoIntervalo(dia, intervalo) {
+        if (!intervalo) return true;
+        const d = parseInt(dia, 10);
+        if (intervalo === '1-10') return d >= 1 && d <= 10;
+        if (intervalo === '11-20') return d >= 11 && d <= 20;
+        if (intervalo === '21-31') return d >= 21 && d <= 31;
+        return true;
+      }
+
+      function renderizarFolhetos(filtrados) {
+        if (filtrados.length === 0) {
+          lista.innerHTML = '<li class="folheto-vazio">Nenhum folheto neste mês.</li>';
+        } else {
+          lista.innerHTML = filtrados.map(f => {
+            const dataFmt = new Date(f.data + 'T12:00:00').toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+            const url = 'folheto.html?pdf=' + encodeURIComponent(f.arquivo);
+            return `<li class="folheto-item" data-mes="${f.data.slice(0, 7)}">
+              <div class="folheto-info">
+                <span class="folheto-data">${dataFmt}</span>
+                <span class="folheto-nome">${(f.titulo || '').replace(/</g, '&lt;')}</span>
+              </div>
+              <a href="${url}" class="btn-abrir" target="_self">Abrir folheto →</a>
+            </li>`;
+          }).join('');
+        }
+      }
+      function aplicarFiltro() {
+        let filtrados = ordenados;
+        const valorMes = filtroMes.value;
+        if (valorMes) filtrados = filtrados.filter(f => f.data.slice(0, 7) === valorMes);
+        const valorDias = filtroDias.value;
+        if (valorDias) filtrados = filtrados.filter(f => diaNoIntervalo(f.data.slice(8, 10), valorDias));
+        renderizarFolhetos(filtrados);
+      }
+
+      loading.style.display = 'none';
+      if (ordenados.length === 0) {
+        vazio.style.display = 'block';
+      } else {
+        const mesesUnicos = [...new Set(ordenados.map(f => f.data.slice(0, 7)))].sort().reverse();
+        filtroMes.innerHTML = '<option value="">Todos</option>' + mesesUnicos.map(m => {
+          const [ano, mes] = m.split('-');
+          return `<option value="${m}">${mes}/${ano}</option>`;
+        }).join('');
+
+        const valorInicial = mesesUnicos.includes(mesAtual) ? mesAtual : '';
+        filtroMes.value = valorInicial;
+        filtroContainer.style.display = 'flex';
+        lista.style.display = 'flex';
+        aplicarFiltro();
+        filtroMes.addEventListener('change', aplicarFiltro);
+        filtroDias.addEventListener('change', aplicarFiltro);
+      }
+    })();
+  </script>
+</body>
+</html>

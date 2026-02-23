@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <title>Sistema de Venda de Serviços</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -159,6 +159,16 @@
       margin-bottom: 1.25rem;
     }
 
+    .card-header-lista {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.25rem;
+    }
+    .card-header-lista h2 { margin-bottom: 0; }
+
     .form-grid {
       display: grid;
       grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -245,23 +255,22 @@
 
     .item-row {
       display: grid;
-      grid-template-columns: 100px 1fr 80px 100px auto;
+      grid-template-columns: minmax(180px, max-content) 1fr 80px 110px auto;
       gap: 0.75rem;
       align-items: end;
       margin-bottom: 0.75rem;
     }
 
-    @media (max-width: 700px) {
-      .item-row {
-        grid-template-columns: 1fr 1fr;
-      }
-      .item-row .btn-remove { grid-column: 2; }
-    }
 
-    .item-row.tipo-servico .campo-descricao { display: none; }
+    .item-row.tipo-peca-descricao .campo-peca,
+    .item-row.tipo-peca-descricao .campo-servico { display: none; }
+    .item-row.tipo-peca .campo-descricao,
     .item-row.tipo-peca .campo-servico { display: none; }
+    .item-row.tipo-servico .campo-descricao,
+    .item-row.tipo-servico .campo-peca { display: none; }
     .item-row .campo-tipo select { width: 100%; max-width: 100%; }
     .item-row .campo-descricao input,
+    .item-row .campo-peca select,
     .item-row .campo-servico select { width: 100%; min-width: 180px; }
 
     .itens-lista {
@@ -309,7 +318,7 @@
     .filtros {
       display: flex;
       flex-wrap: wrap;
-      gap: 1rem;
+      gap: 0.6rem 1rem;
       margin-bottom: 1rem;
       align-items: flex-end;
     }
@@ -318,6 +327,8 @@
       display: flex;
       flex-direction: column;
       gap: 0.25rem;
+      flex: 0 1 auto;
+      min-width: 0;
     }
 
     .filtro-grupo label {
@@ -336,8 +347,13 @@
       color: var(--text);
       font-family: inherit;
       font-size: 0.9rem;
-      min-width: 140px;
+      min-width: 0;
+      width: 100px;
     }
+
+    .filtro-grupo input[placeholder="Buscar..."] { width: 115px; }
+    .filtro-grupo select { width: 120px; }
+    .filtros .btn { flex-shrink: 0; }
 
     /* Tabelas */
     .table-wrap { overflow-x: auto; }
@@ -429,6 +445,96 @@
     .forma-pag-btn:hover { border-color: var(--accent); background: var(--accent-muted); }
     .forma-pag-btn.sel { border-color: var(--accent); background: var(--accent-muted); color: var(--accent); }
 
+    .modal-detalhe { max-width: 480px; }
+    .modal-cadastro { max-width: 520px; }
+    .modal-nota { max-width: 420px; padding: 0; overflow: hidden; }
+    .modal-nota .doc-conteudo {
+      background: #fff;
+      color: #1a1a1a;
+      padding: 0;
+      margin: 0;
+      max-height: 70vh;
+      overflow-y: auto;
+    }
+    .modal-nota .doc-nota-cabecalho {
+      padding: 1.25rem 1.5rem;
+      border-bottom: 2px solid #e5e5e5;
+      text-align: center;
+    }
+    .modal-nota .doc-nota-empresa {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #1a1a1a;
+      margin-bottom: 0.25rem;
+    }
+    .modal-nota .doc-nota-tipo {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--accent);
+    }
+    .modal-nota .doc-nota-info {
+      padding: 1rem 1.5rem;
+      font-size: 0.9rem;
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      border-bottom: 1px solid #eee;
+    }
+    .modal-nota .doc-nota-cliente { font-weight: 600; color: #333; }
+    .modal-nota .doc-nota-itens {
+      padding: 0 1.5rem 1rem;
+    }
+    .modal-nota .doc-nota-itens table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+    .modal-nota .doc-nota-itens th {
+      text-align: left;
+      padding: 0.5rem 0.4rem 0.5rem 0;
+      color: #666;
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      border-bottom: 1px solid #ddd;
+    }
+    .modal-nota .doc-nota-itens th:last-child,
+    .modal-nota .doc-nota-itens td:last-child { text-align: right; }
+    .modal-nota .doc-nota-itens th:nth-child(2),
+    .modal-nota .doc-nota-itens td:nth-child(2) { text-align: center; width: 40px; }
+    .modal-nota .doc-nota-itens th:nth-child(3),
+    .modal-nota .doc-nota-itens td:nth-child(3) { text-align: right; width: 70px; }
+    .modal-nota .doc-nota-itens td {
+      padding: 0.5rem 0.4rem 0.5rem 0;
+      border-bottom: 1px solid #eee;
+      vertical-align: top;
+    }
+    .modal-nota .doc-nota-total {
+      padding: 1rem 1.5rem;
+      border-top: 2px solid #1a1a1a;
+      font-size: 1.1rem;
+      font-weight: 700;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .modal-nota .doc-nota-pagamento {
+      padding: 0.5rem 1.5rem 1rem;
+      font-size: 0.85rem;
+      color: #666;
+      border-top: 1px dashed #ddd;
+    }
+    .modal-nota .doc-acoes {
+      padding: 1rem 1.5rem;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+    }
+    .modal-detalhe .doc-acoes {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
     .toast {
       position: fixed;
       bottom: 1.5rem;
@@ -460,19 +566,88 @@
     }
 
     .link-voltar:hover { color: var(--accent); }
+
+    /* Mobile */
+    .btn-menu-mobile {
+      display: none;
+      background: var(--surface-hover);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.5rem 0.75rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1.25rem;
+      line-height: 1;
+    }
+
+    @media (max-width: 768px) {
+      .toast {
+        left: 1rem;
+        right: 1rem;
+        bottom: max(1.5rem, env(safe-area-inset-bottom, 0px));
+        margin-left: 0;
+        margin-right: 0;
+        z-index: 9999;
+      }
+      .wrap { padding: 0.75rem 1rem 1.5rem; }
+      header { flex-direction: column; align-items: stretch; padding: 0.75rem 1rem; }
+      .header-top { display: flex !important; align-items: center; justify-content: space-between; width: 100%; }
+      .btn-menu-mobile { display: block !important; }
+      .nav-tabs {
+        display: none;
+        flex-direction: column;
+        margin-top: 0.75rem;
+        border-top: 1px solid var(--border);
+        padding-top: 0.75rem;
+      }
+      .nav-tabs.open { display: flex; }
+      .nav-tabs button { width: 100%; justify-content: flex-start; padding: 0.6rem 0.75rem; }
+      .logo h1 { font-size: 1rem; }
+      .logo span { font-size: 0.75rem; }
+      .form-grid { grid-template-columns: 1fr; }
+      .form-cliente .linha-telefone-cpf { grid-template-columns: 1fr; }
+      .filtros { flex-direction: column; align-items: flex-start; }
+      .filtro-grupo { width: 100%; max-width: 100%; }
+      .filtro-grupo input, .filtro-grupo select { min-width: 100%; }
+      .item-row {
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+      }
+      .item-row .campo-tipo,
+      .item-row .campo-descricao,
+      .item-row .campo-peca,
+      .item-row .campo-servico,
+      .item-row .form-group:has(.btn-add-item) { grid-column: 1 / -1 !important; }
+      .item-row .form-group:has(.input-qtd) { grid-column: 1 !important; }
+      .item-row .form-group:has(.input-valor) { grid-column: 2 !important; }
+      .item-row .input-qtd, .item-row .input-valor { width: 100%; max-width: none; }
+      .item-row .btn-add-item { width: 100%; }
+      .card { padding: 1rem; }
+      .forma-pag-options { grid-template-columns: 1fr; }
+      .modal-detalhe .doc-acoes,
+      .form-actions,
+      .acoes-nota { flex-direction: column; }
+      .doc-acoes .btn,
+      .form-actions .btn,
+      .acoes-nota .btn { width: 100%; }
+      table, th, td { font-size: 0.8rem; padding: 0.5rem; }
+    }
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
-      <div class="logo">
-        <div class="logo-icon">🛠️</div>
-        <div>
-          <h1>Sistema de Venda de Serviços</h1>
-          <span>Clientes, serviços e notas fiscais</span>
+      <div class="header-top">
+        <div class="logo">
+          <div class="logo-icon">🛠️</div>
+          <div>
+            <h1>Sistema de Venda de Serviços</h1>
+            <span>Clientes, serviços e notas fiscais</span>
+          </div>
         </div>
+        <button type="button" class="btn-menu-mobile" id="btnMenuMobile" aria-label="Menu">☰</button>
       </div>
-      <nav class="nav-tabs">
+      <nav class="nav-tabs" id="navTabs">
         <button type="button" data-pagina="novaNota" class="active">Nova Nota</button>
         <button type="button" data-pagina="clientes">Clientes</button>
         <button type="button" data-pagina="servicos">Serviços</button>
@@ -497,17 +672,22 @@
 
         <h3 style="font-size:1rem;margin:1rem 0 0.75rem;color:var(--text-muted)">Itens</h3>
         <div class="itens-nota">
-          <div class="item-row" data-tipo="row">
+          <div class="item-row tipo-peca-descricao" data-tipo="row">
             <div class="form-group campo-tipo" style="grid-column:1">
               <label>Tipo</label>
               <select class="tipo-item">
-                <option value="peca">Peça / descrição</option>
+                <option value="peca_descricao">Peça descrição</option>
+                <option value="peca">Peça</option>
                 <option value="servico">Serviço</option>
               </select>
             </div>
             <div class="form-group campo-descricao" style="grid-column:2">
-              <label>Descrição / Peça</label>
+              <label>Descrição</label>
               <input type="text" class="input-descricao" placeholder="Ex: Óleo 5W30">
+            </div>
+            <div class="form-group campo-peca" style="grid-column:2;display:none">
+              <label>Peça</label>
+              <select class="input-peca"></select>
             </div>
             <div class="form-group campo-servico" style="grid-column:2;display:none">
               <label>Serviço</label>
@@ -548,25 +728,17 @@
     <!-- Clientes -->
     <section id="paginaClientes" class="pagina">
       <div class="card">
-        <h2>Cadastro de Clientes</h2>
-        <form id="formCliente" class="form-cliente">
-          <input type="hidden" id="clienteId">
-          <div class="form-grid">
-            <div class="form-group nome-row full"><label>Nome *</label><input type="text" id="clienteNome" required></div>
-            <div class="linha-telefone-cpf full">
-              <div class="form-group"><label>Telefone</label><input type="text" id="clienteTelefone" placeholder="(11) 99999-9999" maxlength="15"></div>
-              <div class="form-group"><label>CPF</label><input type="text" id="clienteCpf" placeholder="000.000.000-00" maxlength="14"></div>
-            </div>
-            <div class="form-group full"><label>Endereço</label><input type="text" id="clienteEndereco" placeholder="Rua, número, bairro, cidade"></div>
-          </div>
-          <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Salvar</button>
-            <button type="button" class="btn btn-secondary" id="btnCancelarCliente">Cancelar</button>
-          </div>
-        </form>
-      </div>
-      <div class="card">
-        <h2>Lista de Clientes</h2>
+        <div class="card-header-lista">
+          <h2>Lista de Clientes</h2>
+          <button type="button" class="btn btn-primary" id="btnNovoCliente">+ Novo cadastro</button>
+        </div>
+        <div class="filtros">
+          <div class="filtro-grupo"><label>Nome</label><input type="text" id="filtroClienteNome" placeholder="Buscar..."></div>
+          <div class="filtro-grupo"><label>Telefone</label><input type="text" id="filtroClienteTelefone" placeholder="Buscar..."></div>
+          <div class="filtro-grupo"><label>CPF</label><input type="text" id="filtroClienteCpf" placeholder="Buscar..."></div>
+          <div class="filtro-grupo"><label>Endereço</label><input type="text" id="filtroClienteEndereco" placeholder="Buscar..."></div>
+          <button type="button" class="btn btn-secondary" id="btnAplicarCliente">Aplicar</button>
+        </div>
         <div class="table-wrap">
           <table>
             <thead><tr><th>Nome</th><th>Telefone</th><th>CPF</th><th>Endereço</th><th></th></tr></thead>
@@ -579,21 +751,14 @@
     <!-- Serviços -->
     <section id="paginaServicos" class="pagina">
       <div class="card">
-        <h2>Cadastro de Serviços</h2>
-        <form id="formServico" class="form-servico">
-          <input type="hidden" id="servicoId">
-          <div class="form-grid">
-            <div class="form-group servico-nome full"><label>Nome do Serviço *</label><input type="text" id="servicoNome" required></div>
-            <div class="form-group"><label>Valor (R$) *</label><input type="text" id="servicoValor" class="input-moeda" placeholder="0,00" required></div>
-          </div>
-          <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Salvar</button>
-            <button type="button" class="btn btn-secondary" id="btnCancelarServico">Cancelar</button>
-          </div>
-        </form>
-      </div>
-      <div class="card">
-        <h2>Lista de Serviços</h2>
+        <div class="card-header-lista">
+          <h2>Lista de Serviços</h2>
+          <button type="button" class="btn btn-primary" id="btnNovoServico">+ Novo cadastro</button>
+        </div>
+        <div class="filtros">
+          <div class="filtro-grupo"><label>Nome</label><input type="text" id="filtroServicoNome" placeholder="Buscar..."></div>
+          <button type="button" class="btn btn-secondary" id="btnAplicarServico">Aplicar</button>
+        </div>
         <div class="table-wrap">
           <table>
             <thead><tr><th>Nome</th><th>Valor</th><th></th></tr></thead>
@@ -606,21 +771,14 @@
     <!-- Peças -->
     <section id="paginaPecas" class="pagina">
       <div class="card">
-        <h2>Cadastro de Peças</h2>
-        <form id="formPeca">
-          <input type="hidden" id="pecaId">
-          <div class="form-grid">
-            <div class="form-group"><label>Nome da Peça *</label><input type="text" id="pecaNome" required></div>
-            <div class="form-group"><label>Valor (R$) *</label><input type="text" id="pecaValor" class="input-moeda" placeholder="0,00" required></div>
-          </div>
-          <div class="form-actions">
-            <button type="submit" class="btn btn-primary">Salvar</button>
-            <button type="button" class="btn btn-secondary" id="btnCancelarPeca">Cancelar</button>
-          </div>
-        </form>
-      </div>
-      <div class="card">
-        <h2>Lista de Peças</h2>
+        <div class="card-header-lista">
+          <h2>Lista de Peças</h2>
+          <button type="button" class="btn btn-primary" id="btnNovoPeca">+ Novo cadastro</button>
+        </div>
+        <div class="filtros">
+          <div class="filtro-grupo"><label>Nome</label><input type="text" id="filtroPecaNome" placeholder="Buscar..."></div>
+          <button type="button" class="btn btn-secondary" id="btnAplicarPeca">Aplicar</button>
+        </div>
         <div class="table-wrap">
           <table>
             <thead><tr><th>Nome</th><th>Valor</th><th></th></tr></thead>
@@ -643,7 +801,7 @@
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Data</th><th>Cliente</th><th>Total</th><th></th></tr></thead>
+            <thead><tr><th></th><th>Data</th><th>Cliente</th><th>Descrição</th><th>Total</th></tr></thead>
             <tbody id="tbodyOrcamentos"></tbody>
           </table>
         </div>
@@ -663,12 +821,82 @@
         </div>
         <div class="table-wrap">
           <table>
-            <thead><tr><th>Data</th><th>Cliente</th><th>Total</th><th>Pagamento</th><th></th></tr></thead>
+            <thead><tr><th></th><th>Data</th><th>Cliente</th><th>Descrição</th><th>Total</th><th>Pagamento</th></tr></thead>
             <tbody id="tbodyNotas"></tbody>
           </table>
         </div>
       </div>
     </section>
+  </div>
+
+  <!-- Modal Cadastro Cliente -->
+  <div class="modal-overlay" id="modalCliente">
+    <div class="modal modal-cadastro">
+      <h3>Cadastro de Cliente</h3>
+      <form id="formCliente" class="form-cliente">
+        <input type="hidden" id="clienteId">
+        <div class="form-grid">
+          <div class="form-group nome-row full"><label>Nome *</label><input type="text" id="clienteNome" required></div>
+          <div class="linha-telefone-cpf full">
+            <div class="form-group"><label>Telefone</label><input type="text" id="clienteTelefone" placeholder="(11) 99999-9999" maxlength="15"></div>
+            <div class="form-group"><label>CPF</label><input type="text" id="clienteCpf" placeholder="000.000.000-00" maxlength="14"></div>
+          </div>
+          <div class="form-group full"><label>Endereço</label><input type="text" id="clienteEndereco" placeholder="Rua, número, bairro, cidade"></div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Salvar</button>
+          <button type="button" class="btn btn-secondary" id="btnCancelarCliente">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Cadastro Serviço -->
+  <div class="modal-overlay" id="modalServico">
+    <div class="modal modal-cadastro">
+      <h3>Cadastro de Serviço</h3>
+      <form id="formServico" class="form-servico">
+        <input type="hidden" id="servicoId">
+        <div class="form-grid">
+          <div class="form-group servico-nome full"><label>Nome do Serviço *</label><input type="text" id="servicoNome" required></div>
+          <div class="form-group"><label>Valor (R$) *</label><input type="text" id="servicoValor" class="input-moeda" placeholder="0,00" required></div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Salvar</button>
+          <button type="button" class="btn btn-secondary" id="btnCancelarServico">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Cadastro Peça -->
+  <div class="modal-overlay" id="modalPeca">
+    <div class="modal modal-cadastro">
+      <h3>Cadastro de Peça</h3>
+      <form id="formPeca">
+        <input type="hidden" id="pecaId">
+        <div class="form-grid">
+          <div class="form-group"><label>Nome da Peça *</label><input type="text" id="pecaNome" required></div>
+          <div class="form-group"><label>Valor (R$) *</label><input type="text" id="pecaValor" class="input-moeda" placeholder="0,00" required></div>
+        </div>
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">Salvar</button>
+          <button type="button" class="btn btn-secondary" id="btnCancelarPeca">Cancelar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal Detalhe Documento -->
+  <div class="modal-overlay" id="modalDocumento">
+    <div class="modal modal-detalhe modal-nota">
+      <div class="doc-conteudo" id="modalDocConteudo"></div>
+      <div class="doc-acoes">
+        <button type="button" class="btn btn-primary" id="btnDocBaixar">📥 Baixar</button>
+        <button type="button" class="btn btn-secondary" id="btnDocCompartilhar">📤 Compartilhar</button>
+        <button type="button" class="btn btn-secondary" id="btnDocFechar">Fechar</button>
+      </div>
+    </div>
   </div>
 
   <!-- Modal Pagamento -->
@@ -740,6 +968,13 @@
           servicos.map(s => `<option value="${s.id}" data-valor="${s.valor}">${esc(s.nome)} - ${moeda(s.valor)}</option>`).join('');
       }
 
+      function atualizarSelectPecas() {
+        const inputPeca = document.querySelector('.input-peca');
+        if (!inputPeca) return;
+        inputPeca.innerHTML = '<option value="">Selecione</option>' +
+          pecas.map(p => `<option value="${p.id}" data-valor="${p.valor}">${esc(p.nome)} - ${moeda(p.valor)}</option>`).join('');
+      }
+
       function esc(s) {
         if (s == null) return '';
         const d = document.createElement('div');
@@ -807,31 +1042,57 @@
         });
       }
 
-      // Nav
-      document.querySelectorAll('.nav-tabs button').forEach(btn => {
-        btn.addEventListener('click', () => {
+      // Nav - event delegation no container
+      const navTabsEl = document.querySelector('.nav-tabs');
+      const btnMenuMobile = document.getElementById('btnMenuMobile');
+      if (btnMenuMobile && navTabsEl) {
+        btnMenuMobile.addEventListener('click', function() {
+          navTabsEl.classList.toggle('open');
+        });
+      }
+      if (navTabsEl) {
+        navTabsEl.addEventListener('click', function(ev) {
+          const btn = ev.target.closest('button[data-pagina]');
+          if (!btn || !btn.dataset.pagina) return;
+          const pagina = btn.dataset.pagina;
           document.querySelectorAll('.nav-tabs button').forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
           document.querySelectorAll('.pagina').forEach(p => p.classList.remove('ativa'));
-          const pid = 'pagina' + btn.dataset.pagina.charAt(0).toUpperCase() + btn.dataset.pagina.slice(1);
+          const pid = 'pagina' + pagina.charAt(0).toUpperCase() + pagina.slice(1);
           const pag = document.getElementById(pid);
           if (pag) pag.classList.add('ativa');
-          if (pid === 'paginaOrcamentos') renderOrcamentos();
-          if (pid === 'paginaNotas') renderNotas();
-          if (pid === 'paginaClientes') renderClientes();
-          if (pid === 'paginaServicos') renderServicos();
-          if (pid === 'paginaPecas') renderPecas();
-          if (pid === 'paginaNovaNota') {
-            atualizarSelectClientes();
-            atualizarSelectServicos();
-            popularFiltrosOrc();
-            popularFiltrosNota();
-          }
+          navTabsEl.classList.remove('open');
+          try {
+            if (pid === 'paginaOrcamentos') renderOrcamentos();
+            else if (pid === 'paginaNotas') renderNotas();
+            else if (pid === 'paginaClientes') renderClientes();
+            else if (pid === 'paginaServicos') renderServicos();
+            else if (pid === 'paginaPecas') renderPecas();
+            else if (pid === 'paginaNovaNota') {
+              atualizarSelectClientes();
+              atualizarSelectServicos();
+              atualizarSelectPecas();
+              popularFiltrosOrc();
+              popularFiltrosNota();
+              const r = document.querySelector('.item-row');
+              if (r) atualizarTipoItem(r);
+            }
+          } catch (e) { console.error(e); }
         });
+      }
+
+      // Clientes - modais
+      const modalCliente = document.getElementById('modalCliente');
+      const btnNovoCliente = document.getElementById('btnNovoCliente');
+      if (btnNovoCliente) btnNovoCliente.addEventListener('click', () => {
+        editandoClienteId = null;
+        document.getElementById('formCliente').reset();
+        document.getElementById('clienteId').value = '';
+        if (modalCliente) modalCliente.classList.add('open');
       });
 
-      // Clientes
-      document.getElementById('formCliente').addEventListener('submit', e => {
+      const formCliente = document.getElementById('formCliente');
+      if (formCliente) formCliente.addEventListener('submit', e => {
         e.preventDefault();
         const nome = document.getElementById('clienteNome').value.trim();
         const telefone = document.getElementById('clienteTelefone').value.trim();
@@ -854,19 +1115,45 @@
         atualizarSelectClientes();
         popularFiltrosOrc();
         popularFiltrosNota();
+        if (modalCliente) modalCliente.classList.remove('open');
       });
 
-      document.getElementById('btnCancelarCliente').addEventListener('click', () => {
+      const btnCancelarCliente = document.getElementById('btnCancelarCliente');
+      if (btnCancelarCliente) btnCancelarCliente.addEventListener('click', () => {
         editandoClienteId = null;
         document.getElementById('formCliente').reset();
         document.getElementById('clienteId').value = '';
+        if (modalCliente) modalCliente.classList.remove('open');
       });
+      if (modalCliente) modalCliente.addEventListener('click', e => {
+        if (e.target.id === 'modalCliente') e.target.classList.remove('open');
+      });
+
+      ['filtroClienteNome', 'filtroClienteTelefone', 'filtroClienteCpf', 'filtroClienteEndereco'].forEach(id => {
+        document.getElementById(id)?.addEventListener('input', () => renderClientes());
+      });
+      document.getElementById('btnAplicarCliente')?.addEventListener('click', () => renderClientes());
+
+      function filtrarClientes() {
+        const nome = (document.getElementById('filtroClienteNome')?.value || '').toLowerCase().trim();
+        const telefone = (document.getElementById('filtroClienteTelefone')?.value || '').toLowerCase().trim();
+        const cpf = (document.getElementById('filtroClienteCpf')?.value || '').toLowerCase().trim();
+        const endereco = (document.getElementById('filtroClienteEndereco')?.value || '').toLowerCase().trim();
+        return clientes.filter(c => {
+          if (nome && !(c.nome || '').toLowerCase().includes(nome)) return false;
+          if (telefone && !(c.telefone || '').toLowerCase().includes(telefone)) return false;
+          if (cpf && !(c.cpf || '').toLowerCase().includes(cpf)) return false;
+          if (endereco && !(c.endereco || '').toLowerCase().includes(endereco)) return false;
+          return true;
+        });
+      }
 
       function renderClientes() {
         const tbody = document.getElementById('tbodyClientes');
         if (!tbody) return;
-        if (!clientes.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty">Nenhum cliente cadastrado.</td></tr>'; return; }
-        tbody.innerHTML = clientes.map(c => `
+        const lista = filtrarClientes();
+        if (!lista.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty">' + (clientes.length ? 'Nenhum cliente encontrado.' : 'Nenhum cliente cadastrado.') + '</td></tr>'; return; }
+        tbody.innerHTML = lista.map(c => `
           <tr>
             <td>${esc(c.nome)}</td>
             <td>${esc(c.telefone)}</td>
@@ -889,6 +1176,7 @@
         document.getElementById('clienteTelefone').value = formatarTelefone(c.telefone || '');
         document.getElementById('clienteCpf').value = formatarCpf(c.cpf || '');
         document.getElementById('clienteEndereco').value = c.endereco || '';
+        if (modalCliente) modalCliente.classList.add('open');
       };
 
       window.excluirCliente = function(idi) {
@@ -902,8 +1190,18 @@
         popularFiltrosNota();
       };
 
-      // Serviços
-      document.getElementById('formServico').addEventListener('submit', e => {
+      // Serviços - modais
+      const modalServico = document.getElementById('modalServico');
+      const btnNovoServico = document.getElementById('btnNovoServico');
+      if (btnNovoServico) btnNovoServico.addEventListener('click', () => {
+        editandoServicoId = null;
+        document.getElementById('formServico').reset();
+        document.getElementById('servicoId').value = '';
+        if (modalServico) modalServico.classList.add('open');
+      });
+
+      const formServico = document.getElementById('formServico');
+      if (formServico) formServico.addEventListener('submit', e => {
         e.preventDefault();
         const nome = document.getElementById('servicoNome').value.trim();
         const valor = parseValorMoeda(document.getElementById('servicoValor').value);
@@ -922,19 +1220,35 @@
         document.getElementById('servicoId').value = '';
         renderServicos();
         atualizarSelectServicos();
+        if (modalServico) modalServico.classList.remove('open');
       });
 
-      document.getElementById('btnCancelarServico').addEventListener('click', () => {
+      const btnCancelarServico = document.getElementById('btnCancelarServico');
+      if (btnCancelarServico) btnCancelarServico.addEventListener('click', () => {
         editandoServicoId = null;
         document.getElementById('formServico').reset();
         document.getElementById('servicoId').value = '';
+        if (modalServico) modalServico.classList.remove('open');
       });
+      if (modalServico) modalServico.addEventListener('click', e => {
+        if (e.target.id === 'modalServico') e.target.classList.remove('open');
+      });
+
+      function filtrarServicos() {
+        const nome = (document.getElementById('filtroServicoNome')?.value || '').toLowerCase().trim();
+        if (!nome) return servicos;
+        return servicos.filter(s => (s.nome || '').toLowerCase().includes(nome));
+      }
+
+      document.getElementById('filtroServicoNome')?.addEventListener('input', () => renderServicos());
+      document.getElementById('btnAplicarServico')?.addEventListener('click', () => renderServicos());
 
       function renderServicos() {
         const tbody = document.getElementById('tbodyServicos');
         if (!tbody) return;
-        if (!servicos.length) { tbody.innerHTML = '<tr><td colspan="3" class="empty">Nenhum serviço cadastrado.</td></tr>'; return; }
-        tbody.innerHTML = servicos.map(s => `
+        const lista = filtrarServicos();
+        if (!lista.length) { tbody.innerHTML = '<tr><td colspan="3" class="empty">' + (servicos.length ? 'Nenhum serviço encontrado.' : 'Nenhum serviço cadastrado.') + '</td></tr>'; return; }
+        tbody.innerHTML = lista.map(s => `
           <tr>
             <td>${esc(s.nome)}</td>
             <td class="num">${moeda(s.valor)}</td>
@@ -953,6 +1267,7 @@
         document.getElementById('servicoId').value = idi;
         document.getElementById('servicoNome').value = s.nome || '';
         document.getElementById('servicoValor').value = formatarValorMoeda(s.valor ?? '');
+        if (modalServico) modalServico.classList.add('open');
       };
 
       window.excluirServico = function(idi) {
@@ -964,8 +1279,18 @@
         atualizarSelectServicos();
       };
 
-      // Peças
-      document.getElementById('formPeca').addEventListener('submit', e => {
+      // Peças - modais
+      const modalPeca = document.getElementById('modalPeca');
+      const btnNovoPeca = document.getElementById('btnNovoPeca');
+      if (btnNovoPeca) btnNovoPeca.addEventListener('click', () => {
+        editandoPecaId = null;
+        document.getElementById('formPeca').reset();
+        document.getElementById('pecaId').value = '';
+        if (modalPeca) modalPeca.classList.add('open');
+      });
+
+      const formPeca = document.getElementById('formPeca');
+      if (formPeca) formPeca.addEventListener('submit', e => {
         e.preventDefault();
         const nome = document.getElementById('pecaNome').value.trim();
         const valor = parseValorMoeda(document.getElementById('pecaValor').value);
@@ -983,19 +1308,36 @@
         document.getElementById('formPeca').reset();
         document.getElementById('pecaId').value = '';
         renderPecas();
+        atualizarSelectPecas();
+        if (modalPeca) modalPeca.classList.remove('open');
       });
 
-      document.getElementById('btnCancelarPeca').addEventListener('click', () => {
+      const btnCancelarPeca = document.getElementById('btnCancelarPeca');
+      if (btnCancelarPeca) btnCancelarPeca.addEventListener('click', () => {
         editandoPecaId = null;
         document.getElementById('formPeca').reset();
         document.getElementById('pecaId').value = '';
+        if (modalPeca) modalPeca.classList.remove('open');
       });
+      if (modalPeca) modalPeca.addEventListener('click', e => {
+        if (e.target.id === 'modalPeca') e.target.classList.remove('open');
+      });
+
+      function filtrarPecas() {
+        const nome = (document.getElementById('filtroPecaNome')?.value || '').toLowerCase().trim();
+        if (!nome) return pecas;
+        return pecas.filter(p => (p.nome || '').toLowerCase().includes(nome));
+      }
+
+      document.getElementById('filtroPecaNome')?.addEventListener('input', () => renderPecas());
+      document.getElementById('btnAplicarPeca')?.addEventListener('click', () => renderPecas());
 
       function renderPecas() {
         const tbody = document.getElementById('tbodyPecas');
         if (!tbody) return;
-        if (!pecas.length) { tbody.innerHTML = '<tr><td colspan="3" class="empty">Nenhuma peça cadastrada.</td></tr>'; return; }
-        tbody.innerHTML = pecas.map(p => `
+        const lista = filtrarPecas();
+        if (!lista.length) { tbody.innerHTML = '<tr><td colspan="3" class="empty">' + (pecas.length ? 'Nenhuma peça encontrada.' : 'Nenhuma peça cadastrada.') + '</td></tr>'; return; }
+        tbody.innerHTML = lista.map(p => `
           <tr>
             <td>${esc(p.nome)}</td>
             <td class="num">${moeda(p.valor)}</td>
@@ -1014,6 +1356,7 @@
         document.getElementById('pecaId').value = idi;
         document.getElementById('pecaNome').value = p.nome || '';
         document.getElementById('pecaValor').value = formatarValorMoeda(p.valor ?? '');
+        if (modalPeca) modalPeca.classList.add('open');
       };
 
       window.excluirPeca = function(idi) {
@@ -1022,46 +1365,73 @@
         save();
         toast('Peça excluída');
         renderPecas();
+        atualizarSelectPecas();
       };
 
       // Nova Nota - itens
       function atualizarTipoItem(row) {
-        const tipo = row.querySelector('.tipo-item').value;
-        row.querySelector('.campo-descricao').style.display = tipo === 'peca' ? '' : 'none';
-        row.querySelector('.campo-servico').style.display = tipo === 'servico' ? '' : 'none';
+        if (!row) return;
+        const tipoEl = row.querySelector('.tipo-item');
+        const tipo = tipoEl ? tipoEl.value : 'peca_descricao';
+        row.className = 'item-row tipo-' + (tipo || 'peca-descricao');
+        const desc = row.querySelector('.campo-descricao');
+        const pec = row.querySelector('.campo-peca');
+        const serv = row.querySelector('.campo-servico');
+        if (desc) desc.style.setProperty('display', tipo === 'peca_descricao' ? 'flex' : 'none', 'important');
+        if (pec) pec.style.setProperty('display', tipo === 'peca' ? 'flex' : 'none', 'important');
+        if (serv) serv.style.setProperty('display', tipo === 'servico' ? 'flex' : 'none', 'important');
         if (tipo === 'servico') {
           const sel = row.querySelector('.input-servico');
-          const opt = sel.options[sel.selectedIndex];
+          const opt = sel?.options[sel.selectedIndex];
+          if (opt && opt.value) row.querySelector('.input-valor').value = formatarValorMoeda(opt.dataset.valor || '');
+        } else if (tipo === 'peca') {
+          const sel = row.querySelector('.input-peca');
+          const opt = sel?.options[sel.selectedIndex];
           if (opt && opt.value) row.querySelector('.input-valor').value = formatarValorMoeda(opt.dataset.valor || '');
         }
       }
 
-      document.querySelector('.tipo-item').addEventListener('change', e => {
-        atualizarTipoItem(e.target.closest('.item-row'));
+      document.querySelector('.tipo-item')?.addEventListener('change', e => {
+        const row = e.target.closest('.item-row');
+        if (row) atualizarTipoItem(row);
       });
 
-      document.querySelector('.input-servico').addEventListener('change', e => {
+      document.querySelector('.input-servico')?.addEventListener('change', e => {
         const opt = e.target.options[e.target.selectedIndex];
-        if (opt && opt.value) e.target.closest('.item-row').querySelector('.input-valor').value = formatarValorMoeda(opt.dataset.valor || '');
+        const row = e.target.closest('.item-row');
+        const inpValor = row ? row.querySelector('.input-valor') : null;
+        if (opt && opt.value && inpValor) inpValor.value = formatarValorMoeda(opt.dataset.valor || '');
       });
 
-      document.querySelector('.btn-add-item').addEventListener('click', () => {
+      document.querySelector('.input-peca')?.addEventListener('change', e => {
+        const opt = e.target.options[e.target.selectedIndex];
+        const row = e.target.closest('.item-row');
+        const inpValor = row ? row.querySelector('.input-valor') : null;
+        if (opt && opt.value && inpValor) inpValor.value = formatarValorMoeda(opt.dataset.valor || '');
+      });
+
+      document.querySelector('.btn-add-item')?.addEventListener('click', () => {
         const row = document.querySelector('.item-row');
         const tipo = row.querySelector('.tipo-item').value;
         const desc = row.querySelector('.input-descricao').value.trim();
+        const pecaSel = row.querySelector('.input-peca');
+        const pecaId = pecaSel?.value;
         const servSel = row.querySelector('.input-servico');
-        const servId = servSel.value;
+        const servId = servSel?.value;
         const qtd = parseInt(row.querySelector('.input-qtd').value) || 1;
         const valor = parseValorMoeda(row.querySelector('.input-valor').value);
-        if (tipo === 'peca' && !desc) return toast('Informe a descrição da peça', true);
+        if (tipo === 'peca_descricao' && !desc) return toast('Informe a descrição', true);
+        if (tipo === 'peca' && !pecaId) return toast('Selecione a peça', true);
         if (tipo === 'servico' && !servId) return toast('Selecione o serviço', true);
+        const peca = pecas.find(p => p.id === pecaId);
         const serv = servicos.find(s => s.id === servId);
-        const descricao = tipo === 'peca' ? desc : (serv ? serv.nome : '');
-        const vUnit = tipo === 'servico' && serv ? serv.valor : valor;
-        itensNota.push({ tipo, descricao, servicoId: servId || null, quantidade: qtd, valorUnit: vUnit });
+        const descricao = tipo === 'peca_descricao' ? desc : (tipo === 'peca' && peca ? peca.nome : (serv ? serv.nome : ''));
+        const vUnit = tipo === 'peca' && peca ? peca.valor : (tipo === 'servico' && serv ? serv.valor : valor);
+        itensNota.push({ tipo, descricao, pecaId: pecaId || null, servicoId: servId || null, quantidade: qtd, valorUnit: vUnit });
         row.querySelector('.input-descricao').value = '';
         row.querySelector('.input-qtd').value = '1';
         row.querySelector('.input-valor').value = '';
+        row.querySelector('.input-peca').value = '';
         row.querySelector('.input-servico').value = '';
         renderItensNota();
       });
@@ -1188,7 +1558,8 @@
           const matchItem = doc.itens && doc.itens.some(it => (it.descricao || '').toLowerCase().includes(d));
           const matchCli = (doc.clienteNome || '').toLowerCase().includes(d);
           const matchServ = servicos.some(s => (s.nome || '').toLowerCase().includes(d) && doc.itens && doc.itens.some(it => it.servicoId === s.id));
-          if (!matchItem && !matchCli && !matchServ) return false;
+          const matchPeca = pecas.some(p => (p.nome || '').toLowerCase().includes(d) && doc.itens && doc.itens.some(it => it.pecaId === p.id));
+          if (!matchItem && !matchCli && !matchServ && !matchPeca) return false;
         }
         return true;
       }
@@ -1222,46 +1593,153 @@
         const tbody = document.getElementById('tbodyOrcamentos');
         if (!tbody) return;
         const lista = filtrarOrcamentos();
-        if (!lista.length) { tbody.innerHTML = '<tr><td colspan="4" class="empty">Nenhum orçamento encontrado.</td></tr>'; return; }
-        tbody.innerHTML = lista.map(d => `
+        if (!lista.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty">Nenhum orçamento encontrado.</td></tr>'; return; }
+        tbody.innerHTML = lista.map(d => {
+          const descFull = (d.itens || []).map(it => it.descricao || '-').join(', ');
+          const descExib = !descFull ? '-' : (descFull.length > 30 ? descFull.substring(0, 30) + '…' : descFull);
+          return `
           <tr>
+            <td class="acoes"><button type="button" class="btn-icon btn-ver-doc" data-doc-id="${esc(d.id)}" title="Ver">👁️</button></td>
             <td>${data(d.data)}</td>
             <td>${esc(d.clienteNome)}</td>
+            <td title="${esc(descFull || '-')}">${esc(descExib)}</td>
             <td class="num">${moeda(d.total)}</td>
-            <td class="acoes"><button type="button" class="btn-icon" onclick="window.verDocumento('${d.id}')" title="Ver">👁️</button></td>
           </tr>
-        `).join('');
+        `}).join('');
       }
 
       function renderNotas() {
         const tbody = document.getElementById('tbodyNotas');
         if (!tbody) return;
         const lista = filtrarNotas();
-        if (!lista.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty">Nenhuma nota encontrada.</td></tr>'; return; }
-        tbody.innerHTML = lista.map(d => `
+        if (!lista.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty">Nenhuma nota encontrada.</td></tr>'; return; }
+        tbody.innerHTML = lista.map(d => {
+          const descFull = (d.itens || []).map(it => it.descricao || '-').join(', ');
+          const descExib = !descFull ? '-' : (descFull.length > 30 ? descFull.substring(0, 30) + '…' : descFull);
+          return `
           <tr>
+            <td class="acoes"><button type="button" class="btn-icon btn-ver-doc" data-doc-id="${esc(d.id)}" title="Ver">👁️</button></td>
             <td>${data(d.data)}</td>
             <td>${esc(d.clienteNome)}</td>
+            <td title="${esc(descFull || '-')}">${esc(descExib)}</td>
             <td class="num">${moeda(d.total)}</td>
             <td>${esc(d.modoPagamento || '-')}</td>
-            <td class="acoes"><button type="button" class="btn-icon" onclick="window.verDocumento('${d.id}')" title="Ver">👁️</button></td>
           </tr>
-        `).join('');
+        `}).join('');
       }
 
-      window.verDocumento = function(docId) {
-        const doc = documentos.find(d => d.id === docId);
-        if (!doc) return;
+      document.getElementById('tbodyOrcamentos')?.addEventListener('click', e => {
+        const btn = e.target.closest('.btn-ver-doc');
+        if (btn?.dataset.docId) verDocumento(btn.dataset.docId);
+      });
+      document.getElementById('tbodyNotas')?.addEventListener('click', e => {
+        const btn = e.target.closest('.btn-ver-doc');
+        if (btn?.dataset.docId) verDocumento(btn.dataset.docId);
+      });
+
+      function formatarConteudoDoc(doc) {
         const itensStr = (doc.itens || []).map(it => `  • ${it.descricao || '-'} - ${it.quantidade}x ${moeda(it.valorUnit)} = ${moeda(it.quantidade * it.valorUnit)}`).join('\n');
         const tipo = doc.tipo === 'orcamento' ? 'Orçamento' : 'Serviço Prestado';
-        let msg = `${tipo} - ${data(d.data)}\nCliente: ${doc.clienteNome}\n\nItens:\n${itensStr}\n\nTotal: ${moeda(doc.total)}`;
-        if (doc.modoPagamento) msg += `\nPagamento: ${doc.modoPagamento}`;
-        alert(msg);
-      };
+        let txt = `${tipo} - ${data(doc.data)}\nCliente: ${doc.clienteNome}\n\nItens:\n${itensStr}\n\nTotal: ${moeda(doc.total)}`;
+        if (doc.modoPagamento) txt += `\nPagamento: ${doc.modoPagamento}`;
+        return txt;
+      }
+
+      function renderDocNotaHtml(doc) {
+        const tipo = doc.tipo === 'orcamento' ? 'Orçamento' : 'Nota de Serviço';
+        const itensRows = (doc.itens || []).map(it => {
+          const subtotal = (it.quantidade || 1) * (it.valorUnit || 0);
+          return `<tr><td>${esc(it.descricao || '-')}</td><td>${it.quantidade || 1}</td><td>${moeda(it.valorUnit)}</td><td>${moeda(subtotal)}</td></tr>`;
+        }).join('');
+        let pagHtml = '';
+        if (doc.modoPagamento) {
+          pagHtml = `<div class="doc-nota-pagamento">Forma de pagamento: ${esc(doc.modoPagamento)}</div>`;
+        }
+        return `
+          <div class="doc-nota-cabecalho">
+            <div class="doc-nota-empresa">Sistema de Venda de Serviços</div>
+            <div class="doc-nota-tipo">${esc(tipo)}</div>
+          </div>
+          <div class="doc-nota-info">
+            <span class="doc-nota-cliente">${esc(doc.clienteNome)}</span>
+            <span>${data(doc.data)}</span>
+          </div>
+          <div class="doc-nota-itens">
+            <table>
+              <thead><tr><th>Descrição</th><th>Qtd</th><th>Valor unit.</th><th>Subtotal</th></tr></thead>
+              <tbody>${itensRows}</tbody>
+            </table>
+          </div>
+          <div class="doc-nota-total">
+            <span>Total</span>
+            <span>${moeda(doc.total)}</span>
+          </div>
+          ${pagHtml}
+        `;
+      }
+
+      let docAtualVer = null;
+
+      function verDocumento(docId) {
+        const doc = documentos.find(d => d.id === docId);
+        if (!doc) return;
+        docAtualVer = doc;
+        document.getElementById('modalDocConteudo').innerHTML = renderDocNotaHtml(doc);
+        document.getElementById('modalDocumento').classList.add('open');
+      }
+
+      document.getElementById('btnDocFechar').addEventListener('click', () => {
+        document.getElementById('modalDocumento').classList.remove('open');
+      });
+      document.getElementById('modalDocumento').addEventListener('click', e => {
+        if (e.target.id === 'modalDocumento') e.target.classList.remove('open');
+      });
+
+      document.getElementById('btnDocBaixar').addEventListener('click', () => {
+        if (!docAtualVer) return;
+        const txt = formatarConteudoDoc(docAtualVer);
+        const nome = (docAtualVer.tipo === 'orcamento' ? 'orcamento' : 'nota') + '-' + data(docAtualVer.data).replace(/\//g, '-') + '.txt';
+        const blob = new Blob([txt], { type: 'text/plain;charset=utf-8' });
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = nome;
+        a.click();
+        URL.revokeObjectURL(a.href);
+        toast('Arquivo baixado!');
+      });
+
+      document.getElementById('btnDocCompartilhar').addEventListener('click', async () => {
+        if (!docAtualVer) return;
+        const txt = formatarConteudoDoc(docAtualVer);
+        const titulo = (docAtualVer.tipo === 'orcamento' ? 'Orçamento' : 'Nota') + ' - ' + docAtualVer.clienteNome;
+        try {
+          if (navigator.share) {
+            await navigator.share({
+              title: titulo,
+              text: txt,
+              type: 'text/plain'
+            });
+            toast('Compartilhado!');
+          } else {
+            await navigator.clipboard.writeText(txt);
+            toast('Copiado para a área de transferência!');
+          }
+        } catch (err) {
+          if (err.name !== 'AbortError') {
+            try {
+              await navigator.clipboard.writeText(txt);
+              toast('Copiado para a área de transferência!');
+            } catch {
+              toast('Não foi possível compartilhar', true);
+            }
+          }
+        }
+      });
 
       // Init
       atualizarSelectClientes();
       atualizarSelectServicos();
+      atualizarSelectPecas();
       popularFiltrosOrc();
       popularFiltrosNota();
       renderClientes();

@@ -1,0 +1,12 @@
+COMO ADICIONAR NOVOS FOLHETOS
+=============================
+
+1. Coloque o arquivo PDF na pasta "folhetos".
+   Use nomes SEM acentos (evite ã, é, ç etc.) para evitar erro de carregamento.
+   Exemplos: 20250301-Folheto-Domingo.pdf ou 20250301-Solenidade-Santa-Mae-Deus.pdf
+
+2. Edite folhetos/lista.js e adicione no array "raw":
+   A) Só o nome (se seguir YYYYMMDD- nome.pdf): "20250301-Folheto-Domingo.pdf",
+   B) Ou com título: { arquivo: "20250301-xxx.pdf", data: "2025-03-01", titulo: "Nome exibido" },
+
+3. O site ordena pela data mais recente e exibe na aba Folheto.
