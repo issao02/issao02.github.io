@@ -52,15 +52,15 @@
       width: 100%;
       max-width: 100%;
       margin: 0;
-      padding: 2rem;
+      padding: 1rem 2rem 2rem;
       position: relative;
       z-index: 1;
     }
 
     header {
       text-align: center;
-      margin-bottom: 4rem;
-      padding-top: 3rem;
+      margin-bottom: 1rem;
+      padding-top: 0.5rem;
     }
 
     h1 {
@@ -80,6 +80,43 @@
       font-size: 1.1rem;
     }
 
+    .filter-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin-bottom: 1.25rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      padding: 0.6rem 1.2rem;
+      border: 1px solid var(--border);
+      background: var(--bg-card);
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 500;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .filter-btn:hover {
+      color: var(--text);
+      border-color: var(--accent);
+      background: rgba(99, 102, 241, 0.1);
+    }
+
+    .filter-btn.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .project-card.filtered-out {
+      display: none !important;
+    }
+
     .projects-grid {
       display: flex;
       flex-wrap: wrap;
@@ -91,6 +128,7 @@
     .project-card {
       flex: 0 0 240px;
       background: var(--bg-card);
+      transition: opacity 0.3s ease, transform 0.3s ease;
       border: 1px solid var(--border);
       border-radius: 16px;
       padding: 2rem;
@@ -215,8 +253,15 @@
       <p class="subtitle">Clique em um projeto para abrir</p>
     </header>
 
+    <div class="filter-buttons">
+      <button class="filter-btn active" data-filter="all">Todos</button>
+      <button class="filter-btn" data-filter="site">Site</button>
+      <button class="filter-btn" data-filter="sistema">Sistema</button>
+      <button class="filter-btn" data-filter="jogos">Jogos</button>
+    </div>
+
     <main class="projects-grid">
-      <a href="Projetos/SiteBlindagem/" class="project-card" target="_self">
+      <a href="Projetos/SiteBlindagem/" class="project-card" data-filter="site" target="_self">
         <div class="project-icon">🛡️</div>
         <h2>Você Blindado</h2>
         <p>Site institucional sobre blindagem automotiva com design moderno e informativo.</p>
@@ -228,7 +273,7 @@
         </span>
       </a>
 
-      <a href="Projetos/SitePizzaria/" class="project-card" target="_self">
+      <a href="Projetos/SitePizzaria/" class="project-card" data-filter="site" target="_self">
         <div class="project-icon">🍕</div>
         <h2>Bella Napoli</h2>
         <p>Site de pizzaria com cardápio online, carrinho de compras e localização.</p>
@@ -240,7 +285,7 @@
         </span>
       </a>
 
-      <a href="Projetos/GeradorSenha/" class="project-card" target="_self">
+      <a href="Projetos/GeradorSenha/" class="project-card" data-filter="sistema" target="_self">
         <div class="project-icon">🔐</div>
         <h2>Gerador de Senhas</h2>
         <p>Gere senhas seguras com controle sobre números, maiúsculas, minúsculas e caracteres especiais.</p>
@@ -252,7 +297,7 @@
         </span>
       </a>
 
-      <a href="Projetos/GeradorQRCode/" class="project-card" target="_self">
+      <a href="Projetos/GeradorQRCode/" class="project-card" data-filter="sistema" target="_self">
         <div class="project-icon">📱</div>
         <h2>Gerador de QR Code</h2>
         <p>Cole seu link e gere um QR code para baixar em PNG com fundo transparente ou na cor que preferir.</p>
@@ -264,7 +309,7 @@
         </span>
       </a>
 
-      <a href="Projetos/MataMosca/" class="project-card" target="_self">
+      <a href="Projetos/MataMosca/" class="project-card" data-filter="jogos" target="_self">
         <div class="project-icon">🪰</div>
         <h2>Mata Mosca</h2>
         <p>Jogo divertido com fundo de toalha de mesa, cursor em forma de mata-mosca e moscas voando. Conte quantas você matar!</p>
@@ -276,7 +321,7 @@
         </span>
       </a>
 
-      <a href="Projetos/SiteManicure/" class="project-card" target="_self">
+      <a href="Projetos/SiteManicure/" class="project-card" data-filter="site" target="_self">
         <div class="project-icon">💅</div>
         <h2>Lua Manicure</h2>
         <p>Site de manicure com galeria de fotos, vídeos de unhas e links para redes sociais.</p>
@@ -288,7 +333,7 @@
         </span>
       </a>
 
-      <a href="Projetos/TemporizadorFoco/" class="project-card" target="_self">
+      <a href="Projetos/TemporizadorFoco/" class="project-card" data-filter="sistema" target="_self">
         <div class="project-icon">⏱️</div>
         <h2>Temporizador Foco / Descanso</h2>
         <p>Defina tempo de foco e de descanso. Quando acabar, a tela pisca. Clique no botão e comece o próximo período.</p>
@@ -300,7 +345,7 @@
         </span>
       </a>
 
-      <a href="Projetos/MesaMixSom/" class="project-card" target="_self">
+      <a href="Projetos/MesaMixSom/" class="project-card" data-filter="sistema" target="_self">
         <div class="project-icon">🎚️</div>
         <h2>Mesa de Mix de Som</h2>
         <p>Combo com sons variados. Adicione até 6 na mesa em grid 2×3, toque cada um e remova quando quiser.</p>
@@ -312,7 +357,7 @@
         </span>
       </a>
 
-      <a href="Projetos/GeradorSite/" class="project-card" target="_self">
+      <a href="Projetos/GeradorSite/" class="project-card" data-filter="sistema" target="_self">
         <div class="project-icon">🌐</div>
         <h2>Gerador de Site</h2>
         <p>Formulário completo para gerar sites com IA. Paleta de cores, galeria, contato, redes sociais e preview em celular, tablet ou full.</p>
@@ -324,7 +369,7 @@
         </span>
       </a>
 
-      <a href="Projetos/RolarDado/" class="project-card" target="_self">
+      <a href="Projetos/RolarDado/" class="project-card" data-filter="jogos" target="_self">
         <div class="project-icon">🎲</div>
         <h2>Rolar Dado</h2>
         <p>Defina a quantidade de lados (d4, d6, d20, d100...) e jogue! Animação de dado rolando com resultado aleatório.</p>
@@ -336,7 +381,7 @@
         </span>
       </a>
 
-      <a href="Projetos/SistemaEstoque/" class="project-card" target="_self">
+      <a href="Projetos/SistemaEstoque/" class="project-card" data-filter="sistema" target="_self">
         <div class="project-icon">📦</div>
         <h2>Sistema de Estoque</h2>
         <p>Controle de estoque com IndexedDB. Cadastre produtos, faça entradas e saídas. Versão demo para teste.</p>
@@ -348,7 +393,7 @@
         </span>
       </a>
 
-      <a href="Projetos/AgendaConsultorio/" class="project-card" target="_self">
+      <a href="Projetos/AgendaConsultorio/" class="project-card" data-filter="sistema" target="_self">
         <div class="project-icon">📅</div>
         <h2>Sistema de Agendamento</h2>
         <p>Agenda médica com cadastro de médicos, pacientes e consultas. Agenda estilo Google Calendar com blocos configuráveis.</p>
@@ -360,7 +405,7 @@
         </span>
       </a>
 
-      <a href="Projetos/BlogAnime/" class="project-card" target="_self">
+      <a href="Projetos/BlogAnime/" class="project-card" data-filter="site" target="_self">
         <div class="project-icon">📰</div>
         <h2>Blog Anime (Otaku News)</h2>
         <p>Blog de notícias de anime. Cada notícia em HTML separado; adicione à lista e o site ordena e exibe automaticamente.</p>
@@ -372,7 +417,7 @@
         </span>
       </a>
 
-      <a href="Projetos/TelaCheiaEfeitos/" class="project-card" target="_self">
+      <a href="Projetos/TelaCheiaEfeitos/" class="project-card" data-filter="sistema" target="_self">
         <div class="project-icon">📺</div>
         <h2>Simulador de Tela com Defeito</h2>
         <p>Simulações em tela cheia: tela quebrada, tela com defeito/glitch, tela com linhas e tela de bloqueio. Use para brincadeiras ou testes.</p>
@@ -384,7 +429,7 @@
         </span>
       </a>
 
-      <a href="Projetos/SiteComAdsense/" class="project-card" target="_self">
+      <a href="Projetos/SiteComAdsense/" class="project-card" data-filter="site" target="_self">
         <div class="project-icon">💰</div>
         <h2>Site com AdSense</h2>
         <p>Exemplo de página monetizada com Google AdSense. Inclui script e unidades de anúncio (banner, conteúdo e sidebar).</p>
@@ -396,7 +441,7 @@
         </span>
       </a>
 
-      <a href="Projetos/SiteImobiliaria/" class="project-card" target="_self">
+      <a href="Projetos/SiteImobiliaria/" class="project-card" data-filter="site" target="_self">
         <div class="project-icon">🏠</div>
         <h2>Site de Imobiliária</h2>
         <p>20 imóveis à venda com 5 fotos cada. Filtros por tipo, quartos, preço e área. Visualização da localização no mapa.</p>
@@ -408,7 +453,7 @@
         </span>
       </a>
 
-      <a href="Projetos/FlappyBird/" class="project-card" target="_self">
+      <a href="Projetos/FlappyBird/" class="project-card" data-filter="jogos" target="_self">
         <div class="project-icon">🐦</div>
         <h2>Flappy Bird</h2>
         <p>Jogo clássico! Clique ou toque para fazer o pássaro voar e evite os canos. Quanto mais passar, maior sua pontuação.</p>
@@ -420,7 +465,7 @@
         </span>
       </a>
 
-      <a href="Projetos/XadrezIA/" class="project-card" target="_self">
+      <a href="Projetos/XadrezIA/" class="project-card" data-filter="jogos" target="_self">
         <div class="project-icon">♔</div>
         <h2>Xadrez vs IA</h2>
         <p>Jogue xadrez contra a inteligência artificial. Você com as brancas, três níveis de dificuldade e algoritmo minimax.</p>
@@ -432,7 +477,7 @@
         </span>
       </a>
 
-      <a href="Projetos/JogoVelha/" class="project-card" target="_self">
+      <a href="Projetos/JogoVelha/" class="project-card" data-filter="jogos" target="_self">
         <div class="project-icon projeto-velha-icon"><span class="velha-x">X</span><span class="velha-o">O</span></div>
         <h2>Jogo da Velha</h2>
         <p>Jogue contra a IA. Escolha entre fácil, médio ou difícil. No difícil, a IA usa minimax e é quase imbatível.</p>
@@ -444,10 +489,10 @@
         </span>
       </a>
 
-      <a href="Projetos/AnimacoesJS/" class="project-card" target="_self">
+      <a href="Projetos/AnimacoesJS/" class="project-card" data-filter="site" target="_self">
         <div class="project-icon">✨</div>
         <h2>Animações em JS</h2>
-        <p>10 animações: pássaros no céu, Star Wars, warp Star Trek, pétalas sakura, chuva Osaka, Matrix, loads e mais.</p>
+        <p>11 animações: nuvens, Star Wars, warp Star Trek, pétalas sakura, chuva Osaka, Matrix, loads, chuva de corações e mais.</p>
         <span class="project-link">
           Abrir projeto
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -456,7 +501,7 @@
         </span>
       </a>
 
-      <a href="Projetos/siteAnimado/" class="project-card" target="_self">
+      <a href="Projetos/siteAnimado/" class="project-card" data-filter="site" target="_self">
         <div class="project-icon">🎨</div>
         <h2>Animações em CSS</h2>
         <p>20 exemplos práticos para sites: banner, headlines, botões modernos, cards, galeria, transições, skeleton, CTA, navbar e mais.</p>
@@ -468,7 +513,7 @@
         </span>
       </a>
 
-      <a href="Projetos/PaginaExemplo/" class="project-card" target="_self">
+      <a href="Projetos/PaginaExemplo/" class="project-card" data-filter="site" target="_self">
         <div class="project-icon">🐠</div>
         <h2>AquaVida</h2>
         <p>Site de peixes ornamentais: submarino no início, cuidados, estilos, espécies, contato, cursor em peixe e peixes no fundo.</p>
@@ -480,7 +525,7 @@
         </span>
       </a>
 
-      <a href="Projetos/KanbanTarefas/" class="project-card" target="_self">
+      <a href="Projetos/KanbanTarefas/" class="project-card" data-filter="sistema" target="_self">
         <div class="project-icon">📋</div>
         <h2>Kanban - Tarefas do Dia</h2>
         <p>Quadro Kanban para organizar tarefas. Movimente entre Novo, Executando e Finalizado. Arraste para priorizar na mesma etapa.</p>
@@ -492,7 +537,7 @@
         </span>
       </a>
 
-      <a href="Projetos/GravadorVozModuladores/" class="project-card" target="_self">
+      <a href="Projetos/GravadorVozModuladores/" class="project-card" data-filter="sistema" target="_self">
         <div class="project-icon">🎙️</div>
         <h2>Gravador de Voz com Moduladores</h2>
         <p>Grave sua voz, escolha um efeito (distorção, robot, agudo, grave, reverb, echo, alienígena) e reproduza com o áudio modificado.</p>
@@ -504,10 +549,22 @@
         </span>
       </a>
 
-      <a href="Projetos/EmpresasB3/" class="project-card" target="_self">
+      <a href="Projetos/EmpresasB3/" class="project-card" data-filter="site" target="_self">
         <div class="project-icon">📊</div>
         <h2>Empresas B3</h2>
         <p>Lista completa de empresas listadas na B3 com dados em tempo real. Filtre por setor e tipo, ordene por preço, variação, volume e valor de mercado.</p>
+        <span class="project-link">
+          Abrir projeto
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3" />
+          </svg>
+        </span>
+      </a>
+
+      <a href="Projetos/Sudoku/" class="project-card" data-filter="jogos" target="_self">
+        <div class="project-icon">🔢</div>
+        <h2>Sudoku</h2>
+        <p>Sudoku com gerador automático. Escolha a dificuldade, preencha o tabuleiro e divirta-se. Opções de reiniciar ou novo jogo.</p>
         <span class="project-link">
           Abrir projeto
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -521,5 +578,22 @@
       <p>issao02.github.io</p>
     </footer>
   </div>
+
+  <script>
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const filter = btn.dataset.filter;
+        document.querySelectorAll('.project-card').forEach(card => {
+          if (filter === 'all' || card.dataset.filter === filter) {
+            card.classList.remove('filtered-out');
+          } else {
+            card.classList.add('filtered-out');
+          }
+        });
+      });
+    });
+  </script>
 </body>
 </html>

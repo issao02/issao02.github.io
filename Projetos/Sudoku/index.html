@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sudoku - Gerador Automático</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0f0f12;
+      --bg-card: #18181d;
+      --accent: #6366f1;
+      --accent-hover: #818cf8;
+      --text: #e4e4e7;
+      --text-muted: #a1a1aa;
+      --border: #27272a;
+      --fixed-color: #94a3b8;
+      --user-color: #e4e4e7;
+      --error-color: #ef4444;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-image: 
+        linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+      background-size: 60px 60px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1.5rem;
+      width: 100%;
+      max-width: 500px;
+    }
+
+    .screen {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 2rem;
+      width: 100%;
+    }
+
+    .screen.hidden {
+      display: none;
+    }
+
+    h1 {
+      font-size: clamp(1.75rem, 4vw, 2.25rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #fff 0%, var(--text-muted) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-align: center;
+    }
+
+    .difficulty-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      width: 100%;
+    }
+
+    .difficulty-btn {
+      padding: 1rem 1.5rem;
+      font-family: inherit;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      background: var(--bg-card);
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.25s ease;
+      text-align: left;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .difficulty-btn:hover {
+      border-color: var(--accent);
+      background: rgba(99, 102, 241, 0.1);
+      transform: translateX(4px);
+    }
+
+    .difficulty-btn .icon {
+      font-size: 1.5rem;
+    }
+
+    .difficulty-btn .desc {
+      font-size: 0.85rem;
+      font-weight: 400;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    .game-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .game-buttons {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-card);
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .sudoku-board {
+      display: grid;
+      grid-template-columns: repeat(9, 1fr);
+      grid-template-rows: repeat(9, 1fr);
+      gap: 0;
+      width: min(90vw, 400px);
+      aspect-ratio: 1;
+      background: var(--border);
+      border: 3px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .cell {
+      background: var(--bg-card);
+      border: 1px solid rgba(39, 39, 42, 0.6);
+      font-size: clamp(0.9rem, 2.5vw, 1.25rem);
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      min-width: 0;
+      min-height: 0;
+    }
+
+    .cell.fixed {
+      color: var(--fixed-color);
+      cursor: default;
+      font-weight: 600;
+    }
+
+    .cell.user {
+      color: var(--user-color);
+      cursor: pointer;
+    }
+
+    .cell.user:focus,
+    .cell.user.selected {
+      outline: 2px solid var(--accent);
+      outline-offset: -2px;
+      z-index: 1;
+    }
+
+    .cell.error {
+      color: var(--error-color);
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    .cell.border-r-3 { border-right: 2px solid rgba(255, 255, 255, 0.6); }
+    .cell.border-b-3 { border-bottom: 2px solid rgba(255, 255, 255, 0.6); }
+
+    .win-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 1.5rem;
+      z-index: 100;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.4s ease, visibility 0.4s ease;
+    }
+
+    .win-overlay.visible {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .win-overlay h2 {
+      font-size: 2rem;
+      color: #22c55e;
+    }
+
+    .win-overlay .overlay-buttons {
+      display: flex;
+      gap: 1rem;
+    }
+
+    .number-pad {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 0.5rem;
+      width: 100%;
+      max-width: 300px;
+    }
+
+    .number-pad button {
+      padding: 0.6rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.1rem;
+      font-weight: 600;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--bg-card);
+      color: var(--text);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .number-pad button:hover {
+      border-color: var(--accent);
+      background: rgba(99, 102, 241, 0.15);
+    }
+
+    .number-pad button.del {
+      grid-column: span 2;
+      font-size: 0.9rem;
+    }
+
+    .hint-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .toggle-switch {
+      position: relative;
+      width: 44px;
+      height: 24px;
+      background: var(--border);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .toggle-switch.active {
+      background: var(--accent);
+    }
+
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      top: 2px;
+      left: 2px;
+      width: 20px;
+      height: 20px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s ease;
+    }
+
+    .toggle-switch.active::after {
+      transform: translateX(20px);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div id="screenDifficulty" class="screen">
+      <h1>Sudoku</h1>
+      <p style="color: var(--text-muted); text-align: center;">Escolha o nível de dificuldade</p>
+      <div class="difficulty-buttons">
+        <button class="difficulty-btn" data-level="easy">
+          <span class="icon">😊</span>
+          <span class="label">
+            <strong>Fácil</strong>
+            <div class="desc">Muitos números dados. Ideal para iniciantes.</div>
+          </span>
+        </button>
+        <button class="difficulty-btn" data-level="medium">
+          <span class="icon">🤔</span>
+          <span class="label">
+            <strong>Médio</strong>
+            <div class="desc">Equilíbrio entre números e desafio.</div>
+          </span>
+        </button>
+        <button class="difficulty-btn" data-level="hard">
+          <span class="icon">😤</span>
+          <span class="label">
+            <strong>Difícil</strong>
+            <div class="desc">Poucos números. Bom para quem gosta de desafio.</div>
+          </span>
+        </button>
+      </div>
+    </div>
+
+    <div id="screenGame" class="screen hidden">
+      <div class="game-header">
+        <span style="color: var(--text-muted); font-size: 0.9rem;" id="difficultyLabel">Fácil</span>
+        <div class="hint-toggle">
+          <span>Dica (erros em vermelho)</span>
+          <div class="toggle-switch" id="hintToggle" title="Ativa/desativa indicação de erros"></div>
+        </div>
+        <div class="game-buttons">
+          <button class="btn" id="btnRestart">Reiniciar</button>
+          <button class="btn" id="btnNewGame">Novo jogo</button>
+        </div>
+      </div>
+      <div class="sudoku-board" id="board"></div>
+      <div class="number-pad" id="numberPad">
+        <button data-num="1">1</button>
+        <button data-num="2">2</button>
+        <button data-num="3">3</button>
+        <button data-num="4">4</button>
+        <button data-num="5">5</button>
+        <button data-num="6">6</button>
+        <button data-num="7">7</button>
+        <button data-num="8">8</button>
+        <button data-num="9">9</button>
+        <button class="del" data-num="0">Apagar</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="win-overlay" id="winOverlay">
+    <h2>Parabéns! Você completou o Sudoku! 🎉</h2>
+    <div class="overlay-buttons">
+      <button class="btn" id="overlayRestart">Reiniciar</button>
+      <button class="btn" id="overlayNewGame">Novo jogo</button>
+    </div>
+  </div>
+
+  <script>
+    const CELLS_BY_DIFFICULTY = { easy: 45, medium: 38, hard: 30 };
+
+    let solution = [];
+    let puzzle = [];
+    let currentBoard = [];
+    let selectedCell = null;
+    let difficulty = 'easy';
+    let hintEnabled = false;
+
+    const screenDifficulty = document.getElementById('screenDifficulty');
+    const screenGame = document.getElementById('screenGame');
+    const boardEl = document.getElementById('board');
+    const numberPad = document.getElementById('numberPad');
+    const winOverlay = document.getElementById('winOverlay');
+    const difficultyLabel = document.getElementById('difficultyLabel');
+
+    function createEmptyGrid() {
+      return Array(81).fill(0);
+    }
+
+    function isValid(grid, pos, num) {
+      const row = Math.floor(pos / 9);
+      const col = pos % 9;
+      const boxRow = Math.floor(row / 3) * 3;
+      const boxCol = Math.floor(col / 3) * 3;
+
+      for (let c = 0; c < 9; c++) if (grid[row * 9 + c] === num) return false;
+      for (let r = 0; r < 9; r++) if (grid[r * 9 + col] === num) return false;
+      for (let r = boxRow; r < boxRow + 3; r++)
+        for (let c = boxCol; c < boxCol + 3; c++)
+          if (grid[r * 9 + c] === num) return false;
+      return true;
+    }
+
+    function solve(grid) {
+      const empty = grid.indexOf(0);
+      if (empty === -1) return true;
+
+      const nums = [1,2,3,4,5,6,7,8,9].sort(() => Math.random() - 0.5);
+      for (const n of nums) {
+        if (isValid(grid, empty, n)) {
+          grid[empty] = n;
+          if (solve(grid)) return true;
+          grid[empty] = 0;
+        }
+      }
+      return false;
+    }
+
+    function generateSolution() {
+      const grid = createEmptyGrid();
+      solve(grid);
+      return [...grid];
+    }
+
+    function generatePuzzle(diff) {
+      solution = generateSolution();
+      const toKeep = CELLS_BY_DIFFICULTY[diff];
+      const indices = [...Array(81).keys()].sort(() => Math.random() - 0.5);
+
+      puzzle = Array(81).fill(0);
+      for (let i = 0; i < toKeep; i++) {
+        puzzle[indices[i]] = solution[indices[i]];
+      }
+    }
+
+    function renderBoard() {
+      boardEl.innerHTML = '';
+      for (let i = 0; i < 81; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        const row = Math.floor(i / 9);
+        const col = i % 9;
+        if (col === 2 || col === 5) cell.classList.add('border-r-3');
+        if (row === 2 || row === 5) cell.classList.add('border-b-3');
+
+        cell.dataset.index = i;
+        if (puzzle[i] > 0) {
+          cell.textContent = puzzle[i];
+          cell.classList.add('fixed');
+        } else {
+          cell.classList.add('user');
+          cell.textContent = currentBoard[i] || '';
+          if (hintEnabled && currentBoard[i] > 0 && currentBoard[i] !== solution[i]) cell.classList.add('error');
+        }
+
+        cell.addEventListener('click', () => selectCell(i));
+        boardEl.appendChild(cell);
+      }
+    }
+
+    function selectCell(index) {
+      if (puzzle[index] > 0) return;
+      boardEl.querySelectorAll('.cell').forEach(c => c.classList.remove('selected'));
+      selectedCell = index;
+      const cell = boardEl.children[index];
+      cell.classList.add('selected');
+      cell.focus();
+    }
+
+    function updateCell(index, num) {
+      if (puzzle[index] > 0 || index === null) return;
+      currentBoard[index] = num === 0 ? 0 : num;
+      const cell = boardEl.children[index];
+      cell.textContent = num === 0 ? '' : num;
+      cell.classList.remove('error');
+      if (hintEnabled && num > 0 && num !== solution[index]) cell.classList.add('error');
+      checkWin();
+    }
+
+    function applyHintToBoard() {
+      if (!boardEl.children.length) return;
+      for (let i = 0; i < 81; i++) {
+        const cell = boardEl.children[i];
+        if (puzzle[i] > 0) continue;
+        cell.classList.remove('error');
+        if (hintEnabled && currentBoard[i] > 0 && currentBoard[i] !== solution[i]) cell.classList.add('error');
+      }
+    }
+
+    function checkWin() {
+      for (let i = 0; i < 81; i++) {
+        if (puzzle[i] === 0 && currentBoard[i] !== solution[i]) return;
+      }
+      winOverlay.classList.add('visible');
+    }
+
+    function initGame() {
+      generatePuzzle(difficulty);
+      currentBoard = puzzle.map(v => v);
+      selectedCell = null;
+      winOverlay.classList.remove('visible');
+
+      const labels = { easy: 'Fácil', medium: 'Médio', hard: 'Difícil' };
+      difficultyLabel.textContent = labels[difficulty];
+
+      renderBoard();
+    }
+
+    function restartGame() {
+      currentBoard = puzzle.map(v => v);
+      selectedCell = null;
+      winOverlay.classList.remove('visible');
+      renderBoard();
+    }
+
+    document.querySelectorAll('.difficulty-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        difficulty = btn.dataset.level;
+        screenDifficulty.classList.add('hidden');
+        screenGame.classList.remove('hidden');
+        initGame();
+      });
+    });
+
+    numberPad.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const num = parseInt(btn.dataset.num);
+        if (selectedCell !== null) {
+          updateCell(selectedCell, num);
+        }
+      });
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (selectedCell === null) return;
+      if (e.key >= '1' && e.key <= '9') {
+        updateCell(selectedCell, parseInt(e.key));
+      } else if (e.key === 'Backspace' || e.key === 'Delete') {
+        updateCell(selectedCell, 0);
+      } else if (e.key === 'ArrowUp' && selectedCell >= 9) selectCell(selectedCell - 9);
+      else if (e.key === 'ArrowDown' && selectedCell < 72) selectCell(selectedCell + 9);
+      else if (e.key === 'ArrowLeft' && selectedCell % 9 > 0) selectCell(selectedCell - 1);
+      else if (e.key === 'ArrowRight' && selectedCell % 9 < 8) selectCell(selectedCell + 1);
+    });
+
+    document.getElementById('hintToggle').addEventListener('click', () => {
+      hintEnabled = !hintEnabled;
+      document.getElementById('hintToggle').classList.toggle('active', hintEnabled);
+      applyHintToBoard();
+    });
+
+    document.getElementById('btnRestart').addEventListener('click', restartGame);
+    document.getElementById('btnNewGame').addEventListener('click', () => {
+      screenGame.classList.add('hidden');
+      screenDifficulty.classList.remove('hidden');
+    });
+
+    document.getElementById('overlayRestart').addEventListener('click', () => {
+      winOverlay.classList.remove('visible');
+      restartGame();
+    });
+    document.getElementById('overlayNewGame').addEventListener('click', () => {
+      winOverlay.classList.remove('visible');
+      screenGame.classList.add('hidden');
+      screenDifficulty.classList.remove('hidden');
+    });
+  </script>
+</body>
+</html>

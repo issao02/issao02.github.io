@@ -266,6 +266,7 @@
       <option value="8">8 - Load com porcentagem</option>
       <option value="9">9 - Hello World</option>
       <option value="10">10 - Telas flutuantes</option>
+      <option value="12">11 - Chuva de corações</option>
     </select>
     <button id="btn-exec">Executar</button>
   </div>
@@ -289,7 +290,8 @@
       8: 'linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%)',
       9: 'radial-gradient(ellipse at center, #1a1a2e 0%, #0a0a12 100%)',
       10: '#0a0a12',
-      11: 'radial-gradient(ellipse at center, #0d0d14 0%, #050508 50%, #000 100%)'
+      11: 'radial-gradient(ellipse at center, #0d0d14 0%, #050508 50%, #000 100%)',
+      12: 'linear-gradient(180deg, #1a0a1a 0%, #2d0d2d 50%, #1a0515 100%)'
     };
 
     function stopAll() {
@@ -833,6 +835,60 @@
       loop();
     }
 
+    function anim12() {
+      const layer = document.createElement('div');
+      layer.className = 'anim-layer';
+      layer.id = 'hearts-layer';
+      container.appendChild(layer);
+
+      const heartSvg = 'data:image/svg+xml,' + encodeURIComponent(
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><defs><linearGradient id="hg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#ff6b9d"/><stop offset="50%" stop-color="#c44569"/><stop offset="100%" stop-color="#ff8fab"/></linearGradient></defs><path fill="url(#hg)" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>'
+      );
+
+      const hearts = [];
+      const heartCount = 45;
+      for (let i = 0; i < heartCount; i++) {
+        const h = document.createElement('img');
+        h.src = heartSvg;
+        h.className = 'petal';
+        const size = 14 + Math.random() * 32;
+        const speed = 1.5 + Math.random() * 3;
+        const wobble = (Math.random() - 0.5) * 2;
+        hearts.push({
+          el: h,
+          x: Math.random() * (window.innerWidth + 80) - 40,
+          y: Math.random() * window.innerHeight - 100,
+          vx: wobble,
+          vy: speed,
+          rot: Math.random() * 360,
+          rotSpeed: (Math.random() - 0.5) * 5,
+          size: size,
+          opacity: 0.6 + Math.random() * 0.4
+        });
+        h.style.cssText = `width:${size}px;position:absolute;left:0;top:0;opacity:${hearts[i].opacity}`;
+        layer.appendChild(h);
+      }
+
+      function loop() {
+        const layerEl = document.getElementById('hearts-layer');
+        if (!layerEl) return;
+        hearts.forEach(h => {
+          h.x += h.vx;
+          h.y += h.vy;
+          h.rot += h.rotSpeed;
+          if (h.y > window.innerHeight + 50) {
+            h.y = -40;
+            h.x = Math.random() * (window.innerWidth + 80) - 40;
+          }
+          if (h.x < -60) h.x = window.innerWidth + 60;
+          if (h.x > window.innerWidth + 60) h.x = -60;
+          h.el.style.transform = `translate(${h.x}px,${h.y}px) rotate(${h.rot}deg)`;
+        });
+        animId = requestAnimationFrame(loop);
+      }
+      animId = requestAnimationFrame(loop);
+    }
+
     function anim11() {
       const c = document.createElement('canvas');
       c.id = 'anim-canvas';
@@ -949,7 +1005,7 @@
       stopAll();
       body.style.background = backgrounds[val];
       body.style.backgroundAttachment = (val == 1 || val == 4 || val == 5) ? 'fixed' : 'scroll';
-      const fns = { 1: anim1, 2: anim2, 3: anim3, 4: anim4, 5: anim5, 6: anim6, 7: anim7, 8: anim8, 9: anim9, 10: anim10, 11: anim11 };
+      const fns = { 1: anim1, 2: anim2, 3: anim3, 4: anim4, 5: anim5, 6: anim6, 7: anim7, 8: anim8, 9: anim9, 10: anim10, 11: anim11, 12: anim12 };
       fns[val]();
     });
 
