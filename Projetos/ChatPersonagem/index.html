@@ -1,0 +1,764 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#0f0f12">
+  <title>Chat com Personagem</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0f0f12;
+      --surface: #18181d;
+      --surface-hover: #1f1f26;
+      --accent: #6366f1;
+      --accent-hover: #818cf8;
+      --text: #e4e4e7;
+      --text-muted: #a1a1aa;
+      --border: #27272a;
+      --user-msg: #312e81;
+      --char-msg: #1e1b4b;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(99, 102, 241, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(99, 102, 241, 0.03) 1px, transparent 1px);
+      background-size: 50px 50px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 720px;
+      width: 100%;
+      margin: 0 auto;
+      padding: 1.5rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .home-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      padding: 0.5rem;
+      border-radius: 8px;
+      transition: color 0.2s, background 0.2s;
+    }
+
+    .home-link:hover {
+      color: var(--text);
+      background: rgba(255,255,255,0.05);
+    }
+
+    h1 {
+      font-size: clamp(1.35rem, 4vw, 1.75rem);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, #fff 0%, var(--text-muted) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .api-key-area {
+      display: flex;
+      gap: 0.5rem;
+      align-items: center;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .api-key-area input {
+      flex: 1;
+      min-width: 180px;
+      padding: 0.6rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+    }
+
+    .api-key-area input::placeholder {
+      color: var(--text-muted);
+    }
+
+    .api-key-area input:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .api-key-area button {
+      padding: 0.6rem 1rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      font-family: inherit;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .api-key-area button:hover {
+      background: var(--accent-hover);
+    }
+
+    .api-status {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .api-status.ok { color: #22c55e; }
+    .api-status.error { color: #ef4444; }
+
+    .select-area {
+      margin-bottom: 1rem;
+    }
+
+    .select-area label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-bottom: 0.5rem;
+      color: var(--text-muted);
+    }
+
+    .select-area select {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+
+    .select-area select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .description-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.5rem;
+      min-height: 80px;
+    }
+
+    .description-box h3 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+    }
+
+    .description-box p {
+      font-size: 0.9rem;
+      line-height: 1.6;
+      color: var(--text-muted);
+    }
+
+    .chat-container {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      min-height: 400px;
+    }
+
+    .chat-messages {
+      flex: 1;
+      padding: 1rem;
+      overflow-y: auto;
+      max-height: 420px;
+      min-height: 300px;
+    }
+
+    .chat-message {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      animation: fadeIn 0.3s ease;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .chat-message.user {
+      flex-direction: row-reverse;
+    }
+
+    .chat-message .avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      flex-shrink: 0;
+    }
+
+    .chat-message.user .avatar {
+      background: var(--accent);
+    }
+
+    .chat-message.char .avatar {
+      background: var(--char-msg);
+      border: 1px solid var(--border);
+    }
+
+    .chat-message .bubble {
+      max-width: 85%;
+      padding: 0.75rem 1rem;
+      border-radius: 12px;
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    .chat-message.user .bubble {
+      background: var(--user-msg);
+      border-bottom-right-radius: 4px;
+    }
+
+    .chat-message.char .bubble {
+      background: var(--char-msg);
+      border: 1px solid var(--border);
+      border-bottom-left-radius: 4px;
+    }
+
+    .chat-message .name {
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: 0.25rem;
+    }
+
+    .chat-message.user .name {
+      text-align: right;
+      color: var(--text-muted);
+    }
+
+    .chat-input-area {
+      padding: 1rem;
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 0.5rem;
+      align-items: flex-end;
+    }
+
+    .chat-input-area textarea {
+      flex: 1;
+      min-height: 48px;
+      max-height: 120px;
+      padding: 0.75rem 1rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.95rem;
+      resize: none;
+      transition: border-color 0.2s;
+    }
+
+    .chat-input-area textarea::placeholder {
+      color: var(--text-muted);
+    }
+
+    .chat-input-area textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .chat-input-area button {
+      padding: 0.75rem 1.25rem;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-family: inherit;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.2s;
+      flex-shrink: 0;
+    }
+
+    .chat-input-area button:hover:not(:disabled) {
+      background: var(--accent-hover);
+    }
+
+    .chat-input-area button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .typing-indicator {
+      display: flex;
+      gap: 4px;
+      padding: 0.75rem 1rem;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .typing-indicator span {
+      width: 6px;
+      height: 6px;
+      background: var(--text-muted);
+      border-radius: 50%;
+      animation: bounce 1.4s infinite ease-in-out;
+    }
+
+    .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes bounce {
+      0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+      40% { transform: scale(1); opacity: 1; }
+    }
+
+    .empty-chat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 280px;
+      color: var(--text-muted);
+      text-align: center;
+      padding: 2rem;
+    }
+
+    .empty-chat .icon {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    .empty-chat p {
+      font-size: 0.95rem;
+      max-width: 280px;
+    }
+
+    .error-msg {
+      background: rgba(239, 68, 68, 0.15);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #fca5a5;
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      font-size: 0.9rem;
+      margin-bottom: 1rem;
+    }
+
+    @media (max-width: 600px) {
+      .container { padding: 1rem; }
+      .chat-message .bubble { max-width: 92%; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <a href="../../index.html" class="home-link">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M19 12H5M12 19l-7-7 7-7"/>
+        </svg>
+        Voltar
+      </a>
+      <h1>Chat com Personagem</h1>
+    </header>
+
+    <div class="api-key-area">
+      <input type="password" id="apiKey" placeholder="Cole sua chave API OpenAI aqui..." autocomplete="off">
+      <button type="button" id="saveKey">Salvar</button>
+      <span class="api-status" id="apiStatus"></span>
+    </div>
+
+    <div id="errorArea"></div>
+
+    <div class="select-area">
+      <label for="personagem">Personagem</label>
+      <select id="personagem">
+        <option value="">Selecione um personagem...</option>
+        <option value="ash">Ash Ketchum</option>
+        <option value="brock">Brock</option>
+        <option value="misty">Misty</option>
+        <option value="joy">Enfermeira Joy</option>
+        <option value="meowth">Meowth</option>
+      </select>
+    </div>
+
+    <div class="description-box">
+      <h3 id="descTitle">Descrição</h3>
+      <p id="descText">Selecione um personagem para ver sua descrição e começar a conversar.</p>
+    </div>
+
+    <div class="chat-container">
+      <div class="chat-messages" id="chatMessages">
+        <div class="empty-chat">
+          <span class="icon">💬</span>
+          <p>Escolha um personagem e envie sua primeira mensagem para começar a conversa!</p>
+        </div>
+      </div>
+
+      <div class="chat-input-area">
+        <textarea id="chatInput" placeholder="Digite sua mensagem..." rows="1"></textarea>
+        <button type="button" id="sendBtn" disabled>Enviar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const PERSONAGENS = {
+      ash: {
+        nome: 'Ash Ketchum',
+        emoji: '⚡',
+        descricao: 'Treinador Pokémon de 10 anos, de Pallet. Determinado, otimista e impulsivo. Sonha em ser Mestre Pokémon. Parceiro inseparável do Pikachu. Inspira e motiva com energia e frases motivacionais.',
+        systemPrompt: `Você é Ash Ketchum.
+
+IDENTIDADE:
+Idade: 10 anos
+Profissão: Treinador Pokémon
+Local: Cidade de Pallet, região de Kanto
+
+Contexto de vida:
+Você saiu de casa muito jovem com o sonho declarado de se tornar um Mestre Pokémon. Cresceu ouvindo histórias de grandes treinadores e sempre acreditou que seu destino era viajar pelo mundo. No dia em que recebeu seu primeiro Pokémon, chegou atrasado ao laboratório e acabou formando parceria com Pikachu. No início houve conflitos entre vocês, mas a convivência criou um vínculo inquebrável. Você participou de diversas Ligas Pokémon, enfrentou derrotas duras que testaram sua confiança e aprendeu com cada uma delas. Viajou por múltiplas regiões, enfrentou Líderes de Ginásio e frustrou repetidamente os planos da Team Rocket. Sua jornada foi marcada por amizade, superação e amadurecimento. Eventualmente conquistou reconhecimento mundial como campeão, provando que persistência e confiança nos parceiros são sua maior força.
+
+PERSONALIDADE:
+Determinado, Otimista, Impulsivo, Leal, Persistente. Reage a conflitos enfrentando diretamente. Humor energético e competitivo.
+
+FORMA DE FALAR:
+Informal, Direto, Frases motivacionais, Respostas médias.
+
+OBJETIVO NA CONVERSA:
+Inspirar, Motivar, Ajudar, Agir como amigo e rival saudável.
+
+REGRAS IMPORTANTES:
+Nunca sai do personagem. Não diz que é uma IA. Não fala como narrador. Sempre responde como se estivesse vivendo no mundo Pokémon.`
+      },
+      brock: {
+        nome: 'Brock',
+        emoji: '🪨',
+        descricao: 'Ex-Líder de Ginásio de Pewter, 15 anos. Maduro, protetor e racional. Aspirante a médico Pokémon. Especialista em tipo Pedra. Ensinar, orientar e cuidar são seus objetivos.',
+        systemPrompt: `Você é Brock.
+
+IDENTIDADE:
+Idade: 15 anos
+Profissão: Aspirante a Médico Pokémon e ex-Líder de Ginásio
+Local: Pewter City, região de Kanto
+
+Contexto de vida:
+Você cresceu como o filho mais velho de uma família numerosa e assumiu responsabilidades muito cedo. Quando seus pais se ausentaram, passou a administrar o Ginásio de Pewter e cuidar dos irmãos. Especializou-se em Pokémon do tipo Pedra e ganhou respeito como líder. Apesar disso, sempre sentiu que seu verdadeiro chamado era cuidar e curar Pokémon, não apenas batalhar. Ao iniciar jornada com outros treinadores, buscou ampliar seus conhecimentos em nutrição, primeiros socorros e medicina Pokémon. Desenvolveu habilidades culinárias e senso de organização excepcionais. Seu objetivo tornou-se estudar profundamente saúde Pokémon para atuar em qualquer situação crítica. Sua experiência moldou sua maturidade e postura responsável.
+
+PERSONALIDADE:
+Maduro, Protetor, Racional, Cuidador, Persistente. Resolve conflitos com lógica. Humor moderado.
+
+FORMA DE FALAR:
+Semi-formal, Explicativo, Respostas detalhadas.
+
+OBJETIVO NA CONVERSA:
+Ensinar, Orientar, Cuidar, Ser mentor.
+
+REGRAS IMPORTANTES:
+Nunca sai do personagem. Não diz que é uma IA. Não fala como narrador. Sempre responde como habitante do mundo Pokémon.`
+      },
+      misty: {
+        nome: 'Misty',
+        emoji: '🌊',
+        descricao: 'Líder de Ginásio tipo Água de Cerulean, 10 anos. Competitiva, orgulhosa e temperamental. Determinada a provar seu valor. Respostas rápidas e diretas.',
+        systemPrompt: `Você é Misty.
+
+IDENTIDADE:
+Idade: 10 anos
+Profissão: Líder de Ginásio tipo Água
+Local: Cerulean City, região de Kanto
+
+Contexto de vida:
+Você cresceu ao lado de três irmãs mais velhas que já eram reconhecidas como líderes do Ginásio de Cerulean. Frequentemente foi comparada a elas, o que despertou forte espírito competitivo. Desde cedo treinou Pokémon do tipo Água com disciplina e orgulho. Saiu em jornada determinada a provar que era capaz por mérito próprio. Durante suas viagens, fortaleceu sua autoconfiança e desenvolveu estratégias refinadas em batalhas aquáticas. Enfrentou desafios que testaram sua paciência e maturidade. Retornou para assumir oficialmente o Ginásio, decidida a ser respeitada como líder independente e especialista em batalhas de alto nível.
+
+PERSONALIDADE:
+Competitiva, Orgulhosa, Temperamental, Determinada, Leal. Reage a conflitos defendendo sua posição. Humor irônico.
+
+FORMA DE FALAR:
+Informal, Direta, Respostas rápidas.
+
+OBJETIVO NA CONVERSA:
+Competir, Provar valor, Ajudar mesmo com resistência inicial, Agir como rival e amiga.
+
+REGRAS IMPORTANTES:
+Nunca sai do personagem. Não diz que é uma IA. Não fala como narrador. Sempre responde como líder de Ginásio.`
+      },
+      joy: {
+        nome: 'Enfermeira Joy',
+        emoji: '💉',
+        descricao: 'Médica Pokémon do Centro Pokémon, 18-22 anos. Gentil, serena e empática. Pertence à família Joy. Transmite segurança e acolhimento.',
+        systemPrompt: `Você é Enfermeira Joy.
+
+IDENTIDADE:
+Idade: 18–22 anos
+Profissão: Médica Pokémon
+Local: Centro Pokémon na região de Kanto
+
+Contexto de vida:
+Você pertence à tradicional família Joy, responsável pelos Centros Pokémon espalhados por diversas regiões. Desde jovem demonstrou vocação natural para cuidar de Pokémon feridos e treinadores exaustos. Estudou medicina Pokémon com disciplina, aprendendo técnicas de recuperação e estabilização. Atendeu inúmeros casos que variam de batalhas simples a emergências graves. Trabalha frequentemente em cooperação com autoridades locais quando há situações críticas. Sua rotina exige equilíbrio emocional e precisão. Acredita que confiança, calma e acolhimento são parte fundamental do processo de cura. Seu compromisso é manter cada Centro Pokémon como um lugar seguro e confiável.
+
+PERSONALIDADE:
+Gentil, Serena, Empática, Profissional, Firme em situações críticas. Humor suave.
+
+FORMA DE FALAR:
+Formal, Clara, Explicativa, Respostas estruturadas.
+
+OBJETIVO NA CONVERSA:
+Ajudar, Orientar, Cuidar, Transmitir segurança.
+
+REGRAS IMPORTANTES:
+Nunca sai do personagem. Não diz que é uma IA. Não fala como narrador. Sempre responde como profissional do Centro Pokémon.`
+      },
+      meowth: {
+        nome: 'Meowth',
+        emoji: '🐱',
+        descricao: 'Membro da Team Rocket. Aprendeu a falar como humano. Sarcástico, ambicioso e dramático. Busca reconhecimento e vantagem em cada situação.',
+        systemPrompt: `Você é Meowth.
+
+IDENTIDADE:
+Idade: Desconhecida
+Profissão: Membro da Team Rocket
+Local: Base móvel da organização
+
+Contexto de vida:
+Você nasceu como um Meowth comum, mas decidiu se diferenciar aprendendo a andar e falar como humano. Fez isso para impressionar uma Meowth fêmea, mas acabou rejeitado por ser diferente. Essa rejeição moldou sua ambição e insegurança. Encontrou propósito ao ingressar na Equipe Rocket, onde sua habilidade de comunicação o tornou peça estratégica. Atua ao lado de Jessie e James em planos para capturar Pokémon raros, especialmente Pikachu. Apesar das falhas constantes, mantém orgulho e persistência. Busca reconhecimento e prova constante de seu valor.
+
+PERSONALIDADE:
+Sarcástico, Ambicioso, Dramático, Inteligente, Inseguro internamente. Reage com planos elaborados. Humor sarcástico.
+
+FORMA DE FALAR:
+Informal, Cheio de comentários irônicos, Respostas médias.
+
+OBJETIVO NA CONVERSA:
+Agir como vilão estratégico, Criar planos, Manipular situações, Buscar vantagem.
+
+REGRAS IMPORTANTES:
+Nunca sai do personagem. Não diz que é uma IA. Não fala como narrador. Sempre responde como membro da Equipe Rocket.`
+      }
+    };
+
+    const STORAGE_KEY = 'chatPersonagem_apiKey';
+    const chatMessages = document.getElementById('chatMessages');
+    const chatInput = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const personagemSelect = document.getElementById('personagem');
+    const descTitle = document.getElementById('descTitle');
+    const descText = document.getElementById('descText');
+    const apiKeyInput = document.getElementById('apiKey');
+    const saveKeyBtn = document.getElementById('saveKey');
+    const apiStatus = document.getElementById('apiStatus');
+    const errorArea = document.getElementById('errorArea');
+
+    let historico = [];
+    let currentChar = null;
+
+    // Carregar API key salva
+    const savedKey = localStorage.getItem(STORAGE_KEY);
+    if (savedKey) {
+      apiKeyInput.value = savedKey;
+      apiStatus.textContent = 'Chave salva';
+      apiStatus.className = 'api-status ok';
+    }
+
+    saveKeyBtn.addEventListener('click', () => {
+      const key = apiKeyInput.value.trim();
+      if (key) {
+        localStorage.setItem(STORAGE_KEY, key);
+        apiStatus.textContent = 'Chave salva';
+        apiStatus.className = 'api-status ok';
+        hideError();
+      } else {
+        localStorage.removeItem(STORAGE_KEY);
+        apiStatus.textContent = 'Chave removida';
+        apiStatus.className = 'api-status';
+      }
+    });
+
+    personagemSelect.addEventListener('change', () => {
+      const id = personagemSelect.value;
+      if (!id) {
+        descTitle.textContent = 'Descrição';
+        descText.textContent = 'Selecione um personagem para ver sua descrição e começar a conversar.';
+        sendBtn.disabled = true;
+        currentChar = null;
+        return;
+      }
+      currentChar = PERSONAGENS[id];
+      descTitle.textContent = currentChar.nome;
+      descText.textContent = currentChar.descricao;
+      sendBtn.disabled = false;
+      historico = [];
+    });
+
+    function hideEmptyChat() {
+      const empty = chatMessages.querySelector('.empty-chat');
+      if (empty) empty.remove();
+    }
+
+    function addMessage(role, content, nome, emoji) {
+      hideEmptyChat();
+      const div = document.createElement('div');
+      div.className = `chat-message ${role}`;
+      div.innerHTML = `
+        <div class="avatar">${emoji || '💬'}</div>
+        <div>
+          <div class="name">${nome}</div>
+          <div class="bubble">${content.replace(/\n/g, '<br>')}</div>
+        </div>
+      `;
+      chatMessages.appendChild(div);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function addTypingIndicator(nome, emoji) {
+      hideEmptyChat();
+      const div = document.createElement('div');
+      div.className = 'chat-message char';
+      div.id = 'typingIndicator';
+      div.innerHTML = `
+        <div class="avatar">${emoji}</div>
+        <div>
+          <div class="name">${nome}</div>
+          <div class="typing-indicator">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+      `;
+      chatMessages.appendChild(div);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    function removeTypingIndicator() {
+      const el = document.getElementById('typingIndicator');
+      if (el) el.remove();
+    }
+
+    function showError(msg) {
+      errorArea.innerHTML = `<div class="error-msg">${msg}</div>`;
+    }
+
+    function hideError() {
+      errorArea.innerHTML = '';
+    }
+
+    async function enviarMensagem() {
+      const texto = chatInput.value.trim();
+      if (!texto || !currentChar) return;
+
+      const apiKey = localStorage.getItem(STORAGE_KEY) || apiKeyInput.value.trim();
+      if (!apiKey) {
+        showError('Adicione e salve sua chave API da OpenAI para usar o chat.');
+        return;
+      }
+
+      hideError();
+      chatInput.value = '';
+      chatInput.style.height = 'auto';
+
+      addMessage('user', texto, 'Você', '👤');
+      historico.push({ role: 'user', content: texto });
+      historico.push({ role: 'assistant', content: '' });
+
+      sendBtn.disabled = true;
+      addTypingIndicator(currentChar.nome, currentChar.emoji);
+
+      try {
+        const messages = [
+          { role: 'system', content: currentChar.systemPrompt },
+          ...historico.slice(0, -1).map(m => ({ role: m.role, content: m.content }))
+        ];
+
+        const res = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages,
+            temperature: 0.85,
+            max_tokens: 512
+          })
+        });
+
+        const data = await res.json();
+
+        if (data.error) {
+          throw new Error(data.error.message || 'Erro na API');
+        }
+
+        const reply = data.choices[0]?.message?.content || 'Desculpe, não consegui responder.';
+        historico[historico.length - 1].content = reply;
+        removeTypingIndicator();
+        addMessage('char', reply, currentChar.nome, currentChar.emoji);
+      } catch (err) {
+        removeTypingIndicator();
+        showError(err.message || 'Erro ao conectar com a API. Verifique sua chave e conexão.');
+        historico.pop();
+        historico.pop();
+      } finally {
+        sendBtn.disabled = false;
+      }
+    }
+
+    sendBtn.addEventListener('click', enviarMensagem);
+
+    chatInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        enviarMensagem();
+      }
+    });
+
+    chatInput.addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = Math.min(this.scrollHeight, 120) + 'px';
+    });
+  </script>
+</body>
+</html>

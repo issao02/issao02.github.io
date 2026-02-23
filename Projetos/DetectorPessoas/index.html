@@ -254,11 +254,11 @@
     let model = null;
     let currentImage = null;
 
-    // Carregar modelo
+    // Carregar modelo (mobilenet_v2: mais preciso para bebês e crianças no colo)
     async function loadModel() {
       loading.classList.add('visible');
       try {
-        model = await cocoSsd.load();
+        model = await cocoSsd.load({ base: 'mobilenet_v2' });
         loading.classList.remove('visible');
       } catch (err) {
         loading.innerHTML = '<p style="color: #ef4444;">Erro ao carregar modelo. Verifique sua conexão.</p>';
@@ -309,8 +309,8 @@
         alert('Modelo ainda carregando. Aguarde.');
         return;
       }
-      // scoreThreshold 0.3: detecta pessoas parcialmente ocultas (atrás de outra)
-      const predictions = await model.detect(img, 20, 0.3);
+      // minScore 0.2: detecta bebês, crianças no colo e pessoas parcialmente visíveis
+      const predictions = await model.detect(img, 30, 0.2);
       const people = predictions.filter(p => p.class === 'person');
       return nonMaxSuppression(people);
     }

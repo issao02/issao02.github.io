@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Voz para Texto</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0a0a0d;
+      --bg-card: #14141a;
+      --accent: #06b6d4;
+      --accent-hover: #22d3ee;
+      --record: #ef4444;
+      --record-active: #f87171;
+      --text: #e4e4e7;
+      --text-muted: #a1a1aa;
+      --border: #27272a;
+      --success: #22c55e;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(6, 182, 212, 0.12), transparent);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 560px;
+      padding: 2rem 1.5rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, var(--accent), #0891b2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      margin-top: 0.5rem;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .section-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 1rem;
+    }
+
+    .record-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .record-btn {
+      width: 88px;
+      height: 88px;
+      border-radius: 50%;
+      border: 3px solid var(--record);
+      background: var(--record);
+      color: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.2rem;
+      box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4);
+    }
+
+    .record-btn:hover:not(:disabled) {
+      transform: scale(1.05);
+      border-color: var(--record-active);
+      background: var(--record-active);
+      box-shadow: 0 6px 25px rgba(239, 68, 68, 0.5);
+    }
+
+    .record-btn.recording {
+      animation: pulse 1.5s infinite;
+      border-color: white;
+      background: var(--record-active);
+    }
+
+    .record-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(248, 113, 113, 0.6); }
+      50% { box-shadow: 0 0 0 18px rgba(248, 113, 113, 0); }
+    }
+
+    .record-status {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+    }
+
+    .record-status.recording {
+      color: var(--record-active);
+      font-weight: 500;
+    }
+
+    .record-status.listening {
+      color: var(--accent);
+      font-weight: 500;
+    }
+
+    .text-output {
+      width: 100%;
+      min-height: 180px;
+      padding: 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--bg-dark);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      font-size: 1rem;
+      line-height: 1.6;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .text-output:focus {
+      border-color: var(--accent);
+    }
+
+    .text-output::placeholder {
+      color: var(--text-muted);
+      opacity: 0.7;
+    }
+
+    .actions {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 0.75rem 1.25rem;
+      border-radius: 10px;
+      border: none;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .btn-copy {
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn-copy:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-clear {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+
+    .btn-clear:hover {
+      border-color: var(--record);
+      color: var(--record-active);
+    }
+
+    .btn-download {
+      background: var(--success);
+      color: white;
+    }
+
+    .btn-download:hover {
+      background: #16a34a;
+      transform: translateY(-1px);
+    }
+
+    .lang-select {
+      margin-bottom: 1rem;
+    }
+
+    .lang-select label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .lang-select select {
+      width: 100%;
+      padding: 0.6rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg-dark);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.95rem;
+    }
+
+    .warning {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      border-radius: 10px;
+      padding: 1rem;
+      font-size: 0.9rem;
+      color: #fbbf24;
+      margin-bottom: 1.5rem;
+    }
+
+    .warning a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .warning a:hover {
+      text-decoration: underline;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.9rem;
+      margin-bottom: 1.5rem;
+      transition: color 0.2s;
+    }
+
+    .back-link:hover {
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <a href="../" class="back-link">← Voltar aos projetos</a>
+
+    <header>
+      <h1>Voz para Texto</h1>
+      <p class="subtitle">Grave sua voz e converta em texto em tempo real</p>
+    </header>
+
+    <div class="warning" id="browserWarning" style="display: none;">
+      O reconhecimento de voz funciona melhor no <strong>Chrome</strong> ou <strong>Edge</strong>. 
+      O Safari e Firefox têm suporte limitado. Use HTTPS ou localhost.
+    </div>
+
+    <div class="section">
+      <div class="section-title">Idioma</div>
+      <div class="lang-select">
+        <label for="lang">Reconhecer fala em:</label>
+        <select id="lang">
+          <option value="pt-BR">Português (Brasil)</option>
+          <option value="pt-PT">Português (Portugal)</option>
+          <option value="es">Espanhol</option>
+          <option value="en-US">Inglês (EUA)</option>
+          <option value="en-GB">Inglês (UK)</option>
+          <option value="fr">Francês</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Gravação</div>
+      <div class="record-area">
+        <button class="record-btn" id="recordBtn" title="Clique para gravar e transcrever">
+          🎙️
+        </button>
+        <span class="record-status" id="recordStatus">Clique no microfone para começar</span>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Texto transcrito</div>
+      <textarea class="text-output" id="textOutput" placeholder="O texto aparecerá aqui enquanto você fala..."></textarea>
+      <div class="actions">
+        <button class="btn btn-copy" id="copyBtn" disabled>📋 Copiar</button>
+        <button class="btn btn-download" id="downloadBtn" disabled>💾 Baixar .txt</button>
+        <button class="btn btn-clear" id="clearBtn">🗑️ Limpar</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const recordBtn = document.getElementById('recordBtn');
+    const recordStatus = document.getElementById('recordStatus');
+    const textOutput = document.getElementById('textOutput');
+    const copyBtn = document.getElementById('copyBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const clearBtn = document.getElementById('clearBtn');
+    const langSelect = document.getElementById('lang');
+    const browserWarning = document.getElementById('browserWarning');
+
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    let recognition = null;
+    let isListening = false;
+    let finalText = '';
+
+    if (!SpeechRecognition) {
+      recordBtn.disabled = true;
+      recordStatus.textContent = 'Seu navegador não suporta reconhecimento de voz. Use Chrome ou Edge.';
+      browserWarning.style.display = 'block';
+    } else {
+      recognition = new SpeechRecognition();
+      recognition.continuous = true;
+      recognition.interimResults = true;
+      recognition.lang = langSelect.value;
+
+      recognition.onresult = (event) => {
+        let newFinal = '';
+        let interim = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            newFinal += transcript;
+          } else {
+            interim += transcript;
+          }
+        }
+        if (newFinal) finalText += newFinal;
+        textOutput.value = finalText + interim;
+        updateButtons();
+      };
+
+      recognition.onerror = (event) => {
+        if (event.error === 'no-speech') return;
+        if (event.error === 'aborted') return;
+        recordStatus.textContent = 'Erro: ' + (event.error === 'not-allowed' ? 'Permissão de microfone negada' : event.error);
+      };
+
+      recognition.onend = () => {
+        if (isListening) {
+          try { recognition.start(); } catch (e) {}
+        }
+      };
+    }
+
+    langSelect.addEventListener('change', () => {
+      if (recognition) recognition.lang = langSelect.value;
+    });
+
+    recordBtn.addEventListener('click', () => {
+      if (!recognition) return;
+      if (isListening) {
+        isListening = false;
+        recognition.stop();
+        finalText = textOutput.value;
+        recordBtn.classList.remove('recording');
+        recordStatus.classList.remove('listening');
+        recordStatus.textContent = 'Gravação finalizada';
+        recordBtn.innerHTML = '🎙️';
+        updateButtons();
+      } else {
+        isListening = true;
+        finalText = textOutput.value;
+        recognition.lang = langSelect.value;
+        recognition.start();
+        recordBtn.classList.add('recording');
+        recordStatus.classList.add('listening');
+        recordStatus.textContent = 'Ouvindo... fale agora';
+        recordBtn.innerHTML = '⏹️';
+      }
+    });
+
+    function updateButtons() {
+      const hasText = textOutput.value.trim().length > 0;
+      copyBtn.disabled = !hasText;
+      downloadBtn.disabled = !hasText;
+    }
+
+    copyBtn.addEventListener('click', () => {
+      textOutput.select();
+      document.execCommand('copy');
+      copyBtn.textContent = '✓ Copiado!';
+      setTimeout(() => { copyBtn.innerHTML = '📋 Copiar'; }, 2000);
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      const blob = new Blob([textOutput.value], { type: 'text/plain;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'transcricao-' + new Date().toISOString().slice(0, 10) + '.txt';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    clearBtn.addEventListener('click', () => {
+      textOutput.value = '';
+      finalText = '';
+      updateButtons();
+    });
+
+    textOutput.addEventListener('input', updateButtons);
+  </script>
+</body>
+</html>
