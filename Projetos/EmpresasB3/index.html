@@ -193,29 +193,6 @@
 
     .contador strong { color: var(--text); }
 
-    .btn-indicadores {
-      padding: 0.3rem 0.7rem;
-      background: transparent;
-      color: var(--accent);
-      border: 1px solid var(--accent);
-      border-radius: 6px;
-      font-family: inherit;
-      font-size: 0.8rem;
-      font-weight: 500;
-      cursor: pointer;
-      transition: all 0.2s;
-    }
-
-    .btn-indicadores:hover:not(:disabled) {
-      background: var(--accent);
-      color: var(--bg);
-    }
-
-    .btn-indicadores:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
     .btn-colunas {
       padding: 0.3rem 0.7rem;
       background: transparent;
@@ -578,6 +555,7 @@
     .modal-chart-wrap {
       position: relative;
       height: 280px;
+      min-height: 280px;
       width: 100%;
     }
 
@@ -625,8 +603,8 @@
         <span>Última atualização: <strong id="lastUpdate">—</strong></span>
         <span>Total: <strong id="totalCount">0</strong> ativos</span>
         <span style="display:flex;align-items:center;gap:0.5rem;">
-          <label for="brapiToken" style="font-size:0.7rem;">Token:</label>
-          <input type="password" id="brapiToken" placeholder="brapi.dev" style="width:90px;padding:0.25rem 0.4rem;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.75rem;" title="Token gratuito em brapi.dev — se não tiver, indicadores tentam Yahoo Finance">
+          <label for="apiToken" style="font-size:0.7rem;">Token:</label>
+          <input type="password" id="apiToken" placeholder="brapi.dev" style="width:90px;padding:0.25rem 0.4rem;border:1px solid var(--border);border-radius:6px;background:var(--bg);color:var(--text);font-size:0.75rem;" title="Token gratuito em brapi.dev">
         </span>
       </div>
       <button type="button" class="btn-atualizar" id="btnAtualizar" title="Buscar dados atualizados da brapi.dev">
@@ -667,26 +645,6 @@
             <label class="combo-item"><input type="checkbox" data-val="smallcap"> Small Cap</label>
           </div>
         </div>
-        <div class="filtro-grupo filtro-num">
-          <label for="filtroPL">P/L máx.</label>
-          <input type="number" id="filtroPL" placeholder="15" min="0" step="0.1">
-        </div>
-        <div class="filtro-grupo filtro-num">
-          <label for="filtroDivYield">Div.Yield %</label>
-          <input type="number" id="filtroDivYield" placeholder="5" min="0" step="0.1">
-        </div>
-        <div class="filtro-grupo filtro-num">
-          <label for="filtroPVP">P/VP máx.</label>
-          <input type="number" id="filtroPVP" placeholder="2" min="0" step="0.1">
-        </div>
-        <div class="filtro-grupo filtro-num">
-          <label for="filtroROE">ROE %</label>
-          <input type="number" id="filtroROE" placeholder="15" min="-100" step="0.5">
-        </div>
-        <div class="filtro-grupo filtro-num">
-          <label for="filtroPayout">Payout %</label>
-          <input type="number" id="filtroPayout" placeholder="60" min="0" step="1">
-        </div>
     </div>
   </div>
 
@@ -702,10 +660,6 @@
             <!-- preenchido via JS -->
           </div>
         </div>
-        <button type="button" class="btn-indicadores" id="btnIndicadores" title="Busca P/L, LPA e Div. Yield para os ativos exibidos">
-          📊 Indicadores
-        </button>
-        <span id="indicadoresStatus" class="contador" style="font-size:0.85rem;"></span>
       </div>
     </div>
 
@@ -715,7 +669,7 @@
           <thead><tr id="tableHeaderRow"></tr></thead>
           <tbody id="tbody">
             <tr>
-              <td colspan="14" class="loading">
+              <td colspan="9" class="loading">
                 <div class="loading-spinner"></div>
                 Carregando dados da B3...
               </td>
@@ -746,10 +700,10 @@
   <script>
     const BRAPI_LIST = 'https://brapi.dev/api/quote/list';
     const BRAPI_QUOTE = 'https://brapi.dev/api/quote/';
-    const TOKEN_KEY = 'empresasb3_brapi_token';
+    const TOKEN_KEY = 'empresasb3_api_token';
 
     function getToken() {
-      const el = document.getElementById('brapiToken');
+      const el = document.getElementById('apiToken');
       return (el?.value || localStorage.getItem(TOKEN_KEY) || 'demo').trim() || 'demo';
     }
 
@@ -761,11 +715,6 @@
     const tbody = document.getElementById('tbody');
     const btnAtualizar = document.getElementById('btnAtualizar');
     const filtroBusca = document.getElementById('filtroBusca');
-    const filtroPL = document.getElementById('filtroPL');
-    const filtroDivYield = document.getElementById('filtroDivYield');
-    const filtroPVP = document.getElementById('filtroPVP');
-    const filtroROE = document.getElementById('filtroROE');
-    const filtroPayout = document.getElementById('filtroPayout');
     const filtroCap = document.getElementById('filtroCap');
     const lastUpdate = document.getElementById('lastUpdate');
     const totalCount = document.getElementById('totalCount');
@@ -802,34 +751,6 @@
     function fmtPreco(v) {
       if (v == null || v === '' || isNaN(v)) return '—';
       return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    }
-
-    function fmtPL(v) {
-      if (v == null || v === '' || isNaN(v)) return '—';
-      const n = Number(v);
-      return n > 0 ? n.toFixed(2) : '—';
-    }
-
-    function fmtLPA(v) {
-      if (v == null || v === '' || isNaN(v)) return '—';
-      return 'R$ ' + Number(v).toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-    }
-
-    function fmtDivYield(v) {
-      if (v == null || v === '' || isNaN(v)) return '—';
-      return Number(v).toFixed(2) + '%';
-    }
-
-    function fmtPayout(v) {
-      if (v == null || v === '' || isNaN(v)) return '—';
-      return Number(v).toFixed(1) + '%';
-    }
-
-    function fmtRoe(v) {
-      if (v == null || v === '' || isNaN(v)) return '—';
-      const n = Number(v);
-      const pct = Math.abs(n) <= 1 ? n * 100 : n;
-      return pct.toFixed(2) + '%';
     }
 
     function normalizarTipo(t) {
@@ -901,7 +822,7 @@
       if (mc < SMALL_CAP_MAX) return 'smallcap';
       return null;
     }
-    const COLUMN_KEYS = ['stock','name','close','change','volume','market_cap','priceEarnings','earningsPerShare','dividendYield','priceToBook','returnOnEquity','payout','sector','cap','type'];
+    const COLUMN_KEYS = ['stock','name','close','change','volume','market_cap','sector','cap','type'];
     const COLUMNS = {
       stock: { label: 'Ticker', title: 'Código de negociação do ativo na B3 (ex: PETR4, VALE3)', sort: 'stock', cell: d => `<span class="ticker">${d.stock || '—'}</span>`, cls: '' },
       name: { label: 'Empresa', title: 'Nome da empresa ou fundo', sort: 'name', cell: d => (d.name || '—').replace(/</g, '&lt;').replace(/"/g, '&quot;'), cls: 'nome-empresa', tdTitle: d => d.name || '' },
@@ -909,12 +830,6 @@
       change: { label: 'Variação %', title: 'Variação percentual do preço em relação ao fechamento anterior', sort: 'change', cell: d => `<span class="numero ${classeVariacao(d.change != null ? Number(d.change) : null)}">${fmtPct(d.change)}</span>`, cls: 'numero' },
       volume: { label: 'Volume', title: 'Quantidade de ações/cotas negociadas no período', sort: 'volume', cell: d => fmtNum(d.volume), cls: 'numero' },
       market_cap: { label: 'Valor Mercado', title: 'Valor de mercado (preço × quantidade de ações em circulação)', sort: 'market_cap', cell: d => fmtMoeda(d.market_cap), cls: 'numero' },
-      priceEarnings: { label: 'P/L', title: 'Preço/Lucro: preço da ação dividido pelo lucro por ação. Clique em Carregar indicadores.', sort: 'priceEarnings', cell: d => fmtPL(d.priceEarnings), cls: 'numero' },
-      earningsPerShare: { label: 'LPA', title: 'Lucro por Ação: lucro líquido dividido pelo número de ações', sort: 'earningsPerShare', cell: d => fmtLPA(d.earningsPerShare), cls: 'numero' },
-      dividendYield: { label: 'Div.Yield', title: 'Dividend Yield: dividendos dos últimos 12 meses em % do preço', sort: 'dividendYield', cell: d => fmtDivYield(d.dividendYield), cls: 'numero' },
-      priceToBook: { label: 'P/VP', title: 'Preço/Valor Patrimonial: preço ÷ valor patrimonial por ação', sort: 'priceToBook', cell: d => d.priceToBook != null ? Number(d.priceToBook).toFixed(2) : '—', cls: 'numero' },
-      returnOnEquity: { label: 'ROE', title: 'Retorno sobre Patrimônio Líquido em %', sort: 'returnOnEquity', cell: d => fmtRoe(d.returnOnEquity), cls: 'numero' },
-      payout: { label: 'Payout', title: 'Payout: % do lucro distribuído como dividendo', sort: 'payout', cell: d => fmtPayout(d.payout), cls: 'numero' },
       sector: { label: 'Setor', title: 'Setor de atuação da empresa (ex: Financeiro, Petróleo)', sort: 'sector', cell: d => setorDescritivo(d.sector), cls: '' },
       cap: { label: 'Cap', title: 'Blue Chip: valor mercado ≥ R$ 20 bi. Small Cap: valor mercado < R$ 2 bi.', sort: 'cap', cell: d => { const c = classificacaoCap(d); if (c === 'bluechip') return '<span class="badge badge-bluechip">Blue Chip</span>'; if (c === 'smallcap') return '<span class="badge badge-smallcap">Small Cap</span>'; return '—'; }, cls: '' },
       type: { label: 'Tipo', title: 'Tipo do ativo: Ação, FII, ETF, BDR ou Unit', sort: 'type', cell: d => `<span class="badge">${tipoDescritivo(d.type)}</span>`, cls: '' }
@@ -1089,64 +1004,67 @@
     const colCount = () => getVisibleColumnOrder().length;
 
     async function carregarDados() {
-      tbody.innerHTML = '<tr><td colspan="' + Math.max(colCount(), 1) + '" class="loading"><div class="loading-spinner"></div>Carregando dados da B3 (stock, fundos, BDRs, ETFs)...</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="' + Math.max(colCount(), 1) + '" class="loading"><div class="loading-spinner"></div>Carregando dados da B3...</td></tr>';
       btnAtualizar.disabled = true;
 
       try {
         const token = getToken();
-        const tipos = ['stock', 'fund', 'bdr', 'etf'];
         const todosStocks = [];
         const tickersVistos = new Set();
 
-        for (const tipo of tipos) {
+        const addItem = (s, tipoForcado) => {
+          const t = (s.stock || s.symbol || '').trim();
+          if (!t || tickersVistos.has(t)) return;
+          if (/F$/i.test(t)) return;
+          tickersVistos.add(t);
+          const d = { ...s };
+          d.type = tipoForcado != null ? tipoForcado : normalizarTipo(d.type);
+          todosStocks.push(d);
+        };
+
+        const urlDef = BRAPI_LIST + '?token=' + encodeURIComponent(token);
+        const resDef = await fetch(urlDef);
+        if (resDef.ok) {
+          const json = await resDef.json();
+          (json.stocks || []).forEach(s => addItem(s, null));
+        }
+
+        for (const tipo of ['stock', 'fund', 'bdr', 'etf']) {
           try {
-            const url = `${BRAPI_LIST}?token=${encodeURIComponent(token)}&type=${tipo}`;
+            const url = BRAPI_LIST + '?token=' + encodeURIComponent(token) + '&type=' + tipo;
             const res = await fetch(url);
             if (!res.ok) continue;
             const json = await res.json();
             const stocks = json.stocks || [];
-            for (const s of stocks) {
-              const t = (s.stock || s.symbol || '').trim();
-              if (t && !tickersVistos.has(t)) {
-                tickersVistos.add(t);
-                const d = { ...s };
-                if (tipo === 'fund') d.type = 'fii';
-                else if (tipo === 'bdr') d.type = 'bdr';
-                else if (tipo === 'etf') d.type = 'etf';
-                else d.type = d.type || 'stock';
-                todosStocks.push(d);
-              }
-            }
-            if (stocks.length > 0) await new Promise(r => setTimeout(r, 300));
+            const tipoNorm = tipo === 'fund' ? 'fii' : tipo;
+            stocks.forEach(s => addItem(s, tipoNorm));
+            if (stocks.length > 0) await new Promise(r => setTimeout(r, 250));
           } catch (_) {}
         }
 
-        if (todosStocks.length < 500) {
-          const url = `${BRAPI_LIST}?token=${encodeURIComponent(token)}`;
-          const res = await fetch(url);
-          if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-          const json = await res.json();
-          const def = json.stocks || [];
-          const seen = new Set(todosStocks.map(s => (s.stock || s.symbol || '').trim()));
-          for (const s of def) {
-            const t = (s.stock || s.symbol || '').trim();
-            if (t && !seen.has(t)) {
-              seen.add(t);
-              const d = { ...s };
-              d.type = normalizarTipo(d.type);
-              todosStocks.push(d);
-            }
+        try {
+          const urlEtf = BRAPI_LIST + '?token=' + encodeURIComponent(token) + '&search=ETF';
+          const resEtf = await fetch(urlEtf);
+          if (resEtf.ok) {
+            const json = await resEtf.json();
+            (json.stocks || []).forEach(s => addItem(s, 'etf'));
           }
-        }
-        dados = todosStocks.map(d => ({ ...d, type: normalizarTipo(d.type) }));
+        } catch (_) {}
+
+        const etfTickers = new Set(['BOVA11','SMAL11','IVVB11','BOVV11','NASD11','PIBB11','DIVO11','GOLD11','MATB11','BOVS11','XFIX11','IMAB11','SPXI11','USDB11','DOLP11','BBSD11','FIXX11','BPRE11','BLFT11','FIXA11','LFTB11','FNAM11','FNOR11','BOVB11','BOVX11','ACWI11','XINA11','DVER11','UTEC11','USAL11','DOLA11','SPXH11','USTK11','XB5011','XB3511','ELAS11','B5MB11','NTNS11','AGRI11','CORN11','WRLD11','CHIP11','QQQI11','SPYI11','DOLX11','GOLX11','GLDX11','XBIT11','XETH11','ETHE11','HODL11','DEBB11','LFTS11','LFIN11','SCVB11','LPFT11','PIPE11','BLBT11','NUCL11','TECX11','BIZD11','BBOI11','BDOM11','BRAZ11','GBIT11','XBOV11']);
+        dados = todosStocks.map(d => {
+          const t = (d.stock || d.symbol || '').trim();
+          let tipo = normalizarTipo(d.type);
+          if (etfTickers.has(t) || (d.name && /etf|index|índice|fundo de índice|fdo idx/i.test(d.name))) tipo = 'etf';
+          return { ...d, type: tipo };
+        });
 
         lastUpdate.textContent = new Date().toLocaleString('pt-BR');
         totalCount.textContent = dados.length;
-
         popularSetores();
         aplicarFiltros();
       } catch (e) {
-        tbody.innerHTML = '<tr><td colspan="' + Math.max(colCount(), 1) + '"><div class="erro"><p>Erro ao carregar dados</p><small>' + (e.message || 'Verifique sua conexão e tente novamente.') + '</small><br><small>Dados via brapi.dev — use token próprio para mais requisições.</small></div></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="' + Math.max(colCount(), 1) + '"><div class="erro"><p>Erro ao carregar dados</p><small>' + (e.message || 'Verifique sua conexão.') + '</small><br><small>Dados via brapi.dev — token gratuito em brapi.dev</small></div></td></tr>';
       } finally {
         btnAtualizar.disabled = false;
       }
@@ -1226,11 +1144,6 @@
       const setoresSel = getComboSelecionados('panelSetor');
       const tiposSel = getComboSelecionados('panelTipo');
       const capsSel = getComboSelecionados('panelCap');
-      const plMax = parseFloat(filtroPL?.value) || 0;
-      const divMin = parseFloat(filtroDivYield?.value) || 0;
-      const pvpMax = parseFloat(filtroPVP?.value) || 0;
-      const roeMin = parseFloat(filtroROE?.value) || 0;
-      const payoutMax = parseFloat(filtroPayout?.value) || 0;
 
       if (busca) {
         base = base.filter(d =>
@@ -1240,28 +1153,6 @@
       }
       if (setoresSel.length) base = base.filter(d => setoresSel.includes((d.sector || 'Outros').trim()));
       if (tiposSel.length) base = base.filter(d => tiposSel.includes((d.type || '').trim()));
-      if (plMax > 0) base = base.filter(d => {
-        const pl = Number(d.priceEarnings);
-        return !isNaN(pl) && pl > 0 && pl <= plMax;
-      });
-      if (divMin > 0) base = base.filter(d => {
-        const dy = Number(d.dividendYield);
-        return !isNaN(dy) && dy >= divMin;
-      });
-      if (pvpMax > 0) base = base.filter(d => {
-        const pvp = Number(d.priceToBook);
-        return !isNaN(pvp) && pvp > 0 && pvp <= pvpMax;
-      });
-      if (roeMin !== 0) base = base.filter(d => {
-        const roe = Number(d.returnOnEquity);
-        if (isNaN(roe)) return false;
-        const pct = Math.abs(roe) <= 1 ? roe * 100 : roe;
-        return pct >= roeMin;
-      });
-      if (payoutMax > 0) base = base.filter(d => {
-        const py = Number(d.payout);
-        return !isNaN(py) && py >= 0 && py <= payoutMax;
-      });
       if (capsSel.length) base = base.filter(d => capsSel.includes(classificacaoCap(d)));
 
       dadosFiltrados = base;
@@ -1288,7 +1179,6 @@
     function renderizar() {
       filteredCount.textContent = dadosFiltrados.length;
       totalDisplay.textContent = dados.length;
-      if (btnIndicadores) btnIndicadores.disabled = dadosFiltrados.length === 0;
 
       headerRow.querySelectorAll('th[data-sort]').forEach(th => {
         th.classList.remove('sorted-asc', 'sorted-desc');
@@ -1333,7 +1223,6 @@
       document.querySelectorAll('.combo-panel').forEach(p => p.classList.remove('open'));
     });
 
-    const btnIndicadores = document.getElementById('btnIndicadores');
     const btnColunas = document.getElementById('btnColunas');
     const colunasDropdown = document.getElementById('colunasDropdown');
 
@@ -1346,164 +1235,8 @@
       colunasDropdown.addEventListener('click', (e) => e.stopPropagation());
     }
 
-    const indicadoresStatus = document.getElementById('indicadoresStatus');
-
-    async function fetchComCors(url) {
-      const tryFetch = async (u) => {
-        const res = await fetch(u);
-        if (!res.ok) throw new Error('HTTP ' + res.status);
-        return res;
-      };
-      try {
-        return await tryFetch(url);
-      } catch (e) {
-        const proxies = ['https://api.allorigins.win/raw?url=', 'https://corsproxy.io/?'];
-        for (const pre of proxies) {
-          try {
-            return await tryFetch(pre + encodeURIComponent(url));
-          } catch (_) { continue; }
-        }
-        throw e;
-      }
-    }
-
-    function mergeIndicadores(r, d) {
-      if (!d) return;
-      d.priceEarnings = r.priceEarnings;
-      d.earningsPerShare = r.earningsPerShare;
-      let div12m = 0;
-      if (r.dividendsData?.cashDividends?.length && r.regularMarketPrice) {
-        const umAnoAtras = Date.now() - 365 * 24 * 60 * 60 * 1000;
-        div12m = r.dividendsData.cashDividends
-          .filter(x => new Date(x.paymentDate).getTime() > umAnoAtras)
-          .reduce((s, x) => s + (Number(x.rate) || 0), 0);
-        d.dividendYield = div12m > 0 ? (div12m / r.regularMarketPrice) * 100 : null;
-      } else {
-        d.dividendYield = null;
-      }
-      d.payout = (r.earningsPerShare > 0 && div12m > 0)
-        ? (div12m / r.earningsPerShare) * 100 : null;
-      if (r.priceToBook != null) d.priceToBook = r.priceToBook;
-      if (r.returnOnEquity != null) d.returnOnEquity = r.returnOnEquity;
-    }
-
-    function mergeIndicadoresYahoo(y, d) {
-      if (!d) return;
-      const ks = y.defaultKeyStatistics || {};
-      const fd = y.financialData || {};
-      const sd = y.summaryDetail || {};
-      const pe = ks.trailingPE ?? sd.trailingPE;
-      if (pe != null && pe > 0) d.priceEarnings = pe;
-      if (ks.priceToBook != null) d.priceToBook = ks.priceToBook;
-      if (fd.returnOnEquity != null) {
-        const roe = fd.returnOnEquity;
-        d.returnOnEquity = Math.abs(roe) <= 1 ? roe * 100 : roe;
-      }
-      let dy = sd.dividendYield;
-      if (dy != null) d.dividendYield = dy <= 1 ? dy * 100 : dy;
-      if (sd.payoutRatio != null) d.payout = sd.payoutRatio <= 1 ? sd.payoutRatio * 100 : sd.payoutRatio;
-      const preco = d.close || sd.regularMarketPrice || sd.currentPrice;
-      if (pe != null && pe > 0 && preco && !d.earningsPerShare) d.earningsPerShare = preco / pe;
-    }
-
-    function tickerToYahoo(t) {
-      if (!t) return '';
-      const s = String(t).trim().toUpperCase();
-      if (/^[A-Z0-9]{4}[0-9]{1,2}$/.test(s) || /^[A-Z0-9]{5,11}$/.test(s)) return s + '.SA';
-      return s;
-    }
-
-    async function fetchIndicadoresYahoo(ticker) {
-      const sym = tickerToYahoo(ticker);
-      if (!sym) return null;
-      const url = 'https://query1.finance.yahoo.com/v10/finance/quoteSummary/' + sym + '?modules=defaultKeyStatistics,financialData,summaryDetail';
-      try {
-        const res = await fetchComCors(url);
-        if (!res.ok) return null;
-        const json = await res.json();
-        return json.quoteSummary?.result?.[0] || null;
-      } catch (_) { return null; }
-    }
-
-    async function carregarIndicadores() {
-      if (dadosFiltrados.length === 0) return;
-      btnIndicadores.disabled = true;
-      btnIndicadores.textContent = 'Carregando...';
-      if (indicadoresStatus) indicadoresStatus.textContent = 'Buscando P/L, LPA e Div.Yield...';
-      const tickers = dadosFiltrados.slice(0, 20).map(d => (d.stock || d.symbol || '')).filter(Boolean);
-      let totalOk = 0;
-      const BATCH = 3;
-      for (let i = 0; i < tickers.length; i += BATCH) {
-        const batch = tickers.slice(i, i + BATCH);
-        const url = `${BRAPI_QUOTE}${batch.map(t => encodeURIComponent(t)).join(',')}?token=${getToken()}&fundamental=true&dividends=true`;
-        try {
-          const res = await fetchComCors(url);
-          if (!res.ok) throw new Error('HTTP ' + res.status);
-          const json = await res.json();
-          const results = json.results || [];
-          results.forEach(r => {
-            const symb = (r.symbol || '').trim();
-            const d = dados.find(x => (x.stock || x.symbol || '').trim() === symb);
-            if (d) {
-              mergeIndicadores(r, d);
-              totalOk++;
-            }
-          });
-        } catch (e) {
-          if (batch.length === 1) {
-            if (indicadoresStatus) indicadoresStatus.textContent = 'Erro em ' + batch[0] + '. Tentando Yahoo...';
-          }
-          for (const t of batch) {
-            try {
-              const rUrl = `${BRAPI_QUOTE}${encodeURIComponent(t)}?token=${getToken()}&fundamental=true&dividends=true`;
-              const rRes = await fetchComCors(rUrl);
-              if (!rRes.ok) throw new Error('');
-              const rJson = await rRes.json();
-              const r = rJson.results?.[0];
-              if (r) {
-                const d = dados.find(x => (x.stock || x.symbol || '').trim() === (r.symbol || '').trim());
-                if (d) { mergeIndicadores(r, d); totalOk++; }
-              } else throw new Error('');
-            } catch (_) {}
-          }
-        }
-        if (i + BATCH < tickers.length) await new Promise(r => setTimeout(r, 400));
-      }
-      if (totalOk === 0) {
-        if (indicadoresStatus) indicadoresStatus.textContent = 'Brapi sem dados. Tentando Yahoo Finance...';
-        for (const t of tickers) {
-          try {
-            const y = await fetchIndicadoresYahoo(t);
-            if (y) {
-              const d = dados.find(x => (x.stock || x.symbol || '').trim() === t.trim());
-              if (d) { mergeIndicadoresYahoo(y, d); totalOk++; }
-            }
-          } catch (_) {}
-          await new Promise(r => setTimeout(r, 300));
-        }
-      }
-      aplicarFiltros();
-      btnIndicadores.disabled = false;
-      btnIndicadores.textContent = '📊 Indicadores';
-      if (indicadoresStatus) {
-        indicadoresStatus.textContent = totalOk > 0 ? '✓ ' + totalOk + ' ativos com indicadores' : '⚠ Nenhum obtido. Use token brapi.dev ou tente novamente.';
-        setTimeout(() => { if (indicadoresStatus) indicadoresStatus.textContent = ''; }, 10000);
-      }
-    }
-
     filtroBusca.addEventListener('input', aplicarFiltros);
-    filtroPL?.addEventListener('input', aplicarFiltros);
-    filtroPL?.addEventListener('change', aplicarFiltros);
-    filtroDivYield?.addEventListener('input', aplicarFiltros);
-    filtroDivYield?.addEventListener('change', aplicarFiltros);
-    filtroPVP?.addEventListener('input', aplicarFiltros);
-    filtroPVP?.addEventListener('change', aplicarFiltros);
-    filtroROE?.addEventListener('input', aplicarFiltros);
-    filtroROE?.addEventListener('change', aplicarFiltros);
-    filtroPayout?.addEventListener('input', aplicarFiltros);
-    filtroPayout?.addEventListener('change', aplicarFiltros);
     btnAtualizar.addEventListener('click', carregarDados);
-    btnIndicadores.addEventListener('click', carregarIndicadores);
 
     async function abrirDetalhes(ticker) {
       if (!ticker) return;
@@ -1515,10 +1248,9 @@
       modalBody.innerHTML = '<div class="modal-loading">Carregando detalhes...</div>';
 
       try {
-        const url = `${BRAPI_QUOTE}${encodeURIComponent(ticker)}?token=${getToken()}&fundamental=true&dividends=true`;
+        const url = BRAPI_QUOTE + encodeURIComponent(ticker) + '?token=' + encodeURIComponent(getToken()) + '&fundamental=true&dividends=true';
         const res = await fetch(url);
-        if (!res.ok) throw new Error('Falha ao buscar detalhes');
-
+        if (!res.ok) throw new Error('Falha ao buscar');
         const json = await res.json();
         const r = json.results?.[0];
         if (!r) throw new Error('Sem dados');
@@ -1526,9 +1258,9 @@
         const preco = r.regularMarketPrice || 0;
         let div12m = 0;
         if (r.dividendsData?.cashDividends?.length) {
-          const umAnoAtras = Date.now() - 365 * 24 * 60 * 60 * 1000;
+          const umAno = Date.now() - 365 * 24 * 60 * 60 * 1000;
           div12m = r.dividendsData.cashDividends
-            .filter(x => new Date(x.paymentDate).getTime() > umAnoAtras)
+            .filter(x => new Date(x.paymentDate).getTime() > umAno)
             .reduce((s, x) => s + (Number(x.rate) || 0), 0);
         }
         const divYield = preco > 0 && div12m > 0 ? ((div12m / preco) * 100).toFixed(2) + '%' : '—';
@@ -1539,16 +1271,11 @@
         const roe = roeVal != null ? (Math.abs(roeVal) <= 1 ? Number(roeVal) * 100 : Number(roeVal)).toFixed(2) + '%' : '—';
         const payout = r.earningsPerShare > 0 && div12m > 0 ? ((div12m / r.earningsPerShare) * 100).toFixed(1) + '%' : '—';
         const min52 = r.fiftyTwoWeekLow; const max52 = r.fiftyTwoWeekHigh;
-        const pos52 = (min52 != null && max52 != null && max52 > min52 && preco > 0)
-          ? (((preco - min52) / (max52 - min52)) * 100).toFixed(1) + '%' : '—';
-        const potAlta = (max52 != null && preco > 0 && max52 > preco)
-          ? (((max52 - preco) / preco) * 100).toFixed(1) + '%' : '—';
-        const potBaixa = (min52 != null && preco > 0 && min52 < preco)
-          ? (((preco - min52) / preco) * 100).toFixed(1) + '%' : '—';
+        const pos52 = (min52 != null && max52 != null && max52 > min52 && preco > 0) ? (((preco - min52) / (max52 - min52)) * 100).toFixed(1) + '%' : '—';
+        const potAlta = (max52 != null && preco > 0 && max52 > preco) ? (((max52 - preco) / preco) * 100).toFixed(1) + '%' : '—';
+        const potBaixa = (min52 != null && preco > 0 && min52 < preco) ? (((preco - min52) / preco) * 100).toFixed(1) + '%' : '—';
         const proxDiv = r.dividendsData?.cashDividends?.find(x => new Date(x.paymentDate) > new Date());
         const proxDivStr = proxDiv ? 'R$ ' + Number(proxDiv.rate).toFixed(4) + ' em ' + new Date(proxDiv.paymentDate).toLocaleDateString('pt-BR') : '—';
-
-        const v = (val, fmt) => val != null && val !== '' ? (fmt ? fmt(val) : val) : '—';
         const capModal = classificacaoCap({ market_cap: r.marketCap });
         const capLabel = capModal === 'bluechip' ? '<span class="badge badge-bluechip">Blue Chip</span>' : capModal === 'smallcap' ? '<span class="badge badge-smallcap">Small Cap</span>' : '—';
 
@@ -1573,7 +1300,7 @@
             <div class="modal-item"><label>Volume</label><span>${fmtNum(r.regularMarketVolume)}</span></div>
             <div class="modal-item"><label>Valor de mercado</label><span>${fmtMoeda(r.marketCap)}</span></div>
             <div class="modal-item"><label>Cap</label><span>${capLabel}</span></div>
-            <div class="modal-item"><label>Beta</label><span>${v(r.beta)}</span></div>
+            <div class="modal-item"><label>Beta</label><span>${r.beta != null ? r.beta : '—'}</span></div>
             <div class="modal-item"><label>Moeda</label><span>${r.currency || 'BRL'}</span></div>
             <div class="modal-item"><label>Atualização</label><span>${r.regularMarketTime ? new Date(r.regularMarketTime).toLocaleString('pt-BR') : '—'}</span></div>
           </div>
@@ -1592,9 +1319,11 @@
           </div>
         `;
         modalBody.innerHTML = indicatorsHtml;
-        loadChartData(ticker, 'max', '1d');
         modalBody.querySelectorAll('.modal-chart-filters button').forEach(btn => {
           btn.addEventListener('click', () => loadChartData(ticker, btn.dataset.range, btn.dataset.interval));
+        });
+        requestAnimationFrame(() => {
+          requestAnimationFrame(() => loadChartData(ticker, '1y', '1d'));
         });
       } catch (e) {
         modalBody.innerHTML = '<div class="modal-loading">Erro ao carregar detalhes. Tente novamente.</div>';
@@ -1610,17 +1339,25 @@
       const ctx = canvas.getContext('2d');
       if (modalChartInstance) { modalChartInstance.destroy(); modalChartInstance = null; }
       const filters = wrap?.parentElement?.querySelector('.modal-chart-filters');
-      filters?.querySelectorAll('button').forEach(b => b.classList.remove('ativo'));
-      const btn = filters?.querySelector(`button[data-range="${range}"]`);
-      if (btn) btn.classList.add('ativo');
+      if (filters) {
+        filters.querySelectorAll('button').forEach(b => b.classList.remove('ativo'));
+        const btn = filters.querySelector(`button[data-range="${range}"]`);
+        if (btn) btn.classList.add('ativo');
+      }
       const prevErr = wrap?.querySelector('.chart-error');
       if (prevErr) prevErr.remove();
       canvas.style.display = '';
+      canvas.style.visibility = 'visible';
 
-      const url = `${BRAPI_QUOTE}${encodeURIComponent(ticker)}?token=${getToken()}&range=${range}&interval=${interval}`;
+      const url = BRAPI_QUOTE + encodeURIComponent(ticker) + '?token=' + encodeURIComponent(getToken()) + '&range=' + range + '&interval=' + interval;
       try {
-        const res = await fetchComCors(url);
-        if (!res.ok) throw new Error('HTTP ' + res.status);
+        let res = await fetch(url).catch(() => null);
+        if (!res?.ok) {
+          try {
+            res = await fetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(url));
+          } catch (_) {}
+        }
+        if (!res?.ok) throw new Error('HTTP ' + (res?.status || 'erro de rede'));
         const json = await res.json();
         let points = [];
         const h = json.results?.[0]?.historicalDataPrice || json.historical || json.prices || (Array.isArray(json) ? json : []);
@@ -1653,24 +1390,24 @@
           }
         });
       } catch (err) {
-        canvas.style.display = 'none';
+        if (canvas) canvas.style.display = 'none';
         const noData = document.createElement('div');
         noData.className = 'modal-loading chart-error';
         noData.style.padding = '2rem';
-        noData.textContent = 'Gráfico indisponível. Use token brapi.dev (histórico exige plano pago em alguns casos).';
-        wrap?.appendChild(noData);
+        noData.textContent = 'Gráfico indisponível. Verifique o token em brapi.dev.';
+        if (wrap) wrap.appendChild(noData);
       }
     }
 
     modalFechar.addEventListener('click', () => modalOverlay.classList.remove('ativo'));
     modalOverlay.addEventListener('click', e => { if (e.target === modalOverlay) modalOverlay.classList.remove('ativo'); });
 
-    const brapiTokenEl = document.getElementById('brapiToken');
-    if (brapiTokenEl) {
+    const apiTokenEl = document.getElementById('apiToken');
+    if (apiTokenEl) {
       const saved = localStorage.getItem(TOKEN_KEY);
-      if (saved) brapiTokenEl.value = saved;
-      brapiTokenEl.addEventListener('change', () => {
-        const v = brapiTokenEl.value.trim();
+      if (saved) apiTokenEl.value = saved;
+      apiTokenEl.addEventListener('change', () => {
+        const v = apiTokenEl.value.trim();
         if (v) localStorage.setItem(TOKEN_KEY, v);
         else localStorage.removeItem(TOKEN_KEY);
       });
