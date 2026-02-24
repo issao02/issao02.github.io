@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>JogoRPG</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Press Start 2P', cursive;
+      background: #1a1a2e;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+      overflow-y: auto;
+      touch-action: manipulation;
+    }
+
+    h1 {
+      font-size: 1rem;
+      color: #fff;
+      margin-bottom: 1rem;
+      text-shadow: 2px 2px 0 #333;
+    }
+
+    .game-wrapper {
+      position: relative;
+      outline: none;
+      flex-shrink: 0;
+      border: 4px solid #2d2d44;
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: 
+        0 0 0 4px #1a1a2e,
+        inset 0 0 0 2px #3d3d5c,
+        0 20px 60px rgba(0, 0, 0, 0.5);
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    #gameCanvas {
+      display: block;
+      width: 352px;
+      height: 352px;
+      background: #2d5016;
+      cursor: default;
+    }
+
+    .controls {
+      margin-top: 1rem;
+      color: #888;
+      font-size: 0.5rem;
+      text-align: center;
+      line-height: 1.8;
+    }
+
+    .coords {
+      margin-top: 0.5rem;
+      color: #4ade80;
+      font-size: 0.5rem;
+    }
+
+    .virtual-controls {
+      display: none;
+      position: fixed;
+      bottom: 2rem;
+      left: 2rem;
+      width: 140px;
+      height: 140px;
+      touch-action: none;
+      user-select: none;
+      -webkit-user-select: none;
+      z-index: 100;
+    }
+
+    .virtual-controls .dpad {
+      position: relative;
+      width: 100%;
+      height: 100%;
+    }
+
+    .virtual-controls .btn {
+      position: absolute;
+      width: 48px;
+      height: 48px;
+      touch-action: none;
+      background: rgba(99, 102, 241, 0.6);
+      border: 3px solid rgba(255, 255, 255, 0.5);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      color: rgba(255, 255, 255, 0.9);
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 0.1s, background 0.1s;
+    }
+
+    .virtual-controls .btn:active {
+      background: rgba(99, 102, 241, 0.9);
+      transform: scale(0.92);
+    }
+
+    .virtual-controls .btn-up { top: 0; left: 50%; transform: translateX(-50%); }
+    .virtual-controls .btn-down { bottom: 0; left: 50%; transform: translateX(-50%); }
+    .virtual-controls .btn-left { left: 0; top: 50%; transform: translateY(-50%); }
+    .virtual-controls .btn-right { right: 0; top: 50%; transform: translateY(-50%); }
+    .virtual-controls .btn-up:active { transform: translateX(-50%) scale(0.92); }
+    .virtual-controls .btn-down:active { transform: translateX(-50%) scale(0.92); }
+    .virtual-controls .btn-left:active { transform: translateY(-50%) scale(0.92); }
+    .virtual-controls .btn-right:active { transform: translateX(0) translateY(-50%) scale(0.92); }
+
+    @media (max-width: 768px), (hover: none) {
+      .virtual-controls {
+        display: block;
+      }
+
+      .controls {
+        display: none;
+      }
+
+      body {
+        padding-bottom: 180px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <h1>JOGORPG</h1>
+  <div class="game-wrapper" id="gameArea" tabindex="0">
+    <canvas id="gameCanvas" width="352" height="352"></canvas>
+  </div>
+  <p class="controls">↑↓←→ ou WASD para andar (diagonal: combine teclas)</p>
+  <p class="coords" id="coords">X: 50  Y: 50</p>
+
+  <div class="virtual-controls" id="virtualControls">
+    <div class="dpad">
+      <button class="btn btn-up" data-dx="0" data-dy="-1" aria-label="Cima">▲</button>
+      <button class="btn btn-down" data-dx="0" data-dy="1" aria-label="Baixo">▼</button>
+      <button class="btn btn-left" data-dx="-1" data-dy="0" aria-label="Esquerda">◀</button>
+      <button class="btn btn-right" data-dx="1" data-dy="0" aria-label="Direita">▶</button>
+    </div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas ? canvas.getContext('2d') : null;
+    if (!canvas || !ctx) {
+      var err = document.createElement('p');
+      err.style.cssText = 'color:#ef4444;padding:1rem;font-size:0.6rem;';
+      err.textContent = 'Erro: Canvas não disponível. Verifique o console (F12).';
+      document.body.appendChild(err);
+    } else {
+    const TILE_SIZE = 32;
+    const MAP_SIZE = 100;
+    const VIEW_TILES = 11;
+
+    let playerX = Math.floor(MAP_SIZE / 2);
+    let playerY = Math.floor(MAP_SIZE / 2);
+    let facing = 'down';
+    let moveQueue = [];
+    let isMoving = false;
+    let animOffset = 0;
+
+    const keys = { up: false, down: false, left: false, right: false };
+    const touchKeys = { up: false, down: false, left: false, right: false };
+
+    const terrain = [];
+    for (let y = 0; y < MAP_SIZE; y++) {
+      terrain[y] = [];
+      for (let x = 0; x < MAP_SIZE; x++) {
+        const distCenter = Math.abs(x - 50) + Math.abs(y - 50);
+        if (distCenter < 15) {
+          terrain[y][x] = 0;
+        } else {
+          const n = (Math.sin(x * 0.1) * 0.5 + 0.5) * 100 + (Math.cos(y * 0.08) * 0.5 + 0.5) * 100;
+          if (n < 30) terrain[y][x] = 1;
+          else if (n < 45) terrain[y][x] = 2;
+          else if (n < 75) terrain[y][x] = 0;
+          else if (n < 85) terrain[y][x] = 3;
+          else terrain[y][x] = 4;
+        }
+      }
+    }
+
+    const mapBuffer = document.createElement('canvas');
+    mapBuffer.width = MAP_SIZE * TILE_SIZE;
+    mapBuffer.height = MAP_SIZE * TILE_SIZE;
+    const mapCtx = mapBuffer.getContext('2d');
+
+    const tileImages = {};
+    const tilePaths = {
+      0: 'images/tile_grass.png',
+      1: 'images/tile_water.png',
+      2: 'images/tile_sand.png',
+      3: 'images/tile_stone.png',
+      4: 'images/tile_tree.png'
+    };
+
+    const colors = {
+      0: ['#2d5016', '#3d6b20', '#4a7c28'],
+      1: ['#1e3a5f', '#2a4a7a', '#356095'],
+      2: ['#c4a35a', '#d4b86a', '#e4c87a'],
+      3: ['#5a5a5a', '#6a6a6a', '#7a7a7a'],
+      4: ['#1a3d1a', '#2d5a2d', '#1a3d1a']
+    };
+
+    function drawTileFallback(c, type, px, py, variant) {
+      const col = colors[type] || colors[0];
+      c.fillStyle = col[variant % col.length];
+      c.fillRect(px, py, TILE_SIZE, TILE_SIZE);
+    }
+
+    function buildMapBuffer() {
+      for (let ty = 0; ty < MAP_SIZE; ty++) {
+        for (let tx = 0; tx < MAP_SIZE; tx++) {
+          const type = terrain[ty][tx];
+          const variant = (tx + ty) % 3;
+          const img = tileImages[type];
+          if (img && img.complete && img.naturalWidth) {
+            mapCtx.drawImage(img, tx * TILE_SIZE, ty * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+          } else {
+            drawTileFallback(mapCtx, type, tx * TILE_SIZE, ty * TILE_SIZE, variant);
+          }
+        }
+      }
+    }
+
+    function canWalk(x, y) {
+      const t = getTile(x, y);
+      return t !== 1 && t !== 4;
+    }
+
+    let imagesLoaded = 0;
+    const totalImages = 5;
+    function onImageLoad() {
+      imagesLoaded++;
+      if (imagesLoaded === totalImages) buildMapBuffer();
+    }
+
+    for (let i = 0; i < totalImages; i++) {
+      const img = new Image();
+      img.onload = onImageLoad;
+      img.onerror = onImageLoad;
+      img.src = tilePaths[i];
+      tileImages[i] = img;
+    }
+    buildMapBuffer();
+
+    function getTile(x, y) {
+      if (x < 0 || x >= MAP_SIZE || y < 0 || y >= MAP_SIZE) return 0;
+      return terrain[y][x];
+    }
+
+    function drawPlayer(offsetX, offsetY) {
+      const px = (VIEW_TILES / 2) * TILE_SIZE - TILE_SIZE / 2 + offsetX;
+      const py = (VIEW_TILES / 2) * TILE_SIZE - TILE_SIZE / 2 + offsetY;
+
+      const bounce = Math.sin(animOffset * 0.5) * 2;
+
+      ctx.fillStyle = '#f4d03f';
+      ctx.fillRect(px + 8, py + 4 + bounce, 16, 20);
+
+      ctx.fillStyle = '#2c3e50';
+      ctx.fillRect(px + 10, py + 8 + bounce, 4, 4);
+      ctx.fillRect(px + 18, py + 8 + bounce, 4, 4);
+
+      ctx.fillStyle = '#e74c3c';
+      ctx.fillRect(px + 12, py + 16 + bounce, 8, 4);
+
+      ctx.fillStyle = '#27ae60';
+      ctx.fillRect(px + 6, py + 20 + bounce, 8, 4);
+      ctx.fillRect(px + 18, py + 20 + bounce, 8, 4);
+    }
+
+    function render() {
+      const startTileX = playerX - Math.floor(VIEW_TILES / 2);
+      const startTileY = playerY - Math.floor(VIEW_TILES / 2);
+
+      let offsetX = 0, offsetY = 0;
+      if (moveQueue.length > 0) {
+        const m = moveQueue[0];
+        const progress = 1 - (m.frames / 8);
+        offsetX = (m.dx * TILE_SIZE * progress);
+        offsetY = (m.dy * TILE_SIZE * progress);
+      }
+
+      const viewW = VIEW_TILES * TILE_SIZE;
+      const viewH = VIEW_TILES * TILE_SIZE;
+      const srcX = Math.max(0, Math.min(startTileX * TILE_SIZE + offsetX, MAP_SIZE * TILE_SIZE - viewW));
+      const srcY = Math.max(0, Math.min(startTileY * TILE_SIZE + offsetY, MAP_SIZE * TILE_SIZE - viewH));
+      ctx.drawImage(mapBuffer, srcX, srcY, viewW, viewH, 0, 0, viewW, viewH);
+
+      drawPlayer(offsetX, offsetY);
+    }
+
+    function update() {
+      animOffset += 0.15;
+
+      if (moveQueue.length > 0) {
+        moveQueue[0].frames--;
+        if (moveQueue[0].frames <= 0) {
+          playerX += moveQueue[0].dx;
+          playerY += moveQueue[0].dy;
+          moveQueue.shift();
+          if (moveQueue.length === 0) isMoving = false;
+        }
+      } else if (moveQueue.length === 0) {
+        isMoving = false;
+      }
+    }
+
+    function tryMove(dx, dy) {
+      if (isMoving) return;
+      const nx = playerX + dx;
+      const ny = playerY + dy;
+      if (canWalk(nx, ny)) {
+        if (dx > 0) facing = 'right';
+        if (dx < 0) facing = 'left';
+        if (dy > 0) facing = 'down';
+        if (dy < 0) facing = 'up';
+        moveQueue.push({ dx, dy, frames: 8 });
+        isMoving = true;
+      }
+    }
+
+    function gameLoop() {
+      update();
+      if (!isMoving) {
+        const { dx, dy } = getInputDirection();
+        if (dx !== 0 || dy !== 0) tryMove(dx, dy);
+      }
+      render();
+      document.getElementById('coords').textContent = `X: ${playerX}  Y: ${playerY}`;
+    }
+
+    const gameArea = document.getElementById('gameArea');
+    gameArea.focus();
+
+    gameArea.addEventListener('click', () => gameArea.focus());
+
+    function getInputDirection() {
+      const up = keys.up || touchKeys.up;
+      const down = keys.down || touchKeys.down;
+      const left = keys.left || touchKeys.left;
+      const right = keys.right || touchKeys.right;
+      return {
+        dx: (right ? 1 : 0) - (left ? 1 : 0),
+        dy: (down ? 1 : 0) - (up ? 1 : 0)
+      };
+    }
+
+    window.addEventListener('keydown', (e) => {
+      if (e.repeat) return;
+      switch (e.key) {
+        case 'ArrowUp':
+        case 'w':
+        case 'W':
+          e.preventDefault();
+          keys.up = true;
+          break;
+        case 'ArrowDown':
+        case 's':
+        case 'S':
+          e.preventDefault();
+          keys.down = true;
+          break;
+        case 'ArrowLeft':
+        case 'a':
+        case 'A':
+          e.preventDefault();
+          keys.left = true;
+          break;
+        case 'ArrowRight':
+        case 'd':
+        case 'D':
+          e.preventDefault();
+          keys.right = true;
+          break;
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      switch (e.key) {
+        case 'ArrowUp':
+        case 'w':
+        case 'W':
+          keys.up = false;
+          break;
+        case 'ArrowDown':
+        case 's':
+        case 'S':
+          keys.down = false;
+          break;
+        case 'ArrowLeft':
+        case 'a':
+        case 'A':
+          keys.left = false;
+          break;
+        case 'ArrowRight':
+        case 'd':
+        case 'D':
+          keys.right = false;
+          break;
+      }
+    });
+
+    document.querySelectorAll('.virtual-controls .btn').forEach(btn => {
+      const dx = parseInt(btn.dataset.dx, 10);
+      const dy = parseInt(btn.dataset.dy, 10);
+      const setTouch = (pressed) => {
+        if (dx === -1) touchKeys.left = pressed;
+        if (dx === 1) touchKeys.right = pressed;
+        if (dy === -1) touchKeys.up = pressed;
+        if (dy === 1) touchKeys.down = pressed;
+      };
+      btn.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        setTouch(true);
+      });
+      btn.addEventListener('pointerup', (e) => {
+        e.preventDefault();
+        setTouch(false);
+      });
+      btn.addEventListener('pointerleave', () => setTouch(false));
+    });
+
+    gameLoop();
+    setInterval(gameLoop, 1000 / 30);
+    }
+  </script>
+</body>
+</html>
