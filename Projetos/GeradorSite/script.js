@@ -24,19 +24,16 @@
     btnAddSocial: document.getElementById('btnAddSocial'),
     promptOutput: document.getElementById('promptOutput'),
     htmlInput: document.getElementById('htmlInput'),
-    btnPreview: document.getElementById('btnPreview'),
+    btnCopyPrompt: document.getElementById('btnCopyPrompt'),
+    btnCompile: document.getElementById('btnCompile'),
+    btnDownload: document.getElementById('btnDownload'),
+    btnEditCode: document.getElementById('btnEditCode'),
+    btnApplyCode: document.getElementById('btnApplyCode'),
     viewerPlaceholder: document.getElementById('viewerPlaceholder'),
     viewerWrapper: document.getElementById('viewerWrapper'),
     siteViewer: document.getElementById('siteViewer'),
     htmlEditor: document.getElementById('htmlEditor'),
-    viewModeScreen: document.getElementById('viewModeScreen'),
     viewModeCode: document.getElementById('viewModeCode'),
-    btnViewScreen: document.getElementById('btnViewScreen'),
-    btnViewCode: document.getElementById('btnViewCode'),
-    btnEditCode: document.getElementById('btnEditCode'),
-    btnApplyCode: document.getElementById('btnApplyCode'),
-    manualFallback: document.getElementById('manualFallback'),
-    manualFallbackMsg: document.getElementById('manualFallbackMsg'),
     previewContainer: document.getElementById('previewContainer'),
     viewBtns: document.querySelectorAll('.view-btn'),
     viewModeLabel: document.getElementById('viewModeLabel'),
@@ -214,7 +211,7 @@
       glassmorphism: 'Glassmorphism', retro: 'Retrô', corporate: 'Corporativo', creative: 'Criativo / Artístico'
     };
 
-    let p = `Crie um site HTML completo, em uma única página, com CSS inline ou em <style> no <head>.
+    let p = `Crie um site HTML em UM ÚNICO ARQUIVO. Todo o CSS deve estar em <style> no <head>. Todo o JavaScript deve estar em <script> no final do <body>. NÃO use <link href> nem <script src> externos - tudo deve estar embutido no mesmo arquivo HTML.
 
 **IMPORTANTE - Imagens:** Use APENAS imagens da internet. Busque URLs reais de imagens royalty-free em Unsplash (https://images.unsplash.com), Pexels (https://images.pexels.com) ou Pixabay. Cole a URL completa no src das tags <img>. Exemplo: <img src="https://images.unsplash.com/photo-xxx" alt="descrição">. NUNCA use placeholders como placehold.co ou lorem.pics - use imagens reais que tornem o site visualmente atraente.\n\n`;
     p += `**Título:** ${title}\n`;
@@ -246,8 +243,27 @@
     }
     p += `**Layout:** ${layout === 'scroll' ? 'Uma página com scroll suave' : 'Páginas/seções separadas'}\n`;
     if (observations) p += `**Observações:** ${observations}\n`;
-    p += `\nRetorne APENAS o código HTML completo, sem explicações, sem markdown (\`\`\`html). Comece com <!DOCTYPE html>.`;
+    p += `\nRetorne APENAS o código HTML completo em um único arquivo autocontido, sem explicações, sem markdown (\`\`\`html). Comece com <!DOCTYPE html>.`;
     return p;
+  }
+
+  // ========== Gerar e baixar arquivo único ==========
+  function downloadSingleFile() {
+    let html = currentSiteHtml || els.htmlInput.value.trim();
+    if (!html) {
+      showToast('Nenhum HTML para exportar. Compile primeiro.');
+      return;
+    }
+    html = extractHtml(html) || html;
+    const title = document.getElementById('siteTitle').value.trim() || 'site';
+    const filename = title.replace(/[^a-z0-9\u00C0-\u024F\u1E00-\u1EFF-]/gi, '-').toLowerCase() || 'site';
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename + '.html';
+    a.click();
+    URL.revokeObjectURL(a.href);
+    showToast('Arquivo baixado!');
   }
 
   // ========== Extrair HTML da resposta da IA ==========
@@ -332,6 +348,20 @@
 
   let currentSiteHtml = '';
 
+  // ========== Workflow tabs ==========
+  function switchWorkflowTab(tab) {
+    document.querySelectorAll('.workflow-tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.workflow-panel').forEach(p => p.classList.remove('active'));
+    const btn = document.querySelector(`.workflow-tab[data-tab="${tab}"]`);
+    const panel = document.getElementById(`panel${tab.charAt(0).toUpperCase() + tab.slice(1)}`);
+    if (btn) btn.classList.add('active');
+    if (panel) panel.classList.add('active');
+  }
+
+  document.querySelectorAll('.workflow-tab').forEach(btn => {
+    btn.addEventListener('click', () => switchWorkflowTab(btn.dataset.tab));
+  });
+
   // ========== Carregar HTML no visualizador ==========
   function loadHtmlInViewer(html) {
     currentSiteHtml = html;
@@ -340,11 +370,12 @@
     doc.write(html);
     doc.close();
     els.htmlEditor.value = html;
+    els.htmlInput.value = html;
     els.viewerPlaceholder.hidden = true;
-    els.manualFallback.hidden = true;
     els.viewerWrapper.hidden = false;
-    const editBtns = document.querySelector('.edit-mode-btns');
-    if (editBtns) editBtns.style.visibility = 'visible';
+    els.previewContainer.hidden = false;
+    els.viewModeCode.hidden = true;
+    switchWorkflowTab('preview');
   }
 
   function applyCodeToScreen() {
@@ -355,83 +386,96 @@
       doc.open();
       doc.write(html);
       doc.close();
-      switchEditMode('screen');
+      els.viewerPlaceholder.hidden = true;
+      els.viewerWrapper.hidden = false;
+      els.previewContainer.hidden = false;
+      els.viewModeCode.hidden = true;
       showToast('Alterações aplicadas!');
     }
   }
 
-  function switchEditMode(mode) {
-    const isCode = mode === 'code';
-    if (!isCode && els.viewModeCode && !els.viewModeCode.hidden) {
-      const edited = els.htmlEditor?.value?.trim();
-      if (edited) {
-        currentSiteHtml = edited;
-        const doc = els.siteViewer.contentDocument || els.siteViewer.contentWindow.document;
-        doc.open();
-        doc.write(edited);
-        doc.close();
-      }
-    }
-    els.viewModeScreen.hidden = isCode;
-    els.viewModeCode.hidden = !isCode;
-    els.btnViewScreen.classList.toggle('active', !isCode);
-    els.btnViewCode.classList.toggle('active', isCode);
-    if (isCode) {
-      els.htmlEditor.value = currentSiteHtml;
+  function openCodeEditor() {
+    const html = currentSiteHtml || els.htmlInput.value.trim();
+    if (html) {
+      currentSiteHtml = html;
+      els.viewerPlaceholder.hidden = true;
+      els.viewerWrapper.hidden = true;
+      els.previewContainer.hidden = true;
+      els.viewModeCode.hidden = false;
+      els.htmlEditor.value = html;
       els.htmlEditor.focus();
+      switchWorkflowTab('preview');
+    } else {
+      showToast('Cole o HTML no Compilador primeiro.');
     }
   }
 
-  els.btnViewScreen.addEventListener('click', () => switchEditMode('screen'));
-  els.btnViewCode.addEventListener('click', () => switchEditMode('code'));
-  els.btnEditCode?.addEventListener('click', () => switchEditMode('code'));
+  els.btnEditCode?.addEventListener('click', openCodeEditor);
+  document.getElementById('btnEditFromPreview')?.addEventListener('click', openCodeEditor);
+  els.btnDownload?.addEventListener('click', downloadSingleFile);
+  document.getElementById('btnDownloadFromPreview')?.addEventListener('click', downloadSingleFile);
   els.btnApplyCode.addEventListener('click', applyCodeToScreen);
 
-  // ========== Submit - Gerar site ==========
+  // ========== Submit - Gerar prompt (e opcionalmente via IA) ==========
   els.siteForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const apiKey = document.getElementById('apiKey').value.trim();
-    const aiSelect = document.getElementById('aiSelect').value;
-
     const prompt = buildPrompt();
-    els.btnGenerate.disabled = true;
-    showToast('Gerando site...');
+    els.promptOutput.value = prompt;
+    switchWorkflowTab('prompt');
+    showToast('Prompt gerado! Copie e use na IA.');
 
-    const tryApi = async () => {
-      if (aiSelect === 'openai') return callOpenAI(apiKey, prompt);
-      if (aiSelect === 'gemini') return callGemini(apiKey, prompt);
-      if (aiSelect === 'claude') return callClaude(apiKey, prompt);
-      throw new Error('IA não suportada');
-    };
+    const apiKey = document.getElementById('apiKey')?.value?.trim();
+    const aiSelect = document.getElementById('aiSelect')?.value;
 
-    try {
-      if (!apiKey) {
-        throw new Error('Informe a API Key da IA selecionada');
+    if (apiKey && aiSelect) {
+      els.btnGenerate.disabled = true;
+      showToast('Gerando site...');
+
+      const tryApi = async () => {
+        if (aiSelect === 'openai') return callOpenAI(apiKey, prompt);
+        if (aiSelect === 'gemini') return callGemini(apiKey, prompt);
+        if (aiSelect === 'claude') return callClaude(apiKey, prompt);
+        throw new Error('IA não suportada');
+      };
+
+      try {
+        const raw = await tryApi();
+        const html = extractHtml(raw);
+        if (html) {
+          loadHtmlInViewer(html);
+          showToast('Site gerado!');
+        } else {
+          showToast('Resposta vazia. Cole o HTML no Compilador.');
+          els.htmlInput.value = raw || '';
+          switchWorkflowTab('compiler');
+        }
+      } catch (err) {
+        showToast(err.message || 'Erro na API. Cole o HTML no Compilador.');
+        switchWorkflowTab('compiler');
+      } finally {
+        els.btnGenerate.disabled = false;
       }
-      const raw = await tryApi();
-      const html = extractHtml(raw);
-      if (!html) throw new Error('Resposta vazia ou inválida da IA');
-      loadHtmlInViewer(html);
-      showToast('Site gerado!');
-    } catch (err) {
-      showToast(err.message || 'Erro ao gerar. Tente o modo manual.');
-      els.manualFallback.hidden = false;
-      els.manualFallbackMsg.textContent = err.message || 'Use o modo manual abaixo.';
-      els.promptOutput.value = prompt;
-      els.htmlInput.value = '';
-    } finally {
-      els.btnGenerate.disabled = false;
     }
   });
 
-  // ========== Modo manual ==========
-  els.btnPreview.addEventListener('click', () => {
+  // ========== Copiar prompt ==========
+  els.btnCopyPrompt?.addEventListener('click', () => {
+    els.promptOutput.select();
+    navigator.clipboard.writeText(els.promptOutput.value).then(() => {
+      showToast('Prompt copiado!');
+    }).catch(() => showToast('Erro ao copiar'));
+  });
+
+  // ========== Compilador ==========
+  els.btnCompile?.addEventListener('click', () => {
     const html = els.htmlInput.value.trim();
     if (!html) {
       showToast('Cole o HTML no campo acima.');
       return;
     }
-    loadHtmlInViewer(html);
+    const extracted = extractHtml(html);
+    loadHtmlInViewer(extracted || html);
+    showToast('HTML compilado!');
   });
 
   // ========== Modos de visualização ==========

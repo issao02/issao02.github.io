@@ -454,6 +454,146 @@ input[type="checkbox"]:checked + .checkmark::after {
   flex-shrink: 0;
 }
 
+/* Workflow tabs */
+.workflow-tabs {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.workflow-tab {
+  padding: 0.5rem 1rem;
+  background: var(--bg-input);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.workflow-tab:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+.workflow-tab.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+.workflow-panels {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.workflow-panel {
+  display: none;
+  flex: 1;
+  flex-direction: column;
+  overflow: auto;
+  padding: 1rem;
+}
+
+.workflow-panel.active {
+  display: flex;
+}
+
+.prompt-section,
+.compiler-section {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.prompt-header,
+.compiler-section h3 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+  font-size: 1rem;
+}
+
+.btn-copy {
+  padding: 0.4rem 0.9rem;
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-copy:hover {
+  background: var(--accent-hover);
+}
+
+#promptOutput,
+#htmlInput {
+  flex: 1;
+  min-height: 200px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.8rem;
+  resize: vertical;
+}
+
+.prompt-hint,
+.compiler-hint {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-top: 0.5rem;
+}
+
+.compiler-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+}
+
+.btn-compile {
+  padding: 0.6rem 1.2rem;
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-compile:hover {
+  background: var(--accent-hover);
+}
+
+.btn-compile-secondary {
+  padding: 0.6rem 1rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-compile-secondary:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.ia-optional details summary {
+  cursor: pointer;
+  color: var(--accent);
+  font-size: 0.9rem;
+}
+
 .view-mode-btns {
   display: flex;
   gap: 0.25rem;
@@ -521,18 +661,15 @@ input[type="checkbox"]:checked + .checkmark::after {
   color: white;
 }
 
-.view-mode-code,
-.view-mode-screen {
+.view-mode-code {
   width: 100%;
-  height: 100%;
   flex: 1;
   min-height: 0;
   display: flex;
   flex-direction: column;
 }
 
-.view-mode-code[hidden],
-.view-mode-screen[hidden] {
+.view-mode-code[hidden] {
   display: none !important;
 }
 
@@ -571,32 +708,27 @@ input[type="checkbox"]:checked + .checkmark::after {
   background: var(--accent-hover);
 }
 
-.viewer-action-btn {
-  position: absolute;
-  bottom: 1rem;
-  right: 1rem;
-  padding: 0.6rem 1rem;
-  background: var(--accent);
-  border: none;
-  border-radius: 8px;
-  color: white;
-  font-size: 0.9rem;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
-  transition: background 0.2s, transform 0.2s;
-  z-index: 10;
-}
-
-.viewer-action-btn:hover {
-  background: var(--accent-hover);
-  transform: translateY(-1px);
-}
-
-.view-mode-screen {
-  position: relative;
-}
-
 /* Container do preview */
+#panelPreview {
+  padding: 0;
+}
+
+#panelPreview .preview-container,
+#panelPreview .view-mode-code {
+  flex: 1;
+  min-height: 0;
+}
+
+#panelPreview .view-mode-code {
+  display: flex;
+  flex-direction: column;
+  padding: 1rem;
+}
+
+#panelPreview .view-mode-code[hidden] {
+  display: none !important;
+}
+
 .preview-container {
   flex: 1;
   display: flex;
@@ -747,6 +879,7 @@ input[type="checkbox"]:checked + .checkmark::after {
 
 /* Iframe dentro da tela */
 .viewer-wrapper {
+  position: relative;
   width: 100%;
   height: 100%;
   flex: 1;
@@ -771,6 +904,55 @@ input[type="checkbox"]:checked + .checkmark::after {
 
 .preview-full #siteViewer {
   min-height: calc(100vh - 80px);
+}
+
+.viewer-action-btn {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  padding: 0.6rem 1rem;
+  background: var(--accent);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 0.9rem;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(124, 58, 237, 0.4);
+  transition: background 0.2s, transform 0.2s;
+  z-index: 10;
+}
+
+.viewer-action-btn:hover {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+.viewer-actions {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  display: flex;
+  gap: 0.5rem;
+  z-index: 10;
+}
+
+.viewer-actions .viewer-action-btn {
+  position: static;
+}
+
+.btn-download {
+  padding: 0.6rem 1rem;
+  background: var(--success);
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.btn-download:hover {
+  background: #16a34a;
 }
 
 /* Modo manual (fallback) */

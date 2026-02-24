@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gerador de Site | Crie seu site com IA</title>
+  <title>Gerador de Prompt + Compilador de HTML</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -14,8 +14,8 @@
     <!-- Painel do formulário -->
     <aside class="form-panel">
       <header class="form-header">
-        <h1>Gerador de Site</h1>
-        <p class="form-subtitle">Preencha e gere seu site com IA</p>
+        <h1>Gerador de Prompt</h1>
+        <p class="form-subtitle">Preencha o formulário e gere o prompt para IA</p>
       </header>
 
       <form id="siteForm" class="form-content">
@@ -175,19 +175,9 @@
           </select>
         </section>
 
-        <!-- IA e Estilo -->
+        <!-- Estilo -->
         <section class="form-section">
-          <h2>IA e Estilo</h2>
-          <label>Gerar com</label>
-          <select id="aiSelect">
-            <option value="openai">ChatGPT (OpenAI)</option>
-            <option value="gemini">Gemini (Google)</option>
-            <option value="claude">Claude (Anthropic)</option>
-          </select>
-          <label>API Key</label>
-          <input type="password" id="apiKey" placeholder="sk-... ou sua chave" autocomplete="off">
-          <p class="input-hint">Chaves em: OpenAI, Google AI Studio, Anthropic</p>
-          <label>Estilo visual</label>
+          <h2>Estilo visual</h2>
           <select id="styleSelect">
             <option value="classic">Clássico</option>
             <option value="modern">Moderno</option>
@@ -202,6 +192,22 @@
           </select>
         </section>
 
+        <!-- IA (opcional) -->
+        <section class="form-section ia-optional">
+          <details>
+            <summary>Gerar direto com IA (opcional)</summary>
+            <label>Gerar com</label>
+            <select id="aiSelect">
+              <option value="openai">ChatGPT (OpenAI)</option>
+              <option value="gemini">Gemini (Google)</option>
+              <option value="claude">Claude (Anthropic)</option>
+            </select>
+            <label>API Key</label>
+            <input type="password" id="apiKey" placeholder="sk-... ou sua chave" autocomplete="off">
+            <p class="input-hint">Chaves em: OpenAI, Google AI Studio, Anthropic</p>
+          </details>
+        </section>
+
         <!-- Observações -->
         <section class="form-section">
           <label>Observações</label>
@@ -209,59 +215,81 @@
         </section>
 
         <button type="submit" class="btn-generate" id="btnGenerate">
-          Gerar site
+          Gerar prompt
         </button>
       </form>
     </aside>
 
-    <!-- Painel de preview -->
+    <!-- Painel: Prompt + Compilador -->
     <main class="preview-panel">
       <div class="preview-toolbar">
+        <div class="workflow-tabs" role="tablist">
+          <button type="button" class="workflow-tab active" data-tab="prompt" role="tab">📝 Prompt</button>
+          <button type="button" class="workflow-tab" data-tab="compiler" role="tab">⚙️ Compilador</button>
+          <button type="button" class="workflow-tab" data-tab="preview" role="tab">🖥️ Preview</button>
+        </div>
+        <div class="toolbar-divider"></div>
         <div class="view-mode-btns" role="group" aria-label="Tamanho do preview">
           <button type="button" class="view-btn active" data-mode="mobile" title="Celular">📱</button>
           <button type="button" class="view-btn" data-mode="tablet" title="Tablet">📲</button>
           <button type="button" class="view-btn" data-mode="full" title="Full">🖥️</button>
         </div>
         <span class="view-mode-label" id="viewModeLabel">Celular</span>
-        <div class="toolbar-divider"></div>
-        <div class="edit-mode-btns" role="group" aria-label="Modo de visualização" style="visibility: hidden;">
-          <button type="button" class="edit-mode-btn active" id="btnViewScreen" data-mode="screen" title="Ver tela">🖥️ Tela</button>
-          <button type="button" class="edit-mode-btn" id="btnViewCode" data-mode="code" title="Editar código">📝 Código</button>
-        </div>
       </div>
 
-      <div class="preview-container preview-mobile" id="previewContainer">
-        <div class="preview-inner" id="previewInner">
-        <div class="viewer-placeholder" id="viewerPlaceholder">
-          <div class="viewer-placeholder-content">
-            <span class="viewer-placeholder-icon">🖥️</span>
-            <p>Preencha o formulário e clique em <strong>Gerar site</strong></p>
-            <p class="viewer-placeholder-hint">O site será gerado pela IA e exibido aqui</p>
+      <div class="workflow-panels">
+        <!-- Painel Prompt -->
+        <div class="workflow-panel active" id="panelPrompt" role="tabpanel">
+          <div class="prompt-section">
+            <div class="prompt-header">
+              <h3>Prompt gerado</h3>
+              <button type="button" class="btn-copy" id="btnCopyPrompt" title="Copiar prompt">📋 Copiar</button>
+            </div>
+            <textarea id="promptOutput" readonly placeholder="Clique em 'Gerar prompt' no formulário para gerar o prompt..."></textarea>
+            <p class="prompt-hint">Copie o prompt e cole no ChatGPT, Claude, Gemini ou outra IA para gerar o HTML.</p>
           </div>
         </div>
-        <div class="viewer-wrapper" id="viewerWrapper" hidden>
-          <div class="view-mode-screen" id="viewModeScreen">
-            <div class="device-frame" id="deviceFrame">
-              <div class="device-screen">
-                <iframe id="siteViewer" title="Preview do site"></iframe>
+
+        <!-- Painel Compilador -->
+        <div class="workflow-panel" id="panelCompiler" role="tabpanel">
+          <div class="compiler-section">
+            <h3>Compilador de HTML</h3>
+            <p class="compiler-hint">Cole o HTML retornado pela IA e clique em Compilar para visualizar.</p>
+            <textarea id="htmlInput" placeholder="Cole o HTML completo aqui (incluindo &lt;!DOCTYPE html&gt;)..."></textarea>
+            <div class="compiler-actions">
+              <button type="button" class="btn-compile" id="btnCompile">⚙️ Compilar e visualizar</button>
+              <button type="button" class="btn-compile-secondary" id="btnEditCode">📝 Editar código</button>
+              <button type="button" class="btn-download" id="btnDownload" title="Baixar como arquivo .html único">📥 Baixar .html</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Painel Preview -->
+        <div class="workflow-panel" id="panelPreview" role="tabpanel">
+          <div class="preview-container preview-mobile" id="previewContainer">
+            <div class="viewer-placeholder" id="viewerPlaceholder">
+              <div class="viewer-placeholder-content">
+                <span class="viewer-placeholder-icon">🖥️</span>
+                <p>Cole o HTML no <strong>Compilador</strong> e clique em Compilar</p>
+                <p class="viewer-placeholder-hint">O site será exibido aqui</p>
               </div>
             </div>
-            <button type="button" class="viewer-action-btn" id="btnEditCode" title="Editar código HTML">📝 Editar código</button>
+            <div class="viewer-wrapper" id="viewerWrapper" hidden>
+              <div class="device-frame" id="deviceFrame">
+                <div class="device-screen">
+                  <iframe id="siteViewer" title="Preview do site"></iframe>
+                </div>
+              </div>
+              <div class="viewer-actions">
+                <button type="button" class="viewer-action-btn" id="btnEditFromPreview" title="Editar código HTML">📝 Editar</button>
+                <button type="button" class="viewer-action-btn" id="btnDownloadFromPreview" title="Baixar como arquivo .html único">📥 Baixar .html</button>
+              </div>
+            </div>
           </div>
           <div class="view-mode-code" id="viewModeCode" hidden>
-            <textarea id="htmlEditor" placeholder="Edite o HTML aqui. Clique em 'Ver visualização' para aplicar as alterações." spellcheck="false"></textarea>
-            <button type="button" class="btn-apply-code" id="btnApplyCode">🖥️ Ver visualização</button>
+            <textarea id="htmlEditor" placeholder="Edite o HTML aqui. Clique em 'Aplicar' para visualizar." spellcheck="false"></textarea>
+            <button type="button" class="btn-apply-code" id="btnApplyCode">🖥️ Aplicar e visualizar</button>
           </div>
-        </div>
-        <div class="manual-fallback" id="manualFallback" hidden>
-          <p class="manual-fallback-msg" id="manualFallbackMsg"></p>
-          <details class="manual-details">
-            <summary>Modo manual (copiar prompt e colar HTML)</summary>
-            <textarea id="promptOutput" readonly placeholder="Prompt..."></textarea>
-            <textarea id="htmlInput" placeholder="Cole o HTML da IA aqui..."></textarea>
-            <button type="button" class="btn-preview" id="btnPreview">Carregar no visualizador</button>
-          </details>
-        </div>
         </div>
       </div>
     </main>
