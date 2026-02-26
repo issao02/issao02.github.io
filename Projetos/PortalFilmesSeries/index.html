@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Portal de Filmes e Séries</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0c0d10;
+      --surface: #16181d;
+      --surface-hover: #1e2128;
+      --accent: #e50914;
+      --accent-hover: #f40612;
+      --accent-soft: rgba(229, 9, 20, 0.15);
+      --text: #f5f5f7;
+      --text-muted: #8e8e93;
+      --border: #2c2e33;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* Grade de fundo sutil */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: 
+        linear-gradient(rgba(229, 9, 20, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(229, 9, 20, 0.03) 1px, transparent 1px);
+      background-size: 48px 48px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 1.5rem 3rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    header {
+      padding: 2rem 0 1.5rem;
+      text-align: center;
+    }
+
+    .logo {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(1.75rem, 4vw, 2.5rem);
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, var(--accent) 0%, #ff6b6b 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      margin-top: 0.5rem;
+      color: var(--text-muted);
+      font-size: 1rem;
+    }
+
+    /* Barra de filtros */
+    .filtros-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.25rem 1.5rem;
+      margin-bottom: 1.5rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: flex-end;
+    }
+
+    .filtro-grupo {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+
+    .filtro-grupo label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .filtro-grupo select {
+      padding: 0.55rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      background: var(--bg);
+      color: var(--text);
+      min-width: 140px;
+      cursor: pointer;
+    }
+
+    .filtro-grupo select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .filtro-grupo.ordenacao select { min-width: 180px; }
+
+    .contador {
+      margin-left: auto;
+      align-self: center;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+    }
+
+    .contador strong { color: var(--accent); font-weight: 600; }
+
+    .loading-msg {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-muted);
+    }
+
+    .loading-msg .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 0 auto 1rem;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .api-config {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.5rem;
+      margin-bottom: 1rem;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .api-config a { color: var(--accent); }
+
+    /* Grid de cards */
+    .grid-filmes {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .card:hover {
+      transform: translateY(-6px);
+      border-color: var(--accent);
+      box-shadow: 0 20px 40px -12px rgba(229, 9, 20, 0.25);
+    }
+
+    .card-poster {
+      aspect-ratio: 2/3;
+      background: var(--surface-hover);
+      overflow: hidden;
+    }
+
+    .card-poster img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: transform 0.4s ease;
+    }
+
+    .card:hover .card-poster img {
+      transform: scale(1.05);
+    }
+
+    .card-body {
+      padding: 1rem;
+    }
+
+    .card-tipo {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--accent);
+      margin-bottom: 0.35rem;
+    }
+
+    .card-titulo {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1rem;
+      font-weight: 600;
+      line-height: 1.3;
+      margin-bottom: 0.5rem;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .card-meta {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .card-nota {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      background: var(--accent-soft);
+      color: var(--accent);
+      padding: 0.2rem 0.5rem;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+
+    .card-streaming {
+      display: flex;
+      gap: 0.35rem;
+      margin-top: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .badge-stream {
+      font-size: 0.65rem;
+      padding: 0.2rem 0.45rem;
+      border-radius: 6px;
+      background: var(--surface-hover);
+      color: var(--text-muted);
+      text-transform: uppercase;
+      font-weight: 600;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.85);
+      z-index: 1000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+      overflow-y: auto;
+    }
+
+    .modal-overlay.ativo { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border-radius: 20px;
+      max-width: 560px;
+      width: 100%;
+      border: 1px solid var(--border);
+      overflow: hidden;
+    }
+
+    .modal-poster {
+      width: 100%;
+      aspect-ratio: 16/9;
+      object-fit: cover;
+      background: var(--surface-hover);
+    }
+
+    .modal-content {
+      padding: 1.5rem;
+    }
+
+    .modal-tipo {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--accent);
+      margin-bottom: 0.5rem;
+    }
+
+    .modal-titulo {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+
+    .modal-ano-pais {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+
+    .modal-nota {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      background: var(--accent-soft);
+      color: var(--accent);
+      padding: 0.35rem 0.75rem;
+      border-radius: 8px;
+      font-weight: 600;
+      margin-bottom: 1rem;
+    }
+
+    .modal-sinopse {
+      font-size: 0.95rem;
+      line-height: 1.6;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+
+    .modal-streaming {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .modal-streaming .badge-stream {
+      font-size: 0.75rem;
+      padding: 0.35rem 0.65rem;
+    }
+
+    .nenhum-resultado {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--text-muted);
+    }
+
+    .nenhum-resultado p {
+      font-size: 1.1rem;
+      margin-bottom: 0.5rem;
+    }
+
+    @media (max-width: 600px) {
+      .filtros-bar {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .contador { margin-left: 0; }
+
+      .grid-filmes {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 1rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1 class="logo">Portal de Filmes e Séries</h1>
+      <p class="subtitle">Descubra o que assistir com filtros e ordenação</p>
+    </header>
+
+    <div class="api-config" id="apiConfig">
+      <strong>Integração TMDB:</strong> Para milhares de filmes e séries em tempo real, adicione sua chave em <code>index.html</code> (variável <code>TMDB_API_KEY</code>). 
+      Gratuita em <a href="https://www.themoviedb.org/settings/api" target="_blank" rel="noopener">themoviedb.org/settings/api</a> — sem chave, usa catálogo local.
+    </div>
+
+    <div class="filtros-bar">
+      <div class="filtro-grupo">
+        <label>Gênero</label>
+        <select id="filtroGenero">
+          <option value="">Todos</option>
+          <option value="acao">Ação</option>
+          <option value="comedia">Comédia</option>
+          <option value="romance">Romance</option>
+          <option value="drama">Drama</option>
+          <option value="dorama">Dorama</option>
+          <option value="documentario">Documentário</option>
+        </select>
+      </div>
+      <div class="filtro-grupo">
+        <label>País/Região</label>
+        <select id="filtroPais">
+          <option value="">Todos</option>
+          <option value="US">EUA</option>
+          <option value="BR">Brasil</option>
+          <option value="KR">Coreia do Sul</option>
+          <option value="JP">Japão</option>
+          <option value="GB">Reino Unido</option>
+          <option value="ES">Espanha</option>
+          <option value="FR">França</option>
+        </select>
+      </div>
+      <div class="filtro-grupo">
+        <label>Tipo</label>
+        <select id="filtroTipo">
+          <option value="">Todos</option>
+          <option value="filme">Filme</option>
+          <option value="serie">Série</option>
+          <option value="documentario">Documentário</option>
+        </select>
+      </div>
+      <div class="filtro-grupo">
+        <label>Streaming</label>
+        <select id="filtroStreaming">
+          <option value="">Todos</option>
+          <option value="netflix">Netflix</option>
+          <option value="prime">Prime Video</option>
+          <option value="starplus">Star+</option>
+          <option value="disney">Disney+</option>
+          <option value="paramount">Paramount+</option>
+          <option value="max">Max</option>
+          <option value="globoplay">Globoplay</option>
+        </select>
+      </div>
+      <div class="filtro-grupo ordenacao">
+        <label>Ordenar por</label>
+        <select id="ordenacao">
+          <option value="nota-desc">Pontuação (maior)</option>
+          <option value="nota-asc">Pontuação (menor)</option>
+          <option value="ano-desc">Data lançamento (mais recente)</option>
+          <option value="ano-asc">Data lançamento (mais antigo)</option>
+        </select>
+      </div>
+      <div class="contador">
+        <span id="contador">0</span> título(s) encontrado(s)
+      </div>
+    </div>
+
+    <div class="loading-msg" id="loadingMsg" style="display: none;">
+      <div class="spinner"></div>
+      <p>Carregando do TMDB...</p>
+    </div>
+    <main class="grid-filmes" id="gridFilmes"></main>
+
+    <div class="nenhum-resultado" id="nenhumResultado" style="display: none;">
+      <p>Nenhum título encontrado com os filtros selecionados.</p>
+      <p style="font-size: 0.9rem;">Tente alterar os filtros.</p>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay">
+    <div class="modal" id="modal">
+      <img class="modal-poster" id="modalPoster" src="" alt="">
+      <div class="modal-content">
+        <div class="modal-tipo" id="modalTipo"></div>
+        <h2 class="modal-titulo" id="modalTitulo"></h2>
+        <div class="modal-ano-pais" id="modalAnoPais"></div>
+        <div class="modal-nota" id="modalNota"></div>
+        <p class="modal-sinopse" id="modalSinopse"></p>
+        <div class="modal-streaming" id="modalStreaming"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Coloque sua chave TMDB aqui (gratuita em themoviedb.org/settings/api)
+    const TMDB_API_KEY = '';
+
+    const CATALOGO_DATA = [{"id":1,"titulo":"Oppenheimer","tipo":"filme","genero":"drama","pais":"EUA","ano":2023,"nota":8.5,"sinopse":"A história do físico J. Robert Oppenheimer e seu papel no desenvolvimento da bomba atômica.","poster":"https://image.tmdb.org/t/p/w300/8Gxv8gS8UvPoy50EWMr5dxGDqrm.jpg","streaming":["prime","paramount"]},{"id":2,"titulo":"Breaking Bad","tipo":"serie","genero":"drama","pais":"EUA","ano":2008,"nota":9.5,"sinopse":"Professor de química se torna produtor de metanfetamina ao descobrir que tem câncer.","poster":"https://image.tmdb.org/t/p/w300/ggFHVNu6YYI5L9pCfOacjizRGt.jpg","streaming":["netflix"]},{"id":3,"titulo":"Parasita","tipo":"filme","genero":"drama","pais":"Coreia do Sul","ano":2019,"nota":8.6,"sinopse":"Família pobre infiltra-se na casa de uma família rica.","poster":"https://image.tmdb.org/t/p/w300/7IiTTgloJzvGI1TAYymCfbfl3vT.jpg","streaming":["netflix","prime"]},{"id":4,"titulo":"John Wick 4","tipo":"filme","genero":"acao","pais":"EUA","ano":2023,"nota":7.8,"sinopse":"John Wick enfrenta o Alto Comando para ganhar liberdade.","poster":"https://image.tmdb.org/t/p/w300/vZloFAK7NmvMGKE7VkF5UHaz0I.jpg","streaming":["starplus","prime"]},{"id":5,"titulo":"O Lobo de Wall Street","tipo":"filme","genero":"comedia","pais":"EUA","ano":2013,"nota":8.2,"sinopse":"A ascensão e queda do corretor Jordan Belfort.","poster":"https://image.tmdb.org/t/p/w300/34mymtyeKv4FnlYaqofCu6LvIJe.jpg","streaming":["starplus","paramount"]},{"id":6,"titulo":"Squid Game","tipo":"serie","genero":"drama","pais":"Coreia do Sul","ano":2021,"nota":8,"sinopse":"Centenas de pessoas endividadas competem em jogos mortais por um prêmio em dinheiro.","poster":"https://image.tmdb.org/t/p/w300/dDlEmu3EF0Pvfi1OVlEe8X8SqGV.jpg","streaming":["netflix"]},{"id":7,"titulo":"O Segredo dos Nossos Pais","tipo":"filme","genero":"romance","pais":"Japao","ano":2021,"nota":8.1,"sinopse":"Romance entre dois jovens que escondem segredos de família.","poster":"https://image.tmdb.org/t/p/w300/q719jXXEzOoYaps6babgKONOdYJ.jpg","streaming":["netflix"]},{"id":8,"titulo":"The Office","tipo":"serie","genero":"comedia","pais":"EUA","ano":2005,"nota":8.9,"sinopse":"Documentário fictício sobre o dia a dia de um escritório.","poster":"https://image.tmdb.org/t/p/w300/qWnJ5ZQy3MsjRtX6MRVWnOn2A7u.jpg","streaming":["prime","paramount"]},{"id":9,"titulo":"Velozes e Furiosos 10","tipo":"filme","genero":"acao","pais":"EUA","ano":2023,"nota":7,"sinopse":"Dom Toretto e sua família enfrentam o vilão mais letal de todos.","poster":"https://image.tmdb.org/t/p/w300/fiVW06jE7z9YnO4trhaMEdclSiC.jpg","streaming":["prime","starplus"]},{"id":10,"titulo":"Nosso Planeta","tipo":"documentario","genero":"documentario","pais":"Reino Unido","ano":2019,"nota":9.2,"sinopse":"Documentário sobre a diversidade da vida selvagem em diferentes habitats.","poster":"https://image.tmdb.org/t/p/w300/n6brEq2ObQ3nf2z2dTf2gR4jJh.jpg","streaming":["netflix"]},{"id":11,"titulo":"La Casa de Papel","tipo":"serie","genero":"acao","pais":"Espanha","ano":2017,"nota":8.3,"sinopse":"Um gênio planeja o maior assalto da história da Espanha.","poster":"https://image.tmdb.org/t/p/w300/reEMJA1uzscCbk4R4kv5RLffQpDQ.jpg","streaming":["netflix"]},{"id":12,"titulo":"Extraordinário","tipo":"filme","genero":"drama","pais":"EUA","ano":2017,"nota":8,"sinopse":"Menino com deformidade facial frequenta escola pela primeira vez.","poster":"https://image.tmdb.org/t/p/w300/ouYgAatYH4GzKf8TR8GM8Tar2Mq.jpg","streaming":["prime","starplus"]},{"id":13,"titulo":"Crash Landing on You","tipo":"serie","genero":"dorama","pais":"Coreia do Sul","ano":2019,"nota":8.7,"sinopse":"Herdeira sul-coreana cai de paraquedas na Coreia do Norte e conhece um capitão.","poster":"https://image.tmdb.org/t/p/w300/5ZSw8d3vX1T0G0FKRx6f4ETN4e7.jpg","streaming":["netflix"]},{"id":14,"titulo":"Guardians of the Galaxy Vol. 3","tipo":"filme","genero":"acao","pais":"EUA","ano":2023,"nota":8,"sinopse":"Os Guardiões protegem Rocket em uma missão perigosa.","poster":"https://image.tmdb.org/t/p/w300/r2J02Z2OpNTctfOSN1Ydgii51I3.jpg","streaming":["starplus","disney"]},{"id":15,"titulo":"Se Eu Fosse Você","tipo":"filme","genero":"comedia","pais":"Brasil","ano":2006,"nota":7.5,"sinopse":"Casal troca de corpo após uma discussão.","poster":"https://image.tmdb.org/t/p/w300/2lBOQK7lf6UDhWfml5oBeG6gHRp.jpg","streaming":["prime","globoplay"]},{"id":16,"titulo":"Black Mirror","tipo":"serie","genero":"drama","pais":"Reino Unido","ano":2011,"nota":8.7,"sinopse":"Antologia sobre o lado sombrio da tecnologia.","poster":"https://image.tmdb.org/t/p/w300/5Hv57F2uPPQ1n6wYvGnj2gL5H9K.jpg","streaming":["netflix"]},{"id":17,"titulo":"O Diário de Bridget Jones","tipo":"filme","genero":"romance","pais":"Reino Unido","ano":2001,"nota":6.9,"sinopse":"Bridget Jones decide mudar de vida e encontrar o amor.","poster":"https://image.tmdb.org/t/p/w300/9W0SKqj6W0SKqj6W0SKqj6W0SK.jpg","streaming":["prime","starplus"]},{"id":18,"titulo":"Marcha dos Pinguins","tipo":"documentario","genero":"documentario","pais":"Franca","ano":2005,"nota":7.7,"sinopse":"A jornada anual dos pinguins-imperador na Antártida.","poster":"https://image.tmdb.org/t/p/w300/4gKxQUe00c6WCBJj6W0SKqj6W0S.jpg","streaming":["disney","starplus"]},{"id":19,"titulo":"Duna: Parte Dois","tipo":"filme","genero":"acao","pais":"EUA","ano":2024,"nota":8.4,"sinopse":"Paul Atreides une-se aos Fremen para vingar sua família.","poster":"https://image.tmdb.org/t/p/w300/8b8R8l88Qje9dn9OE8PY05Nxl1X.jpg","streaming":["max","prime"]},{"id":20,"titulo":"Round 6","tipo":"serie","genero":"acao","pais":"Coreia do Sul","ano":2024,"nota":7.8,"sinopse":"Segunda temporada dos jogos mortais com prêmios em dinheiro.","poster":"https://image.tmdb.org/t/p/w300/dDlEmu3EF0Pvfi1OVlEe8X8SqGV.jpg","streaming":["netflix"]}];
+
+    let catalogo = [];
+
+    const STREAMING_LABELS = {
+      netflix: 'Netflix',
+      prime: 'Prime Video',
+      starplus: 'Star+',
+      disney: 'Disney+',
+      paramount: 'Paramount+',
+      max: 'Max',
+      globoplay: 'Globoplay'
+    };
+
+    const TIPO_LABELS = {
+      filme: 'Filme',
+      serie: 'Série',
+      documentario: 'Documentário'
+    };
+
+    const GENRE_TMDB = { acao: 28, comedia: 35, romance: 10749, drama: 18, dorama: 18, documentario: 99 };
+    const GENRE_TV_TMDB = { acao: 10759, comedia: 35, romance: 10749, drama: 18, dorama: 18, documentario: 99 };
+    const PROVIDER_TMDB = { netflix: 8, prime: 9, starplus: 531, disney: 337, paramount: 531, max: 384, globoplay: 207 };
+    const PAIS_LABELS = { US: 'EUA', BR: 'Brasil', KR: 'Coreia do Sul', JP: 'Japão', GB: 'Reino Unido', ES: 'Espanha', FR: 'França', DE: 'Alemanha', IT: 'Itália' };
+    const LANG_TO_PAIS = { en: 'US', ko: 'KR', ja: 'JP', es: 'ES', pt: 'BR', fr: 'FR', de: 'DE', it: 'IT' };
+
+    async function carregarDados() {
+      if (TMDB_API_KEY && TMDB_API_KEY.length > 10) {
+        document.getElementById('loadingMsg').style.display = 'block';
+        document.getElementById('gridFilmes').innerHTML = '';
+        try {
+          catalogo = await buscarTMDB();
+          document.getElementById('apiConfig').style.display = 'none';
+        } catch (e) {
+          console.warn('TMDB falhou, usando dados locais:', e);
+          catalogo = CATALOGO_DATA;
+        }
+        document.getElementById('loadingMsg').style.display = 'none';
+      } else {
+        catalogo = CATALOGO_DATA;
+      }
+      aplicarFiltros();
+    }
+
+    async function buscarTMDB() {
+      const genero = document.getElementById('filtroGenero').value;
+      const pais = document.getElementById('filtroPais').value;
+      const tipo = document.getElementById('filtroTipo').value;
+      const streaming = document.getElementById('filtroStreaming').value;
+      const ordenacao = document.getElementById('ordenacao').value;
+
+      const sortMapMovie = {
+        'nota-desc': 'vote_average.desc', 'nota-asc': 'vote_average.asc',
+        'ano-desc': 'primary_release_date.desc', 'ano-asc': 'primary_release_date.asc'
+      };
+      const sortMapTv = {
+        'nota-desc': 'vote_average.desc', 'nota-asc': 'vote_average.asc',
+        'ano-desc': 'first_air_date.desc', 'ano-asc': 'first_air_date.asc'
+      };
+      const region = pais || 'BR';
+      const genreId = genero ? (GENRE_TMDB[genero] || GENRE_TV_TMDB[genero]) : null;
+      const providerId = streaming ? PROVIDER_TMDB[streaming] : null;
+
+      const buildParams = (isTv) => {
+        const gid = (tipo === 'documentario' ? 99 : (genero ? (isTv ? GENRE_TV_TMDB[genero] : GENRE_TMDB[genero]) : null));
+        const sortBy = isTv ? (sortMapTv[ordenacao] || 'popularity.desc') : (sortMapMovie[ordenacao] || 'popularity.desc');
+        const p = { api_key: TMDB_API_KEY, language: 'pt-BR', sort_by: sortBy };
+        if (gid) p.with_genres = gid;
+        if (providerId) { p.with_watch_providers = providerId; p.watch_region = region; }
+        if (isTv && pais) p.with_origin_country = pais;
+        if (!isTv && pais) p.region = pais;
+        return new URLSearchParams(p).toString();
+      };
+
+      const items = [];
+      const tiposBuscar = tipo === 'filme' ? ['movie'] : tipo === 'serie' ? ['tv'] : ['movie', 'tv'];
+
+      for (const t of tiposBuscar) {
+        const res = await fetch(`https://api.themoviedb.org/3/discover/${t}?${buildParams(t === 'tv')}`);
+        if (!res.ok) throw new Error('TMDB API error');
+        const json = await res.json();
+        const list = (json.results || []).map(r => ({
+          id: r.id,
+          titulo: r.title || r.name,
+          tipo: t === 'movie' ? 'filme' : (r.genre_ids?.includes(99) ? 'documentario' : 'serie'),
+          genero: genero || 'drama',
+          pais: (r.origin_country?.[0] || LANG_TO_PAIS[r.original_language] || 'US'),
+          ano: parseInt((r.release_date || r.first_air_date || '').slice(0, 4)) || 0,
+          nota: Math.round((r.vote_average || 0) * 10) / 10,
+          sinopse: r.overview || '',
+          poster: r.poster_path ? `https://image.tmdb.org/t/p/w300${r.poster_path}` : '',
+          streaming: []
+        }));
+        items.push(...list);
+      }
+
+      const [campo, dir] = ordenacao.split('-');
+      items.sort((a, b) => {
+        const va = a[campo] ?? 0;
+        const vb = b[campo] ?? 0;
+        return dir === 'desc' ? (vb - va) : (va - vb);
+      });
+      return items.slice(0, 40);
+    }
+
+    function aplicarFiltros() {
+      const genero = document.getElementById('filtroGenero').value;
+      const pais = document.getElementById('filtroPais').value;
+      const tipo = document.getElementById('filtroTipo').value;
+      const streaming = document.getElementById('filtroStreaming').value;
+      const ordenacao = document.getElementById('ordenacao').value;
+
+      let filtrados = [...catalogo];
+
+      if (!TMDB_API_KEY || TMDB_API_KEY.length <= 10) {
+        const paisLocal = pais ? (PAIS_LABELS[pais] || pais) : null;
+        if (genero) filtrados = filtrados.filter(i => i.genero === genero);
+        if (paisLocal) filtrados = filtrados.filter(i => i.pais === paisLocal);
+        if (tipo) filtrados = filtrados.filter(i => i.tipo === tipo);
+        if (streaming) filtrados = filtrados.filter(i => i.streaming && i.streaming.includes(streaming));
+
+        const [campo, dir] = ordenacao.split('-');
+        filtrados.sort((a, b) => {
+          const va = a[campo] ?? 0;
+          const vb = b[campo] ?? 0;
+          return dir === 'desc' ? (vb - va) : (va - vb);
+        });
+      }
+
+      filtrados.forEach(i => { i.paisExibir = PAIS_LABELS[i.pais] || i.pais; });
+      renderizarGrid(filtrados);
+      document.getElementById('contador').textContent = filtrados.length;
+      document.getElementById('nenhumResultado').style.display = filtrados.length === 0 ? 'block' : 'none';
+    }
+
+    function renderizarGrid(itens) {
+      const grid = document.getElementById('gridFilmes');
+      grid.innerHTML = '';
+
+      itens.forEach(item => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="card-poster">
+            <img src="${item.poster}" alt="${item.titulo}" loading="lazy" onerror="this.src='https://via.placeholder.com/300x450/1a1a2e/8e8e93?text=Poster';this.onerror=null">
+          </div>
+          <div class="card-body">
+            <div class="card-tipo">${TIPO_LABELS[item.tipo] || item.tipo}</div>
+            <h3 class="card-titulo">${item.titulo}</h3>
+            <div class="card-meta">
+              <span class="card-nota">★ ${item.nota}</span>
+              <span>${item.ano}</span>
+              <span>•</span>
+              <span>${item.paisExibir || item.pais}</span>
+            </div>
+            ${item.streaming && item.streaming.length ? `
+              <div class="card-streaming">
+                ${item.streaming.map(s => `<span class="badge-stream">${STREAMING_LABELS[s] || s}</span>`).join('')}
+              </div>
+            ` : ''}
+          </div>
+        `;
+        card.addEventListener('click', () => abrirModal(item));
+        grid.appendChild(card);
+      });
+    }
+
+    function abrirModal(item) {
+      const modalImg = document.getElementById('modalPoster');
+      modalImg.src = item.poster;
+      modalImg.onerror = function() { this.src = 'https://via.placeholder.com/560x315/1a1a2e/8e8e93?text=Poster'; this.onerror = null; };
+      document.getElementById('modalTipo').textContent = TIPO_LABELS[item.tipo] || item.tipo;
+      document.getElementById('modalTitulo').textContent = item.titulo;
+      document.getElementById('modalAnoPais').textContent = `${item.ano} • ${item.paisExibir || item.pais}`;
+      document.getElementById('modalNota').innerHTML = `★ ${item.nota}`;
+      document.getElementById('modalSinopse').textContent = item.sinopse || '';
+      const streamDiv = document.getElementById('modalStreaming');
+      streamDiv.innerHTML = (item.streaming || []).map(s => 
+        `<span class="badge-stream">${STREAMING_LABELS[s] || s}</span>`
+      ).join('');
+      document.getElementById('modalOverlay').classList.add('ativo');
+    }
+
+    document.getElementById('modalOverlay').addEventListener('click', (e) => {
+      if (e.target.id === 'modalOverlay') {
+        document.getElementById('modalOverlay').classList.remove('ativo');
+      }
+    });
+
+    function onFiltroChange() {
+      if (TMDB_API_KEY && TMDB_API_KEY.length > 10) {
+        carregarDados();
+      } else {
+        aplicarFiltros();
+      }
+    }
+
+    document.getElementById('filtroGenero').addEventListener('change', onFiltroChange);
+    document.getElementById('filtroPais').addEventListener('change', onFiltroChange);
+    document.getElementById('filtroTipo').addEventListener('change', onFiltroChange);
+    document.getElementById('filtroStreaming').addEventListener('change', onFiltroChange);
+    document.getElementById('ordenacao').addEventListener('change', onFiltroChange);
+
+    carregarDados();
+  </script>
+</body>
+</html>
