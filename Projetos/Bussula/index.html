@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#0f0f12">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Bússola</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+  <style>
+    :root, [data-theme="dark"] {
+      --bg: #0f0f12;
+      --surface: #18181d;
+      --accent: #f59e0b;
+      --accent-glow: rgba(245, 158, 11, 0.35);
+      --north: #ef4444;
+      --text: #e4e4e7;
+      --text-muted: #a1a1aa;
+      --border: #27272a;
+    }
+
+    [data-theme="light"] {
+      --bg: #f8fafc;
+      --surface: #ffffff;
+      --accent: #d97706;
+      --accent-glow: rgba(217, 119, 6, 0.25);
+      --north: #dc2626;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+    }
+
+    [data-theme="light"] body::before {
+      background-image: 
+        radial-gradient(ellipse 80% 50% at 50% 0%, rgba(217, 119, 6, 0.06) 0%, transparent 50%),
+        linear-gradient(rgba(217, 119, 6, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(217, 119, 6, 0.04) 1px, transparent 1px);
+    }
+
+    /* Fundo bússola branco (quando tema escuro) */
+    .compass-face.fundo-branco {
+      background: #ffffff;
+      border-color: #e2e8f0;
+      box-shadow: 
+        0 0 0 1px rgba(0,0,0,0.06),
+        inset 0 0 40px rgba(0,0,0,0.03),
+        0 12px 40px rgba(0,0,0,0.12);
+    }
+
+    .compass-face.fundo-branco .compass-cardinal {
+      color: #64748b;
+      text-shadow: 0 1px 2px rgba(255,255,255,0.8);
+    }
+
+    .compass-face.fundo-branco .compass-cardinal.n { color: #dc2626; }
+
+    .compass-face.fundo-branco .compass-center {
+      border-color: #ffffff;
+    }
+
+    .compass-face.fundo-branco .degree-tick {
+      background: #e2e8f0;
+    }
+
+    .compass-face.fundo-branco .degree-tick.major {
+      background: #64748b;
+    }
+
+    /* Fundo bússola escuro (quando tema claro) */
+    .compass-face.fundo-escuro {
+      background: #18181d;
+      border-color: #27272a;
+      box-shadow: 
+        0 0 0 1px rgba(0,0,0,0.2),
+        inset 0 0 60px rgba(0,0,0,0.4),
+        0 20px 60px rgba(0,0,0,0.5);
+    }
+
+    .compass-face.fundo-escuro .compass-cardinal {
+      color: #a1a1aa;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+
+    .compass-face.fundo-escuro .compass-cardinal.n { color: #ef4444; }
+
+    .compass-wrapper.fundo-escuro .needle-north {
+      border-bottom-color: #ef4444;
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+    }
+
+    .compass-wrapper.fundo-escuro .needle-south {
+      border-top-color: #a1a1aa;
+      filter: drop-shadow(0 -2px 4px rgba(0,0,0,0.4));
+    }
+
+    .compass-face.fundo-escuro .compass-center {
+      background: #f59e0b;
+      border-color: #18181d;
+      box-shadow: 0 0 12px rgba(245, 158, 11, 0.35);
+    }
+
+    .compass-face.fundo-escuro .degree-tick {
+      background: #27272a;
+    }
+
+    .compass-face.fundo-escuro .degree-tick.major {
+      background: #a1a1aa;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: 
+        radial-gradient(ellipse 80% 50% at 50% 0%, rgba(245, 158, 11, 0.08) 0%, transparent 50%),
+        linear-gradient(rgba(245, 158, 11, 0.02) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(245, 158, 11, 0.02) 1px, transparent 1px);
+      background-size: 100% 100%, 40px 40px, 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 380px;
+    }
+
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 1.5rem;
+      color: var(--text);
+    }
+
+    .compass-wrapper {
+      position: relative;
+      width: 280px;
+      height: 280px;
+      margin-bottom: 1.5rem;
+    }
+
+    .compass-face {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 3px solid var(--border);
+      box-shadow: 
+        0 0 0 1px rgba(0,0,0,0.3),
+        inset 0 0 60px rgba(0,0,0,0.4),
+        0 20px 60px rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.08s ease-out;
+    }
+
+    .compass-cardinal {
+      position: absolute;
+      font-weight: 700;
+      font-size: 1rem;
+      color: var(--text-muted);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+    }
+
+    .compass-cardinal.n { top: 8px; left: 50%; transform: translateX(-50%); color: var(--north); font-size: 1.2rem; }
+    .compass-cardinal.s { bottom: 8px; left: 50%; transform: translateX(-50%); }
+    .compass-cardinal.e { right: 12px; top: 50%; transform: translateY(-50%); }
+    .compass-cardinal.w { left: 12px; top: 50%; transform: translateY(-50%); }
+
+    .compass-needle {
+      position: absolute;
+      width: 12px;
+      height: 100px;
+      left: 50%;
+      top: 50%;
+      margin-left: -6px;
+      margin-top: -50px;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .needle-north {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 0;
+      height: 0;
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-bottom: 50px solid var(--north);
+      filter: drop-shadow(0 2px 4px rgba(0,0,0,0.4));
+    }
+
+    .needle-south {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 0;
+      height: 0;
+      border-left: 6px solid transparent;
+      border-right: 6px solid transparent;
+      border-top: 50px solid var(--text-muted);
+      filter: drop-shadow(0 -2px 4px rgba(0,0,0,0.4));
+    }
+
+    .compass-center {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      left: 50%;
+      top: 50%;
+      margin-left: -12px;
+      margin-top: -12px;
+      background: var(--accent);
+      border-radius: 50%;
+      border: 3px solid var(--surface);
+      box-shadow: 0 0 12px var(--accent-glow);
+      z-index: 11;
+    }
+
+    .heading-display {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 2rem;
+      font-weight: 500;
+      color: var(--accent);
+      text-shadow: 0 0 20px var(--accent-glow);
+      margin-bottom: 0.25rem;
+    }
+
+    .heading-label {
+      font-size: 0.95rem;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+    }
+
+    .btn-start {
+      padding: 0.85rem 2rem;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--bg);
+      background: var(--accent);
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 20px var(--accent-glow);
+    }
+
+    .btn-start:hover {
+      background: #fbbf24;
+      transform: translateY(-2px);
+      box-shadow: 0 6px 28px var(--accent-glow);
+    }
+
+    .btn-start:active {
+      transform: translateY(0);
+    }
+
+    .status-msg {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      text-align: center;
+      min-height: 1.4em;
+    }
+
+    .status-msg.error { color: #f87171; }
+    .status-msg.success { color: #22c55e; }
+
+    .header-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 280px;
+      margin-bottom: 1.5rem;
+    }
+
+    .theme-toggle {
+      display: flex;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 4px;
+      gap: 2px;
+    }
+
+    .theme-btn {
+      padding: 0.4rem 0.75rem;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 500;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .theme-btn:hover { color: var(--text); }
+    .theme-btn.ativo {
+      background: var(--accent);
+      color: var(--bg);
+    }
+
+    .degrees-markers {
+      position: absolute;
+      inset: 0;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .degree-tick {
+      position: absolute;
+      width: 2px;
+      height: 8px;
+      background: var(--border);
+      left: 50%;
+      top: 4px;
+      margin-left: -1px;
+      transform-origin: center 136px;
+    }
+
+    .degree-tick.major {
+      height: 12px;
+      background: var(--text-muted);
+      top: 2px;
+      transform-origin: center 138px;
+    }
+
+    @media (max-width: 400px) {
+      .compass-wrapper { width: 260px; height: 260px; }
+      .compass-face { border-width: 2px; }
+      .degree-tick {
+        transform-origin: center 126px;
+      }
+      .degree-tick.major {
+        transform-origin: center 128px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header-row">
+      <h1>Bússola</h1>
+      <div class="theme-toggle">
+        <button type="button" class="theme-btn" data-theme="light" aria-label="Tema claro">Claro</button>
+        <button type="button" class="theme-btn ativo" data-theme="dark" aria-label="Tema escuro">Escuro</button>
+      </div>
+    </div>
+
+    <div class="compass-wrapper" id="compass-wrapper">
+      <div class="compass-face" id="compass-face">
+        <div class="degrees-markers" id="degrees-markers"></div>
+        <div class="compass-cardinal n">N</div>
+        <div class="compass-cardinal s">S</div>
+        <div class="compass-cardinal e">E</div>
+        <div class="compass-cardinal w">O</div>
+        <div class="compass-center"></div>
+      </div>
+      <div class="compass-needle" id="compass-needle">
+        <div class="needle-north"></div>
+        <div class="needle-south"></div>
+      </div>
+    </div>
+
+    <div class="heading-display" id="heading-display">—°</div>
+    <div class="heading-label" id="heading-label">Aguardando...</div>
+
+    <button class="btn-start" id="btn-start">Ativar Bússola</button>
+    <p class="status-msg" id="status-msg"></p>
+  </div>
+
+  <script>
+    const CARDINAIS = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSO', 'SO', 'OSO', 'O', 'ONO', 'NO', 'NNO'];
+    const CARDINAIS_ANG = 360 / CARDINAIS.length;
+
+    const face = document.getElementById('compass-face');
+    const compassWrapper = document.getElementById('compass-wrapper');
+    const headingDisplay = document.getElementById('heading-display');
+    const headingLabel = document.getElementById('heading-label');
+    const btnStart = document.getElementById('btn-start');
+    const statusMsg = document.getElementById('status-msg');
+
+    let heading = 0;
+    let smoothHeading = 0;
+    let isActive = false;
+
+    function criarMarcadoresGraus() {
+      const container = document.getElementById('degrees-markers');
+      for (let i = 0; i < 360; i += 5) {
+        const tick = document.createElement('div');
+        tick.className = 'degree-tick' + (i % 90 === 0 ? ' major' : '');
+        tick.style.transform = `rotate(${i}deg)`;
+        container.appendChild(tick);
+      }
+    }
+    criarMarcadoresGraus();
+
+    function grauParaCardinal(deg) {
+      const idx = Math.round(((deg % 360) + 360) % 360 / CARDINAIS_ANG) % CARDINAIS.length;
+      return CARDINAIS[idx];
+    }
+
+    function normalizarAngulo(a) {
+      a = a % 360;
+      if (a < 0) a += 360;
+      return a;
+    }
+
+    function atualizarUI() {
+      const deg = Math.round(smoothHeading);
+      headingDisplay.textContent = deg + '°';
+      headingLabel.textContent = grauParaCardinal(deg);
+      face.style.transform = `rotate(${-smoothHeading}deg)`;
+    }
+
+    function lerp(a, b, t) {
+      let diff = b - a;
+      if (diff > 180) diff -= 360;
+      if (diff < -180) diff += 360;
+      return a + diff * t;
+    }
+
+    function onOrientation(e) {
+      if (!isActive) return;
+      const raw = e.webkitCompassHeading ?? (e.alpha !== null ? (360 - (e.alpha || 0)) : null);
+      if (raw !== null && raw !== undefined) {
+        heading = normalizarAngulo(raw);
+        smoothHeading = lerp(smoothHeading, heading, 0.15);
+        atualizarUI();
+      }
+    }
+
+    function iniciarBussula() {
+      if (!window.DeviceOrientationEvent) {
+        statusMsg.textContent = 'Bússola não suportada neste dispositivo.';
+        statusMsg.classList.add('error');
+        return;
+      }
+
+      if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+        statusMsg.textContent = 'Solicitando permissão...';
+        statusMsg.classList.remove('error', 'success');
+        DeviceOrientationEvent.requestPermission()
+          .then(permission => {
+            if (permission === 'granted') {
+              isActive = true;
+              btnStart.style.display = 'none';
+              statusMsg.textContent = 'Bússola ativa. Aponte o dispositivo para o Norte.';
+              statusMsg.classList.add('success');
+              window.addEventListener('deviceorientation', onOrientation, { passive: true });
+            } else {
+              statusMsg.textContent = 'Permissão negada. Ative nas configurações.';
+              statusMsg.classList.add('error');
+            }
+          })
+          .catch(err => {
+            statusMsg.textContent = 'Erro: ' + (err.message || 'Permissão necessária');
+            statusMsg.classList.add('error');
+          });
+      } else {
+        isActive = true;
+        btnStart.style.display = 'none';
+        statusMsg.textContent = 'Bússola ativa. Aponte o dispositivo para o Norte.';
+        statusMsg.classList.add('success');
+        window.addEventListener('deviceorientation', onOrientation, { passive: true });
+      }
+    }
+
+    btnStart.addEventListener('click', iniciarBussula);
+
+    function aplicarFundoBussula(theme) {
+      if (theme === 'light') {
+        face.classList.add('fundo-escuro');
+        face.classList.remove('fundo-branco');
+        compassWrapper.classList.add('fundo-escuro');
+        compassWrapper.classList.remove('fundo-branco');
+      } else {
+        face.classList.add('fundo-branco');
+        face.classList.remove('fundo-escuro');
+        compassWrapper.classList.add('fundo-branco');
+        compassWrapper.classList.remove('fundo-escuro');
+      }
+    }
+
+    (function initTheme() {
+      const saved = localStorage.getItem('bussula-theme') || 'dark';
+      document.documentElement.setAttribute('data-theme', saved);
+      aplicarFundoBussula(saved);
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.content = saved === 'light' ? '#f8fafc' : '#0f0f12';
+      document.querySelectorAll('.theme-btn').forEach(btn => {
+        btn.classList.toggle('ativo', btn.dataset.theme === saved);
+      });
+    })();
+
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const theme = btn.dataset.theme;
+        document.documentElement.setAttribute('data-theme', theme);
+        localStorage.setItem('bussula-theme', theme);
+        aplicarFundoBussula(theme);
+        const meta = document.querySelector('meta[name="theme-color"]');
+        if (meta) meta.content = theme === 'light' ? '#f8fafc' : '#0f0f12';
+        document.querySelectorAll('.theme-btn').forEach(b => b.classList.remove('ativo'));
+        btn.classList.add('ativo');
+      });
+    });
+
+    if (location.protocol !== 'https:' && !location.hostname.includes('localhost')) {
+      statusMsg.textContent = 'Use HTTPS para a bússola funcionar.';
+      statusMsg.classList.add('error');
+    }
+  </script>
+</body>
+</html>

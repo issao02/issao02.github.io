@@ -1,0 +1,893 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistema de Dashboards | Carregue Excel e Crie Visualizações</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --bg: #0d0f14;
+      --surface: #161a22;
+      --surface-hover: #1e232d;
+      --accent: #3b82f6;
+      --accent-hover: #60a5fa;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --border: #2d3340;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    header {
+      background: linear-gradient(135deg, var(--surface) 0%, #0f1218 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 0.6rem 1.25rem;
+      flex-shrink: 0;
+    }
+
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .logo-icon {
+      width: 36px;
+      height: 36px;
+      background: linear-gradient(135deg, var(--accent), #6366f1);
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+    }
+
+    .logo h1 {
+      font-size: 1.2rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+    }
+
+    .logo span {
+      color: var(--text-muted);
+      font-weight: 400;
+      font-size: 0.9rem;
+    }
+
+    .upload-zone {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      border: none;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--surface-hover);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--accent);
+      background: rgba(59, 130, 246, 0.1);
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .main-content {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      min-height: 0;
+    }
+
+    .sidebar {
+      width: 280px;
+      background: var(--surface);
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      flex-shrink: 0;
+    }
+
+    .sidebar-section {
+      padding: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .sidebar-section h3 {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+    }
+
+    .field-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .field-chip {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.5rem 0.75rem;
+      background: var(--surface-hover);
+      border-radius: 8px;
+      font-size: 0.9rem;
+      cursor: grab;
+      border: 1px dashed var(--border);
+      transition: all 0.2s;
+    }
+
+    .field-chip:hover {
+      border-color: var(--accent);
+      background: rgba(59, 130, 246, 0.08);
+    }
+
+    .field-chip.dragging {
+      opacity: 0.5;
+    }
+
+    .field-chip.in-use {
+      border-style: solid;
+      border-color: var(--accent);
+      background: rgba(59, 130, 246, 0.15);
+    }
+
+    .field-chip .remove-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      padding: 0.2rem;
+      font-size: 1rem;
+      line-height: 1;
+      opacity: 0.7;
+    }
+
+    .field-chip .remove-btn:hover {
+      color: #ef4444;
+      opacity: 1;
+    }
+
+    .drop-zone {
+      min-height: 44px;
+      padding: 0.5rem;
+      background: rgba(59, 130, 246, 0.05);
+      border: 2px dashed var(--border);
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+      transition: all 0.2s;
+    }
+
+    .drop-zone.drag-over {
+      border-color: var(--accent);
+      background: rgba(59, 130, 246, 0.1);
+    }
+
+    .drop-zone .placeholder {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      text-align: center;
+      padding: 0.5rem;
+    }
+
+    .drop-zone .assigned {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .assigned-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.35rem 0.6rem;
+      background: var(--accent);
+      color: white;
+      border-radius: 6px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+
+    .assigned-chip .remove {
+      cursor: pointer;
+      opacity: 0.9;
+    }
+
+    .assigned-chip .remove:hover {
+      opacity: 1;
+    }
+
+    select {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      background: var(--surface-hover);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+
+    .chart-area {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      padding: 1rem;
+    }
+
+    .chart-toolbar {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .chart-container {
+      flex: 1;
+      min-height: 300px;
+      background: var(--surface);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      padding: 1.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .chart-container canvas {
+      max-width: 100%;
+      max-height: 100%;
+    }
+
+    .empty-state {
+      text-align: center;
+      color: var(--text-muted);
+      padding: 3rem 2rem;
+    }
+
+    .empty-state .icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      opacity: 0.5;
+    }
+
+    .empty-state h3 {
+      font-size: 1.25rem;
+      color: var(--text);
+      margin-bottom: 0.5rem;
+    }
+
+    .empty-state p {
+      font-size: 0.95rem;
+      max-width: 400px;
+      margin: 0 auto;
+    }
+
+    .data-table-panel {
+      max-height: 250px;
+      overflow: auto;
+      margin-top: 1rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    .data-table-panel table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85rem;
+    }
+
+    .data-table-panel th,
+    .data-table-panel td {
+      padding: 0.5rem 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .data-table-panel th {
+      background: var(--surface-hover);
+      font-weight: 600;
+      color: var(--text-muted);
+      position: sticky;
+      top: 0;
+    }
+
+    .data-table-panel tr:hover td {
+      background: rgba(59, 130, 246, 0.05);
+    }
+
+    .measure-select {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.4rem;
+    }
+
+    .measure-select select {
+      flex: 1;
+      margin-bottom: 0;
+    }
+
+    .measure-select .agg-select {
+      width: 90px;
+      flex-shrink: 0;
+    }
+
+    .no-data-msg {
+      padding: 2rem;
+      text-align: center;
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 900px) {
+      .sidebar {
+        width: 240px;
+      }
+
+      .main-content {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-inner">
+      <div class="logo">
+        <div class="logo-icon">📊</div>
+        <div>
+          <h1>Sistema de Dashboards</h1>
+          <span>Carregue Excel e crie visualizações como Power BI</span>
+        </div>
+      </div>
+      <div class="upload-zone">
+        <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+        <button class="btn btn-primary" onclick="document.getElementById('fileInput').click()">
+          Carregar Excel
+        </button>
+        <button class="btn btn-secondary" id="btnReset" disabled onclick="resetAll()">Limpar tudo</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="main-content">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <h3>Colunas disponíveis</h3>
+        <div class="field-list" id="fieldList">
+          <div class="no-data-msg">Carregue um arquivo Excel</div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>Eixo X (categorias)</h3>
+        <div class="drop-zone" id="dropX" data-role="x">
+          <div class="placeholder">Arraste uma coluna aqui</div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>Valores (medidas)</h3>
+        <div class="drop-zone" id="dropValues" data-role="values">
+          <div class="placeholder">Arraste colunas numéricas</div>
+        </div>
+        <div id="measureConfigs"></div>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>Tipo de gráfico</h3>
+        <select id="chartType">
+          <option value="bar">Barras</option>
+          <option value="line">Linhas</option>
+          <option value="pie">Pizza</option>
+          <option value="doughnut">Rosquinha</option>
+          <option value="radar">Radar</option>
+        </select>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>Filtros</h3>
+        <div id="filterList">
+          <div class="placeholder" style="font-size: 0.85rem; color: var(--text-muted);">Selecione colunas para filtrar</div>
+        </div>
+      </div>
+
+      <div class="sidebar-section">
+        <h3>Prévia dos dados</h3>
+        <div class="data-table-panel" id="dataPreview">
+          <div class="no-data-msg">Nenhum dado carregado</div>
+        </div>
+      </div>
+    </aside>
+
+    <main class="chart-area">
+      <div class="chart-toolbar">
+        <button class="btn btn-secondary" id="btnExportChart" disabled onclick="exportChart()">Exportar gráfico (PNG)</button>
+      </div>
+      <div class="chart-container">
+        <div class="empty-state" id="emptyState">
+          <div class="icon">📈</div>
+          <h3>Bem-vindo ao Sistema de Dashboards</h3>
+          <p>Carregue um arquivo Excel (.xlsx, .xls ou .csv) e arraste as colunas para os campos Eixo X e Valores para criar seus gráficos.</p>
+        </div>
+        <canvas id="chartCanvas" style="display: none;"></canvas>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    let rawData = [];
+    let columns = [];
+    let chartInstance = null;
+    const xField = { name: null };
+    const valueFields = [];
+    const filters = {};
+
+    const fileInput = document.getElementById('fileInput');
+    fileInput.addEventListener('change', handleFileSelect);
+
+    function handleFileSelect(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const data = new Uint8Array(ev.target.result);
+          const workbook = XLSX.read(data, { type: 'array' });
+          const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+          rawData = XLSX.utils.sheet_to_json(firstSheet, { header: 1, defval: '' });
+
+          if (rawData.length < 2) {
+            alert('O arquivo parece estar vazio ou sem cabeçalho.');
+            return;
+          }
+
+          const headers = rawData[0].map((h, i) => h && String(h).trim() ? String(h) : `Coluna_${i + 1}`);
+          rawData = rawData.slice(1).map(row => {
+            const obj = {};
+            headers.forEach((h, i) => obj[h] = row[i] !== undefined && row[i] !== null ? row[i] : '');
+            return obj;
+          });
+
+          columns = headers;
+          xField.name = null;
+          valueFields.length = 0;
+          Object.keys(filters).forEach(k => delete filters[k]);
+
+          renderFieldList();
+          renderDataPreview();
+          updateDropZones();
+          document.getElementById('btnReset').disabled = false;
+          updateChart();
+        } catch (err) {
+          alert('Erro ao ler o arquivo: ' + err.message);
+        }
+      };
+
+      if (file.name.endsWith('.csv')) {
+        const textReader = new FileReader();
+        textReader.onload = (ev) => {
+          const text = ev.target.result;
+          const lines = text.split(/\r?\n/).filter(l => l.trim());
+          if (lines.length < 2) {
+            alert('O arquivo CSV parece estar vazio.');
+            return;
+          }
+          const headers = parseCSVLine(lines[0]);
+          rawData = lines.slice(1).map(line => {
+            const vals = parseCSVLine(line);
+            const obj = {};
+            headers.forEach((h, i) => obj[h] = vals[i] !== undefined ? vals[i] : '');
+            return obj;
+          });
+          columns = headers;
+          xField.name = null;
+          valueFields.length = 0;
+          renderFieldList();
+          renderDataPreview();
+          updateDropZones();
+          document.getElementById('btnReset').disabled = false;
+          updateChart();
+        };
+        textReader.readAsText(file, 'UTF-8');
+        return;
+      }
+
+      reader.readAsArrayBuffer(file);
+    }
+
+    function parseCSVLine(line) {
+      const result = [];
+      let current = '';
+      let inQuotes = false;
+      for (let i = 0; i < line.length; i++) {
+        const c = line[i];
+        if (c === '"') {
+          inQuotes = !inQuotes;
+        } else if ((c === ',' && !inQuotes) || c === ';') {
+          result.push(current.trim());
+          current = '';
+        } else {
+          current += c;
+        }
+      }
+      result.push(current.trim());
+      return result;
+    }
+
+    function isNumeric(val) {
+      if (val === '' || val === null || val === undefined) return false;
+      const n = Number(String(val).replace(',', '.'));
+      return !isNaN(n);
+    }
+
+    function toNumber(val) {
+      if (val === '' || val === null || val === undefined) return 0;
+      return Number(String(val).replace(',', '.')) || 0;
+    }
+
+    function renderFieldList() {
+      const el = document.getElementById('fieldList');
+      if (columns.length === 0) {
+        el.innerHTML = '<div class="no-data-msg">Carregue um arquivo Excel</div>';
+        return;
+      }
+
+      el.innerHTML = columns.map(col => {
+        const inX = xField.name === col;
+        const inV = valueFields.some(v => v.name === col);
+        const inUse = inX || inV;
+        return `
+          <div class="field-chip ${inUse ? 'in-use' : ''}" draggable="true" data-field="${escapeAttr(col)}">
+            ${col}
+            ${inUse ? `<button class="remove-btn" onclick="removeField('${escapeAttr(col)}')">×</button>` : ''}
+          </div>
+        `;
+      }).join('');
+
+      el.querySelectorAll('.field-chip').forEach(chip => {
+        chip.addEventListener('dragstart', handleDragStart);
+        chip.addEventListener('dragend', handleDragEnd);
+      });
+    }
+
+    function escapeAttr(s) {
+      return String(s).replace(/'/g, "\\'").replace(/"/g, '&quot;');
+    }
+
+    function handleDragStart(e) {
+      e.dataTransfer.setData('text/plain', e.target.dataset.field);
+      e.target.classList.add('dragging');
+    }
+
+    function handleDragEnd(e) {
+      e.target.classList.remove('dragging');
+      document.querySelectorAll('.drop-zone').forEach(z => z.classList.remove('drag-over'));
+    }
+
+    function setupDropZones() {
+      ['dropX', 'dropValues'].forEach(id => {
+        const zone = document.getElementById(id);
+        zone.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          zone.classList.add('drag-over');
+        });
+        zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+        zone.addEventListener('drop', (e) => {
+          e.preventDefault();
+          zone.classList.remove('drag-over');
+          const field = e.dataTransfer.getData('text/plain');
+          if (!field || !columns.includes(field)) return;
+
+          if (id === 'dropX') {
+            xField.name = field;
+          } else {
+            if (!valueFields.some(v => v.name === field)) {
+              valueFields.push({ name: field, agg: 'sum' });
+            }
+          }
+          updateDropZones();
+          renderFieldList();
+          updateChart();
+        });
+      });
+    }
+
+    function updateDropZones() {
+      const xZone = document.getElementById('dropX');
+      xZone.innerHTML = xField.name
+        ? `<div class="assigned"><span class="assigned-chip">${xField.name} <span class="remove" onclick="clearX()">×</span></span></div>`
+        : '<div class="placeholder">Arraste uma coluna aqui</div>';
+
+      const vZone = document.getElementById('dropValues');
+      const mConfigs = document.getElementById('measureConfigs');
+      if (valueFields.length === 0) {
+        vZone.innerHTML = '<div class="placeholder">Arraste colunas numéricas</div>';
+        mConfigs.innerHTML = '';
+      } else {
+        vZone.innerHTML = valueFields.map((v, i) =>
+          `<span class="assigned-chip">${v.name} <span class="remove" onclick="removeValue(${i})">×</span></span>`
+        ).join('');
+        mConfigs.innerHTML = valueFields.map((v, i) => `
+          <div class="measure-select">
+            <select class="agg-select" onchange="setAgg(${i}, this.value)">
+              <option value="sum" ${v.agg === 'sum' ? 'selected' : ''}>Soma</option>
+              <option value="avg" ${v.agg === 'avg' ? 'selected' : ''}>Média</option>
+              <option value="count" ${v.agg === 'count' ? 'selected' : ''}>Contagem</option>
+              <option value="min" ${v.agg === 'min' ? 'selected' : ''}>Mínimo</option>
+              <option value="max" ${v.agg === 'max' ? 'selected' : ''}>Máximo</option>
+            </select>
+            <span style="font-size:0.85rem;color:var(--text-muted)">${v.name}</span>
+          </div>
+        `).join('');
+      }
+    }
+
+    function clearX() {
+      xField.name = null;
+      updateDropZones();
+      renderFieldList();
+      updateChart();
+    }
+
+    function removeValue(i) {
+      valueFields.splice(i, 1);
+      updateDropZones();
+      renderFieldList();
+      updateChart();
+    }
+
+    function removeField(field) {
+      if (xField.name === field) xField.name = null;
+      const idx = valueFields.findIndex(v => v.name === field);
+      if (idx >= 0) valueFields.splice(idx, 1);
+      updateDropZones();
+      renderFieldList();
+      updateChart();
+    }
+
+    function setAgg(i, agg) {
+      if (valueFields[i]) valueFields[i].agg = agg;
+      updateChart();
+    }
+
+    document.getElementById('chartType').addEventListener('change', updateChart);
+
+    function applyFilters(data) {
+      let result = data;
+      Object.keys(filters).forEach(col => {
+        const vals = filters[col];
+        if (vals && vals.length > 0) {
+          result = result.filter(row => vals.includes(String(row[col])));
+        }
+      });
+      return result;
+    }
+
+    function aggregateData() {
+      const filtered = applyFilters(rawData);
+      if (!xField.name || valueFields.length === 0) return null;
+
+      const groups = {};
+      filtered.forEach(row => {
+        const key = String(row[xField.name] ?? '');
+        if (!groups[key]) groups[key] = {};
+        valueFields.forEach(v => {
+          if (!groups[key][v.name]) groups[key][v.name] = [];
+          const val = row[v.name];
+          if (v.agg === 'count') {
+            groups[key][v.name].push(1);
+          } else {
+            groups[key][v.name].push(toNumber(val));
+          }
+        });
+      });
+
+      const labels = Object.keys(groups).sort((a, b) => {
+        const an = toNumber(a);
+        const bn = toNumber(b);
+        if (!isNaN(an) && !isNaN(bn)) return an - bn;
+        return String(a).localeCompare(String(b));
+      });
+
+      const datasets = valueFields.map((v, i) => {
+        const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+        const agg = v.agg;
+        const values = labels.map(lbl => {
+          const arr = groups[lbl]?.[v.name] || [];
+          if (agg === 'sum') return arr.reduce((a, b) => a + b, 0);
+          if (agg === 'avg') return arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+          if (agg === 'count') return arr.length;
+          if (agg === 'min') return arr.length ? Math.min(...arr) : 0;
+          if (agg === 'max') return arr.length ? Math.max(...arr) : 0;
+          return 0;
+        });
+        return {
+          label: `${v.name} (${agg})`,
+          data: values,
+          backgroundColor: colors[i % colors.length],
+          borderColor: colors[i % colors.length],
+          borderWidth: 1,
+          fill: false
+        };
+      });
+
+      return { labels, datasets };
+    }
+
+    function updateChart() {
+      const agg = aggregateData();
+      const emptyState = document.getElementById('emptyState');
+      const canvas = document.getElementById('chartCanvas');
+      const btnExport = document.getElementById('btnExportChart');
+
+      if (!agg || agg.labels.length === 0) {
+        if (chartInstance) {
+          chartInstance.destroy();
+          chartInstance = null;
+        }
+        emptyState.style.display = 'block';
+        canvas.style.display = 'none';
+        btnExport.disabled = true;
+        return;
+      }
+
+      emptyState.style.display = 'none';
+      canvas.style.display = 'block';
+      btnExport.disabled = false;
+
+      const type = document.getElementById('chartType').value;
+      const isPieLike = type === 'pie' || type === 'doughnut';
+
+      if (chartInstance) chartInstance.destroy();
+
+      const config = {
+        type,
+        data: {
+          labels: agg.labels,
+          datasets: isPieLike && agg.datasets[0]
+            ? [{
+                label: agg.datasets[0].label,
+                data: agg.datasets[0].data,
+                backgroundColor: agg.datasets[0].data.map((_, i) => {
+                  const c = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
+                  return c[i % c.length];
+                }),
+                borderWidth: 2,
+                borderColor: 'var(--surface)'
+              }]
+            : agg.datasets
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: true,
+          plugins: {
+            legend: { position: 'top' }
+          },
+          scales: isPieLike ? {} : {
+            y: { beginAtZero: true, grid: { color: 'var(--border)' }, ticks: { color: 'var(--text-muted)' } },
+            x: { grid: { color: 'var(--border)' }, ticks: { color: 'var(--text-muted)', maxRotation: 45 } }
+          }
+        }
+      };
+
+      Chart.defaults.color = 'var(--text-muted)';
+      Chart.defaults.borderColor = 'var(--border)';
+      chartInstance = new Chart(canvas, config);
+    }
+
+    function exportChart() {
+      if (!chartInstance) return;
+      const link = document.createElement('a');
+      link.download = 'grafico-dashboard.png';
+      link.href = chartInstance.toBase64Image('image/png');
+      link.click();
+    }
+
+    function renderDataPreview() {
+      const el = document.getElementById('dataPreview');
+      if (rawData.length === 0) {
+        el.innerHTML = '<div class="no-data-msg">Nenhum dado carregado</div>';
+        return;
+      }
+
+      const preview = rawData.slice(0, 100);
+      el.innerHTML = `
+        <table>
+          <thead><tr>${columns.map(c => `<th>${c}</th>`).join('')}</tr></thead>
+          <tbody>
+            ${preview.map(row => `<tr>${columns.map(c => `<td>${row[c] ?? ''}</td>`).join('')}</tr>`).join('')}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function resetAll() {
+      rawData = [];
+      columns = [];
+      xField.name = null;
+      valueFields.length = 0;
+      Object.keys(filters).forEach(k => delete filters[k]);
+      fileInput.value = '';
+
+      if (chartInstance) {
+        chartInstance.destroy();
+        chartInstance = null;
+      }
+
+      document.getElementById('emptyState').style.display = 'block';
+      document.getElementById('chartCanvas').style.display = 'none';
+      document.getElementById('btnExportChart').disabled = true;
+      document.getElementById('btnReset').disabled = true;
+
+      renderFieldList();
+      renderDataPreview();
+      updateDropZones();
+      document.getElementById('dataPreview').innerHTML = '<div class="no-data-msg">Nenhum dado carregado</div>';
+    }
+
+    setupDropZones();
+  </script>
+</body>
+</html>
