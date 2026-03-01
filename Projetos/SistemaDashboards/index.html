@@ -277,9 +277,94 @@
 
     .chart-toolbar {
       display: flex;
+      align-items: center;
       gap: 0.75rem;
       margin-bottom: 1rem;
       flex-wrap: wrap;
+    }
+
+    .view-toggle {
+      display: flex;
+      background: var(--surface-hover);
+      border-radius: 8px;
+      padding: 2px;
+      border: 1px solid var(--border);
+    }
+
+    .view-toggle .toggle-btn {
+      padding: 0.4rem 1rem;
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+
+    .view-toggle .toggle-btn.active {
+      background: var(--accent);
+      color: white;
+    }
+
+    .view-toggle .toggle-btn:hover:not(.active) {
+      color: var(--text);
+    }
+
+    .main-data-table {
+      flex: 1;
+      overflow: auto;
+      background: var(--surface);
+      border-radius: 12px;
+      border: 1px solid var(--border);
+    }
+
+    .main-data-table table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    .main-data-table th,
+    .main-data-table td {
+      padding: 0.6rem 1rem;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .main-data-table th {
+      background: var(--surface-hover);
+      font-weight: 600;
+      color: var(--text-muted);
+      position: sticky;
+      top: 0;
+      z-index: 1;
+    }
+
+    .main-data-table tr:hover td {
+      background: rgba(59, 130, 246, 0.05);
+    }
+
+    .filter-checkbox {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+
+    .filter-checkbox input {
+      accent-color: var(--accent);
+      cursor: pointer;
+    }
+
+    .filter-values {
+      max-height: 120px;
+      overflow-y: auto;
+      margin-top: 0.5rem;
     }
 
     .chart-container {
@@ -321,6 +406,28 @@
       font-size: 0.95rem;
       max-width: 400px;
       margin: 0 auto;
+    }
+
+    .chart-container.drop-over {
+      border-color: var(--accent);
+      background: rgba(59, 130, 246, 0.08);
+      box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+    }
+
+    .empty-state .drop-hint {
+      margin-top: 1rem;
+      padding: 1rem 1.5rem;
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      transition: all 0.2s;
+    }
+
+    .chart-container.drop-over .empty-state .drop-hint {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(59, 130, 246, 0.05);
     }
 
     .data-table-panel {
@@ -447,9 +554,11 @@
 
       <div class="sidebar-section">
         <h3>Filtros</h3>
-        <div id="filterList">
-          <div class="placeholder" style="font-size: 0.85rem; color: var(--text-muted);">Selecione colunas para filtrar</div>
-        </div>
+        <select id="filterColumn">
+          <option value="">Selecione uma coluna</option>
+        </select>
+        <div id="filterValues" class="filter-values"></div>
+        <div id="activeFilters"></div>
       </div>
 
       <div class="sidebar-section">
@@ -462,13 +571,19 @@
 
     <main class="chart-area">
       <div class="chart-toolbar">
-        <button class="btn btn-secondary" id="btnExportChart" disabled onclick="exportChart()">Exportar gráfico (PNG)</button>
+        <div class="view-toggle">
+          <button class="toggle-btn" id="btnViewData" onclick="setView('data')">Dados</button>
+          <button class="toggle-btn active" id="btnViewChart" onclick="setView('chart')">Gráfico</button>
+        </div>
+        <button class="btn btn-secondary" id="btnExportChart" disabled onclick="exportData()">Exportar</button>
       </div>
-      <div class="chart-container">
+      <div class="main-data-table" id="mainDataView" style="display: none;"></div>
+      <div class="chart-container" id="chartContainer">
         <div class="empty-state" id="emptyState">
           <div class="icon">📈</div>
           <h3>Bem-vindo ao Sistema de Dashboards</h3>
           <p>Carregue um arquivo Excel (.xlsx, .xls ou .csv) e arraste as colunas para os campos Eixo X e Valores para criar seus gráficos.</p>
+          <p class="drop-hint">ou arraste o arquivo aqui</p>
         </div>
         <canvas id="chartCanvas" style="display: none;"></canvas>
       </div>
@@ -479,17 +594,42 @@
     let rawData = [];
     let columns = [];
     let chartInstance = null;
+    let currentView = 'chart';
     const xField = { name: null };
     const valueFields = [];
     const filters = {};
 
     const fileInput = document.getElementById('fileInput');
-    fileInput.addEventListener('change', handleFileSelect);
-
-    function handleFileSelect(e) {
+    fileInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
-      if (!file) return;
+      if (file) processFile(file);
+    });
 
+    const chartContainer = document.querySelector('.chart-container');
+    chartContainer.addEventListener('dragover', (e) => {
+      if (rawData.length > 0) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'copy';
+      chartContainer.classList.add('drop-over');
+    });
+    chartContainer.addEventListener('dragleave', (e) => {
+      if (!chartContainer.contains(e.relatedTarget)) {
+        chartContainer.classList.remove('drop-over');
+      }
+    });
+    chartContainer.addEventListener('drop', (e) => {
+      e.preventDefault();
+      chartContainer.classList.remove('drop-over');
+      if (rawData.length > 0) return;
+      const file = e.dataTransfer.files[0];
+      if (file && /\.(xlsx|xls|csv)$/i.test(file.name)) {
+        processFile(file);
+      } else if (file) {
+        alert('Use um arquivo Excel (.xlsx, .xls) ou CSV.');
+      }
+    });
+
+    function processFile(file) {
       const reader = new FileReader();
       reader.onload = (ev) => {
         try {
@@ -516,10 +656,12 @@
           Object.keys(filters).forEach(k => delete filters[k]);
 
           renderFieldList();
+          renderFilterSection();
           renderDataPreview();
           updateDropZones();
           document.getElementById('btnReset').disabled = false;
           updateChart();
+          updateDataView();
         } catch (err) {
           alert('Erro ao ler o arquivo: ' + err.message);
         }
@@ -545,10 +687,12 @@
           xField.name = null;
           valueFields.length = 0;
           renderFieldList();
+          renderFilterSection();
           renderDataPreview();
           updateDropZones();
           document.getElementById('btnReset').disabled = false;
           updateChart();
+          updateDataView();
         };
         textReader.readAsText(file, 'UTF-8');
         return;
@@ -714,6 +858,86 @@
 
     document.getElementById('chartType').addEventListener('change', updateChart);
 
+    document.getElementById('filterColumn').addEventListener('change', function() {
+      const col = this.value;
+      const filterValuesEl = document.getElementById('filterValues');
+      if (!col) {
+        filterValuesEl.innerHTML = '';
+        return;
+      }
+      const uniques = [...new Set(rawData.map(r => String(r[col] ?? '')))].filter(Boolean).sort();
+      const selected = filters[col] || [];
+      filterValuesEl.innerHTML = uniques.map(val => {
+        const safeVal = String(val).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');
+        return `<label class="filter-checkbox"><input type="checkbox" value="${safeVal}" ${selected.includes(val) ? 'checked' : ''}><span>${safeVal}</span></label>`;
+      }).join('');
+      filterValuesEl.querySelectorAll('input').forEach(cb => {
+        cb.addEventListener('change', () => toggleFilter(col, cb));
+      });
+    });
+
+    function toggleFilter(col, checkbox) {
+      if (!filters[col]) filters[col] = [];
+      const val = checkbox.value;
+      if (checkbox.checked) {
+        if (!filters[col].includes(val)) filters[col].push(val);
+      } else {
+        filters[col] = filters[col].filter(v => v !== val);
+      }
+      if (filters[col].length === 0) delete filters[col];
+      updateChart();
+      updateDataView();
+    }
+
+    function setView(view) {
+      currentView = view;
+      document.getElementById('btnViewData').classList.toggle('active', view === 'data');
+      document.getElementById('btnViewChart').classList.toggle('active', view === 'chart');
+      const mainDataView = document.getElementById('mainDataView');
+      const chartContainer = document.getElementById('chartContainer');
+      if (view === 'data') {
+        mainDataView.style.display = 'block';
+        chartContainer.style.display = 'none';
+        updateDataView();
+      } else {
+        mainDataView.style.display = 'none';
+        chartContainer.style.display = '';
+      }
+    }
+
+    function updateDataView() {
+      const el = document.getElementById('mainDataView');
+      const agg = aggregateData();
+      if (!agg || !xField.name || valueFields.length === 0) {
+        el.innerHTML = '<div class="no-data-msg">Configure o Eixo X e Valores para ver os dados agregados.</div>';
+        if (currentView === 'data') el.style.display = 'block';
+        return;
+      }
+      const rows = [];
+      agg.labels.forEach((label, i) => {
+        valueFields.forEach((v, j) => {
+          const resultado = agg.datasets[j].data[i];
+          rows.push([label, v.name, resultado]);
+        });
+      });
+      el.innerHTML = `
+        <table>
+          <thead><tr><th>${xField.name}</th><th>Campo</th><th>Resultado</th></tr></thead>
+          <tbody>
+            ${rows.map(([x, campo, resultado]) => `<tr><td>${x}</td><td>${campo}</td><td>${resultado}</td></tr>`).join('')}
+          </tbody>
+        </table>
+      `;
+      if (currentView === 'data') el.style.display = 'block';
+    }
+
+    function renderFilterSection() {
+      const sel = document.getElementById('filterColumn');
+      sel.innerHTML = '<option value="">Selecione uma coluna</option>' +
+        columns.map(c => `<option value="${escapeAttr(c)}">${c}</option>`).join('');
+      document.getElementById('filterValues').innerHTML = '';
+    }
+
     function applyFilters(data) {
       let result = data;
       Object.keys(filters).forEach(col => {
@@ -790,6 +1014,7 @@
         emptyState.style.display = 'block';
         canvas.style.display = 'none';
         btnExport.disabled = true;
+        updateDataView();
         return;
       }
 
@@ -826,23 +1051,47 @@
             legend: { position: 'top' }
           },
           scales: isPieLike ? {} : {
-            y: { beginAtZero: true, grid: { color: 'var(--border)' }, ticks: { color: 'var(--text-muted)' } },
-            x: { grid: { color: 'var(--border)' }, ticks: { color: 'var(--text-muted)', maxRotation: 45 } }
+            y: { beginAtZero: true, grid: { color: 'var(--border)' }, ticks: { color: '#fff' } },
+            x: { grid: { color: 'var(--border)' }, ticks: { color: '#fff', maxRotation: 45 } }
           }
         }
       };
 
-      Chart.defaults.color = 'var(--text-muted)';
+      Chart.defaults.color = '#fff';
       Chart.defaults.borderColor = 'var(--border)';
       chartInstance = new Chart(canvas, config);
+      updateDataView();
     }
 
-    function exportChart() {
-      if (!chartInstance) return;
-      const link = document.createElement('a');
-      link.download = 'grafico-dashboard.png';
-      link.href = chartInstance.toBase64Image('image/png');
-      link.click();
+    function exportData() {
+      const agg = aggregateData();
+      if (!agg || !xField.name || valueFields.length === 0) return;
+
+      if (currentView === 'data') {
+        const rows = [];
+        agg.labels.forEach((label, i) => {
+          valueFields.forEach((v, j) => {
+            rows.push([label, v.name, agg.datasets[j].data[i]]);
+          });
+        });
+        const header = [xField.name, 'Campo', 'Resultado'].map(h => `"${String(h).replace(/"/g, '""')}"`).join(';');
+        const csvRows = rows.map(([x, campo, resultado]) =>
+          [`"${String(x).replace(/"/g, '""')}"`, `"${String(campo).replace(/"/g, '""')}"`, `"${String(resultado).replace(/"/g, '""')}"`].join(';')
+        );
+        const csv = '\uFEFF' + header + '\r\n' + csvRows.join('\r\n');
+        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+        const link = document.createElement('a');
+        link.download = 'dados-dashboard.csv';
+        link.href = URL.createObjectURL(blob);
+        link.click();
+        URL.revokeObjectURL(link.href);
+      } else {
+        if (!chartInstance) return;
+        const link = document.createElement('a');
+        link.download = 'grafico-dashboard.jpg';
+        link.href = chartInstance.toBase64Image('image/jpeg');
+        link.click();
+      }
     }
 
     function renderDataPreview() {
@@ -876,12 +1125,16 @@
         chartInstance = null;
       }
 
+      setView('chart');
+      document.getElementById('mainDataView').style.display = 'none';
+      document.getElementById('mainDataView').innerHTML = '';
       document.getElementById('emptyState').style.display = 'block';
       document.getElementById('chartCanvas').style.display = 'none';
       document.getElementById('btnExportChart').disabled = true;
       document.getElementById('btnReset').disabled = true;
 
       renderFieldList();
+      renderFilterSection();
       renderDataPreview();
       updateDropZones();
       document.getElementById('dataPreview').innerHTML = '<div class="no-data-msg">Nenhum dado carregado</div>';

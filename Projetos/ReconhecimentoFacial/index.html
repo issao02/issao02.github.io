@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0a0e">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>FaceLock – Reconhecimento Facial</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+  <script src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
+  <style>
+    :root {
+      --bg: #0a0a0e;
+      --surface: #12121a;
+      --surface-elevated: #1a1a24;
+      --accent: #0ea5e9;
+      --accent-dim: #0284c7;
+      --success: #10b981;
+      --error: #ef4444;
+      --text: #f4f4f5;
+      --text-muted: #71717a;
+      --border: #27272a;
+      --radius: 16px;
+      --radius-sm: 12px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: radial-gradient(ellipse 100% 80% at 50% -30%, rgba(14, 165, 233, 0.15), transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .app {
+      max-width: 420px;
+      min-height: 100vh;
+      min-height: 100dvh;
+      margin: 0 auto;
+      padding: 1.5rem 1.25rem 2rem;
+      padding-bottom: max(2rem, env(safe-area-inset-bottom));
+      position: relative;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .screen {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      width: 100%;
+      flex: 1;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    .logo {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+      filter: drop-shadow(0 0 20px rgba(14, 165, 233, 0.4));
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      background: linear-gradient(135deg, var(--text) 0%, var(--text-muted) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.25rem;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .btn-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      width: 100%;
+      max-width: 320px;
+    }
+
+    .btn {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      width: 100%;
+      padding: 1rem 1.5rem;
+      font-family: inherit;
+      font-size: 1.05rem;
+      font-weight: 600;
+      border: none;
+      border-radius: var(--radius);
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-dim) 100%);
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(14, 165, 233, 0.35);
+    }
+
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 28px rgba(14, 165, 233, 0.45);
+    }
+
+    .btn-secondary {
+      background: var(--surface-elevated);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--accent);
+      background: rgba(14, 165, 233, 0.08);
+    }
+
+    .btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .video-wrap {
+      position: relative;
+      width: 100%;
+      max-width: 320px;
+      aspect-ratio: 3/4;
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: var(--surface);
+      border: 2px solid var(--border);
+      margin-bottom: 1.5rem;
+    }
+
+    .video-wrap video,
+    .video-wrap canvas {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .video-wrap canvas {
+      pointer-events: none;
+    }
+
+    .face-overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 70%;
+      aspect-ratio: 1;
+      border: 3px solid var(--accent);
+      border-radius: 50%;
+      opacity: 0.6;
+      pointer-events: none;
+      transition: opacity 0.3s, border-color 0.3s;
+    }
+
+    .face-overlay.ready {
+      border-color: var(--success);
+      opacity: 1;
+      animation: pulse-ring 1.5s ease-in-out infinite;
+    }
+
+    @keyframes pulse-ring {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.4); }
+      50% { box-shadow: 0 0 0 12px rgba(16, 185, 129, 0); }
+    }
+
+    .status-text {
+      text-align: center;
+      font-size: 1rem;
+      margin-bottom: 1rem;
+      min-height: 1.5em;
+    }
+
+    .status-text.success { color: var(--success); }
+    .status-text.error { color: var(--error); }
+    .status-text.muted { color: var(--text-muted); }
+
+    .loading-spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin: 2rem auto;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .unlocked-content {
+      display: none;
+      text-align: center;
+      padding: 2rem;
+      animation: fadeIn 0.5s ease;
+    }
+
+    .unlocked-content.visible {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.95); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .unlocked-icon {
+      font-size: 4rem;
+      margin-bottom: 1rem;
+      animation: bounce 0.6s ease;
+    }
+
+    @keyframes bounce {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.2); }
+    }
+
+    .unlocked-content h2 {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .unlocked-content p {
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+
+    .no-face-registered {
+      background: var(--surface-elevated);
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 2rem;
+      text-align: center;
+      color: var(--text-muted);
+      margin-bottom: 1.5rem;
+    }
+
+    .no-face-registered p {
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Tela inicial -->
+    <section class="screen active" id="screenHome">
+      <div class="logo">🔐</div>
+      <h1>FaceLock</h1>
+      <p class="subtitle">Simulação de reconhecimento facial. Cadastre seu rosto e depois use para desbloquear.</p>
+      <div class="btn-grid">
+        <button type="button" class="btn btn-primary" id="btnRegister">
+          <span>📷</span>
+          Cadastrar rosto
+        </button>
+        <button type="button" class="btn btn-secondary" id="btnUnlock">
+          <span>👤</span>
+          Desbloquear com rosto
+        </button>
+      </div>
+      <div class="no-face-registered" id="noFaceMsg" style="display: none;">
+        <p>Nenhum rosto cadastrado.</p>
+        <p style="font-size: 0.9rem;">Cadastre primeiro para poder desbloquear.</p>
+      </div>
+    </section>
+
+    <!-- Tela cadastrar -->
+    <section class="screen" id="screenRegister">
+      <h1>Cadastrar rosto</h1>
+      <p class="subtitle">Posicione seu rosto no círculo e aguarde a confirmação</p>
+      <div class="video-wrap">
+        <video id="videoRegister" autoplay playsinline muted></video>
+        <canvas id="canvasRegister"></canvas>
+        <div class="face-overlay" id="overlayRegister"></div>
+      </div>
+      <p class="status-text muted" id="statusRegister">Aguardando câmera...</p>
+      <div class="btn-grid">
+        <button type="button" class="btn btn-secondary" id="btnBackRegister">Voltar</button>
+      </div>
+    </section>
+
+    <!-- Tela desbloquear -->
+    <section class="screen" id="screenUnlock">
+      <h1>Desbloquear</h1>
+      <p class="subtitle">Posicione seu rosto para reconhecer</p>
+      <div class="video-wrap">
+        <video id="videoUnlock" autoplay playsinline muted></video>
+        <canvas id="canvasUnlock"></canvas>
+        <div class="face-overlay" id="overlayUnlock"></div>
+      </div>
+      <p class="status-text muted" id="statusUnlock">Aguardando câmera...</p>
+      <div class="unlocked-content" id="unlockedContent">
+        <div class="unlocked-icon">✅</div>
+        <h2>Acesso liberado!</h2>
+        <p>Reconhecimento facial confirmado.</p>
+        <button type="button" class="btn btn-primary" id="btnLockAgain">Bloquear novamente</button>
+      </div>
+      <div class="btn-grid" id="unlockButtons">
+        <button type="button" class="btn btn-secondary" id="btnBackUnlock">Voltar</button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'facelock_descriptor';
+    const MODEL_URL = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/model';
+    const MATCH_THRESHOLD = 0.55;
+
+    let modelsLoaded = false;
+    let isUnlocked = false;
+
+    const screens = {
+      home: document.getElementById('screenHome'),
+      register: document.getElementById('screenRegister'),
+      unlock: document.getElementById('screenUnlock')
+    };
+
+    const videoRegister = document.getElementById('videoRegister');
+    const videoUnlock = document.getElementById('videoUnlock');
+    const canvasRegister = document.getElementById('canvasRegister');
+    const canvasUnlock = document.getElementById('canvasUnlock');
+    const overlayRegister = document.getElementById('overlayRegister');
+    const overlayUnlock = document.getElementById('overlayUnlock');
+    const statusRegister = document.getElementById('statusRegister');
+    const statusUnlock = document.getElementById('statusUnlock');
+    const unlockedContent = document.getElementById('unlockedContent');
+    const unlockButtons = document.getElementById('unlockButtons');
+    const noFaceMsg = document.getElementById('noFaceMsg');
+
+    function showScreen(name) {
+      Object.keys(screens).forEach(k => screens[k].classList.remove('active'));
+      screens[name].classList.add('active');
+    }
+
+    function hasStoredFace() {
+      try {
+        const data = localStorage.getItem(STORAGE_KEY);
+        return data && JSON.parse(data).length === 128;
+      } catch { return false; }
+    }
+
+    function updateNoFaceMsg() {
+      noFaceMsg.style.display = hasStoredFace() ? 'none' : 'block';
+    }
+
+    async function loadModels() {
+      if (modelsLoaded) return;
+      await Promise.all([
+        faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL),
+        faceapi.nets.faceLandmark68Net.loadFromUri(MODEL_URL),
+        faceapi.nets.faceRecognitionNet.loadFromUri(MODEL_URL)
+      ]);
+      modelsLoaded = true;
+    }
+
+    async function startCamera(video) {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'user', width: { ideal: 640 }, height: { ideal: 480 } },
+          audio: false
+        });
+        video.srcObject = stream;
+        return stream;
+      } catch (err) {
+        console.error(err);
+        throw new Error('Não foi possível acessar a câmera. Verifique as permissões.');
+      }
+    }
+
+    function stopCamera(stream) {
+      if (stream) {
+        stream.getTracks().forEach(t => t.stop());
+      }
+    }
+
+    // --- Cadastrar ---
+    document.getElementById('btnRegister').addEventListener('click', async () => {
+      showScreen('register');
+      statusRegister.textContent = 'Carregando modelos...';
+      statusRegister.className = 'status-text muted';
+
+      try {
+        await loadModels();
+        const stream = await startCamera(videoRegister);
+        statusRegister.textContent = 'Posicione seu rosto no círculo';
+        overlayRegister.classList.remove('ready');
+
+        const detectAndCapture = async () => {
+          if (!modelsLoaded || !videoRegister.srcObject) return;
+
+          const detection = await faceapi
+            .detectSingleFace(videoRegister, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 }))
+            .withFaceLandmarks()
+            .withFaceDescriptor();
+
+          if (detection) {
+            overlayRegister.classList.add('ready');
+            statusRegister.textContent = 'Rosto detectado! Capturando em 2s...';
+            statusRegister.className = 'status-text';
+
+            await new Promise(r => setTimeout(r, 2000));
+
+            const descriptor = Array.from(detection.descriptor);
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(descriptor));
+            statusRegister.textContent = 'Rosto cadastrado com sucesso!';
+            statusRegister.className = 'status-text success';
+
+            stopCamera(stream);
+            videoRegister.srcObject = null;
+            setTimeout(() => {
+              showScreen('home');
+              updateNoFaceMsg();
+            }, 1500);
+            return;
+          } else {
+            overlayRegister.classList.remove('ready');
+            statusRegister.textContent = 'Posicione seu rosto no círculo';
+          }
+
+          requestAnimationFrame(detectAndCapture);
+        };
+
+        videoRegister.onloadedmetadata = () => {
+          videoRegister.play();
+          detectAndCapture();
+        };
+      } catch (err) {
+        statusRegister.textContent = err.message || 'Erro ao iniciar câmera';
+        statusRegister.className = 'status-text error';
+      }
+    });
+
+    document.getElementById('btnBackRegister').addEventListener('click', () => {
+      if (videoRegister.srcObject) {
+        stopCamera(videoRegister.srcObject);
+        videoRegister.srcObject = null;
+      }
+      showScreen('home');
+    });
+
+    // --- Desbloquear ---
+    document.getElementById('btnUnlock').addEventListener('click', async () => {
+      if (!hasStoredFace()) {
+        alert('Nenhum rosto cadastrado. Cadastre primeiro.');
+        return;
+      }
+
+      showScreen('unlock');
+      isUnlocked = false;
+      unlockedContent.classList.remove('visible');
+      unlockButtons.style.display = 'flex';
+      statusUnlock.textContent = 'Carregando modelos...';
+      statusUnlock.className = 'status-text muted';
+
+      try {
+        await loadModels();
+        const stream = await startCamera(videoUnlock);
+        statusUnlock.textContent = 'Posicione seu rosto para reconhecer';
+        overlayUnlock.classList.remove('ready');
+
+        const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
+        const labeledDescriptors = new faceapi.LabeledFaceDescriptors('user', [new Float32Array(stored)]);
+        const matcher = new faceapi.FaceMatcher(labeledDescriptors, MATCH_THRESHOLD);
+
+        const detectAndMatch = async () => {
+          if (isUnlocked || !videoUnlock.srcObject) return;
+
+          const detection = await faceapi
+            .detectSingleFace(videoUnlock, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 }))
+            .withFaceLandmarks()
+            .withFaceDescriptor();
+
+          if (detection) {
+            overlayUnlock.classList.add('ready');
+            const match = matcher.findBestMatch(detection.descriptor);
+
+            if (match.distance < MATCH_THRESHOLD) {
+              isUnlocked = true;
+              statusUnlock.textContent = 'Reconhecido!';
+              statusUnlock.className = 'status-text success';
+
+              stopCamera(stream);
+              videoUnlock.srcObject = null;
+
+              unlockButtons.style.display = 'none';
+              unlockedContent.classList.add('visible');
+            } else {
+              statusUnlock.textContent = 'Rosto não reconhecido. Tente novamente.';
+              statusUnlock.className = 'status-text error';
+            }
+          } else {
+            overlayUnlock.classList.remove('ready');
+            statusUnlock.textContent = 'Posicione seu rosto para reconhecer';
+            statusUnlock.className = 'status-text muted';
+          }
+
+          if (!isUnlocked) requestAnimationFrame(detectAndMatch);
+        };
+
+        videoUnlock.onloadedmetadata = () => {
+          videoUnlock.play();
+          detectAndMatch();
+        };
+      } catch (err) {
+        statusUnlock.textContent = err.message || 'Erro ao iniciar câmera';
+        statusUnlock.className = 'status-text error';
+      }
+    });
+
+    document.getElementById('btnBackUnlock').addEventListener('click', () => {
+      if (videoUnlock.srcObject) {
+        stopCamera(videoUnlock.srcObject);
+        videoUnlock.srcObject = null;
+      }
+      isUnlocked = true;
+      showScreen('home');
+    });
+
+    document.getElementById('btnLockAgain').addEventListener('click', () => {
+      showScreen('home');
+    });
+
+    updateNoFaceMsg();
+  </script>
+</body>
+</html>
