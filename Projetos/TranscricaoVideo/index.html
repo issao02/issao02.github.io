@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Transcrição de Vídeo para Texto</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&family=JetBrains+Mono:wght@400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-dark: #0a0a0d;
+      --bg-card: #14141a;
+      --accent: #8b5cf6;
+      --accent-hover: #a78bfa;
+      --text: #e4e4e7;
+      --text-muted: #a1a1aa;
+      --border: #27272a;
+      --success: #22c55e;
+      --warning: #f59e0b;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Outfit', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(ellipse 80% 50% at 50% -20%, rgba(139, 92, 246, 0.12), transparent);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 640px;
+      padding: 2rem 1.5rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: linear-gradient(135deg, var(--accent), #7c3aed);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      margin-top: 0.5rem;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .section-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 1rem;
+    }
+
+    .drop-zone {
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 2rem;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      background: rgba(139, 92, 246, 0.05);
+    }
+
+    .drop-zone:hover, .drop-zone.dragover {
+      border-color: var(--accent);
+      background: rgba(139, 92, 246, 0.12);
+    }
+
+    .drop-zone-icon {
+      font-size: 3rem;
+      margin-bottom: 0.75rem;
+      opacity: 0.8;
+    }
+
+    .drop-zone p {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .drop-zone p strong {
+      color: var(--text);
+    }
+
+    .model-select {
+      margin-bottom: 1rem;
+    }
+
+    .model-select label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .model-select select {
+      width: 100%;
+      padding: 0.6rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg-dark);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.95rem;
+    }
+
+    .model-hint {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 0.35rem;
+    }
+
+    .file-info {
+      display: none;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: var(--bg-dark);
+      border-radius: 10px;
+      margin-top: 1rem;
+    }
+
+    .file-info.visible {
+      display: flex;
+    }
+
+    .file-info span {
+      flex: 1;
+      font-size: 0.9rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .file-info .btn-remove {
+      padding: 0.35rem 0.6rem;
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+
+    .file-info .btn-remove:hover {
+      border-color: #ef4444;
+      color: #ef4444;
+    }
+
+    .progress-wrap {
+      display: none;
+      margin-top: 1rem;
+    }
+
+    .progress-wrap.visible {
+      display: block;
+    }
+
+    .progress-bar {
+      height: 8px;
+      background: var(--border);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 0.5rem;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), #7c3aed);
+      border-radius: 4px;
+      width: 0%;
+      transition: width 0.3s ease;
+    }
+
+    .progress-text {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .btn-transcribe {
+      width: 100%;
+      padding: 1rem 1.5rem;
+      margin-top: 1rem;
+      border: none;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent), #7c3aed);
+      color: white;
+      font-family: inherit;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .btn-transcribe:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(139, 92, 246, 0.35);
+    }
+
+    .btn-transcribe:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .text-output {
+      width: 100%;
+      min-height: 200px;
+      padding: 1.25rem;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--bg-dark);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      font-size: 1rem;
+      line-height: 1.6;
+      resize: vertical;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    .text-output:focus {
+      border-color: var(--accent);
+    }
+
+    .text-output::placeholder {
+      color: var(--text-muted);
+      opacity: 0.7;
+    }
+
+    .actions {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 0.75rem 1.25rem;
+      border-radius: 10px;
+      border: none;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+    }
+
+    .btn-copy {
+      background: var(--accent);
+      color: white;
+    }
+
+    .btn-copy:hover {
+      background: var(--accent-hover);
+      transform: translateY(-1px);
+    }
+
+    .btn-clear {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+    }
+
+    .btn-clear:hover {
+      border-color: var(--warning);
+      color: var(--warning);
+    }
+
+    .btn-download {
+      background: var(--success);
+      color: white;
+    }
+
+    .btn-download:hover {
+      background: #16a34a;
+      transform: translateY(-1px);
+    }
+
+    .warning {
+      background: rgba(245, 158, 11, 0.15);
+      border: 1px solid rgba(245, 158, 11, 0.4);
+      border-radius: 10px;
+      padding: 1rem;
+      font-size: 0.9rem;
+      color: #fbbf24;
+      margin-bottom: 1.5rem;
+    }
+
+    .warning a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .warning a:hover {
+      text-decoration: underline;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .lang-select {
+      margin-top: 1rem;
+    }
+
+    .lang-select label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    .lang-select select {
+      width: 100%;
+      padding: 0.6rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      background: var(--bg-dark);
+      color: var(--text);
+      font-family: inherit;
+      font-size: 0.95rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Transcrição de Vídeo para Texto</h1>
+      <p class="subtitle">Máxima precisão com IA Whisper – processamento 100% local no navegador</p>
+    </header>
+
+    <div class="warning">
+      O processamento é feito localmente no seu navegador. Nenhum áudio é enviado para servidores. 
+      Na primeira vez, o modelo será baixado (~150 MB para máxima precisão). Use Chrome ou Edge para melhor desempenho.
+      Se aparecer "Unable to decode audio data", tente converter o arquivo para MP3 ou WAV antes.
+    </div>
+
+    <div class="section">
+      <div class="section-title">Arquivo</div>
+      <div class="drop-zone" id="dropZone">
+        <div class="drop-zone-icon">🎬</div>
+        <p><strong>Arraste um vídeo ou áudio aqui</strong> ou clique para selecionar</p>
+        <p style="margin-top: 0.5rem; font-size: 0.85rem;">MP4, WebM, MOV, MP3, WAV, M4A, OGG, FLAC</p>
+      </div>
+      <input type="file" id="fileInput" accept="video/*,audio/*,.mp4,.webm,.mov,.mp3,.wav,.m4a,.ogg,.flac">
+
+      <div class="file-info" id="fileInfo">
+        <span id="fileName"></span>
+        <button type="button" class="btn-remove" id="btnRemove">Remover</button>
+      </div>
+
+      <div class="model-select">
+        <label for="model">Modelo (precisão vs velocidade)</label>
+        <select id="model">
+          <option value="Xenova/whisper-tiny">Tiny – Rápido (~40 MB)</option>
+          <option value="Xenova/whisper-base">Base – Balanceado (~75 MB)</option>
+          <option value="Xenova/whisper-small" selected>Small – Alta precisão (~150 MB)</option>
+          <option value="Xenova/whisper-medium">Medium – Máxima precisão (~500 MB)</option>
+        </select>
+        <p class="model-hint">Recomendado: Small para melhor equilíbrio. Medium para máxima precisão (mais lento).</p>
+      </div>
+
+      <div class="lang-select">
+        <label for="lang">Idioma do áudio</label>
+        <select id="lang">
+          <option value="portuguese" selected>Português</option>
+          <option value="english">Inglês</option>
+          <option value="spanish">Espanhol</option>
+          <option value="french">Francês</option>
+          <option value="auto">Detectar automaticamente</option>
+        </select>
+      </div>
+
+      <div class="progress-wrap" id="progressWrap">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <p class="progress-text" id="progressText">Preparando...</p>
+      </div>
+
+      <button class="btn-transcribe" id="btnTranscribe" disabled>
+        <span>🎤</span> Transcrever
+      </button>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Texto transcrito</div>
+      <textarea class="text-output" id="textOutput" placeholder="O texto transcrito aparecerá aqui..."></textarea>
+      <div class="actions">
+        <button class="btn btn-copy" id="copyBtn" disabled>📋 Copiar</button>
+        <button class="btn btn-download" id="downloadBtn" disabled>💾 Baixar .txt</button>
+        <button class="btn btn-clear" id="clearBtn">🗑️ Limpar</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    import { pipeline } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2';
+
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('fileInput');
+    const fileInfo = document.getElementById('fileInfo');
+    const fileName = document.getElementById('fileName');
+    const btnRemove = document.getElementById('btnRemove');
+    const modelSelect = document.getElementById('model');
+    const langSelect = document.getElementById('lang');
+    const progressWrap = document.getElementById('progressWrap');
+    const progressFill = document.getElementById('progressFill');
+    const progressText = document.getElementById('progressText');
+    const btnTranscribe = document.getElementById('btnTranscribe');
+    const textOutput = document.getElementById('textOutput');
+    const copyBtn = document.getElementById('copyBtn');
+    const downloadBtn = document.getElementById('downloadBtn');
+    const clearBtn = document.getElementById('clearBtn');
+
+    let selectedFile = null;
+    let transcriber = null;
+
+    function setProgress(percent, text) {
+      progressWrap.classList.add('visible');
+      progressFill.style.width = percent + '%';
+      progressText.textContent = text;
+    }
+
+    function hideProgress() {
+      progressWrap.classList.remove('visible');
+    }
+
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.classList.add('dragover');
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.classList.remove('dragover');
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('dragover');
+      const file = e.dataTransfer.files[0];
+      if (file && (file.type.startsWith('video/') || file.type.startsWith('audio/'))) {
+        setFile(file);
+      }
+    });
+
+    fileInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) setFile(file);
+    });
+
+    function setFile(file) {
+      selectedFile = file;
+      fileName.textContent = file.name;
+      fileInfo.classList.add('visible');
+      btnTranscribe.disabled = false;
+    }
+
+    btnRemove.addEventListener('click', () => {
+      selectedFile = null;
+      fileInput.value = '';
+      fileInfo.classList.remove('visible');
+      btnTranscribe.disabled = true;
+    });
+
+    function createWavBlob(samples, sampleRate) {
+      const numChannels = 1;
+      const bitsPerSample = 16;
+      const bytesPerSample = bitsPerSample / 8;
+      const blockAlign = numChannels * bytesPerSample;
+      const byteRate = sampleRate * blockAlign;
+      const dataSize = samples.length * bytesPerSample;
+      const buffer = new ArrayBuffer(44 + dataSize);
+      const view = new DataView(buffer);
+      const writeStr = (offset, str) => { for (let i = 0; i < str.length; i++) view.setUint8(offset + i, str.charCodeAt(i)); };
+      writeStr(0, 'RIFF');
+      view.setUint32(4, 36 + dataSize, true);
+      writeStr(8, 'WAVE');
+      writeStr(12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true);
+      view.setUint16(22, numChannels, true);
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, byteRate, true);
+      view.setUint16(32, blockAlign, true);
+      view.setUint16(34, bitsPerSample, true);
+      writeStr(36, 'data');
+      view.setUint32(40, dataSize, true);
+      const offset = 44;
+      for (let i = 0; i < samples.length; i++) {
+        const s = Math.max(-1, Math.min(1, samples[i]));
+        view.setInt16(offset + i * 2, s < 0 ? s * 0x8000 : s * 0x7FFF, true);
+      }
+      return new Blob([buffer], { type: 'audio/wav' });
+    }
+
+    async function extractAudioToFloat32(file) {
+      const buffer = await file.arrayBuffer();
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      try {
+        const decoded = await ctx.decodeAudioData(buffer);
+        await ctx.close();
+        let data = decoded.getChannelData(0);
+        if (decoded.numberOfChannels > 1) {
+          const ch1 = decoded.getChannelData(0);
+          const ch2 = decoded.getChannelData(1);
+          data = new Float32Array(ch1.length);
+          for (let i = 0; i < ch1.length; i++) data[i] = (ch1[i] + ch2[i]) / 2;
+        }
+        const targetRate = 16000;
+        if (decoded.sampleRate !== targetRate) {
+          const ratio = decoded.sampleRate / targetRate;
+          const newLen = Math.floor(data.length / ratio);
+          const resampled = new Float32Array(newLen);
+          for (let i = 0; i < newLen; i++) {
+            const src = i * ratio;
+            const j = Math.floor(src);
+            const f = src - j;
+            resampled[i] = (1 - f) * data[j] + f * (data[j + 1] ?? data[j]);
+          }
+          data = resampled;
+        }
+        return { data, sampleRate: targetRate };
+      } catch (e) {
+        await ctx.close();
+        throw e;
+      }
+    }
+
+    async function extractAudioViaMediaElement(blobUrl, isVideo) {
+      return new Promise((resolve, reject) => {
+        const media = document.createElement(isVideo ? 'video' : 'audio');
+        media.muted = true;
+        media.playsInline = true;
+        media.style.cssText = 'position:fixed;left:-9999px;';
+        document.body.appendChild(media);
+
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const source = ctx.createMediaElementSource(media);
+        const processor = ctx.createScriptProcessor(4096, 1, 1);
+        const chunks = [];
+
+        processor.onaudioprocess = (e) => {
+          const input = e.inputBuffer.getChannelData(0);
+          chunks.push(new Float32Array(input));
+        };
+
+        media.onended = async () => {
+          processor.disconnect();
+          source.disconnect();
+          const sourceRate = ctx.sampleRate;
+          await ctx.close();
+          document.body.removeChild(media);
+          URL.revokeObjectURL(blobUrl);
+          const totalLen = chunks.reduce((s, c) => s + c.length, 0);
+          const data = new Float32Array(totalLen);
+          let offset = 0;
+          for (const c of chunks) {
+            data.set(c, offset);
+            offset += c.length;
+          }
+          const targetRate = 16000;
+          if (sourceRate !== targetRate) {
+            const ratio = sourceRate / targetRate;
+            const newLen = Math.floor(data.length / ratio);
+            const resampled = new Float32Array(newLen);
+            for (let i = 0; i < newLen; i++) {
+              const src = i * ratio;
+              const j = Math.floor(src);
+              const f = src - j;
+              resampled[i] = (1 - f) * data[j] + f * (data[j + 1] ?? data[j]);
+            }
+            resolve({ data: resampled, sampleRate: targetRate });
+          } else {
+            resolve({ data, sampleRate: targetRate });
+          }
+        };
+
+        media.onerror = () => {
+          processor.disconnect();
+          source.disconnect();
+          ctx.close();
+          document.body.removeChild(media);
+          URL.revokeObjectURL(blobUrl);
+          reject(new Error('Não foi possível reproduzir o arquivo. Tente converter para MP3 ou WAV.'));
+        };
+
+        source.connect(processor);
+        processor.connect(ctx.destination);
+        media.src = blobUrl;
+        media.play().catch(reject);
+      });
+    }
+
+    btnTranscribe.addEventListener('click', async () => {
+      if (!selectedFile) return;
+
+      btnTranscribe.disabled = true;
+      setProgress(5, 'Carregando modelo Whisper...');
+      let url;
+
+      try {
+        const modelId = modelSelect.value;
+        if (!transcriber || transcriber.modelId !== modelId) {
+          transcriber = await pipeline('automatic-speech-recognition', modelId, {
+            progress_callback: (data) => {
+              if (data.status === 'progress') {
+                const pct = Math.round(data.loaded / data.total * 100);
+                setProgress(5 + pct * 0.4, `Baixando modelo: ${pct}%`);
+              }
+            }
+          });
+        }
+
+        setProgress(45, 'Extraindo áudio...');
+        let audioInput;
+
+        try {
+          const extracted = await extractAudioToFloat32(selectedFile);
+          audioInput = { ...extracted };
+        } catch (decodeErr) {
+          if (decodeErr.message && decodeErr.message.includes('decode')) {
+            setProgress(45, 'Formato não suportado. Tentando via reprodução...');
+            url = URL.createObjectURL(selectedFile);
+            const extracted = await extractAudioViaMediaElement(url, selectedFile.type.startsWith('video/'));
+            url = null;
+            audioInput = extracted;
+          } else {
+            throw decodeErr;
+          }
+        }
+
+        setProgress(50, 'Transcrevendo com Whisper...');
+
+        const lang = langSelect.value;
+        const options = lang === 'auto' ? {} : { language: lang, task: 'transcribe' };
+
+        const wavBlob = createWavBlob(audioInput.data, audioInput.sampleRate);
+        url = URL.createObjectURL(wavBlob);
+        const result = await transcriber(url, options);
+
+        const text = typeof result === 'object' && result.text ? result.text : (result?.chunks?.map(c => c.text).join(' ') || String(result));
+        textOutput.value = text.trim();
+        updateButtons();
+
+        setProgress(100, 'Concluído!');
+        setTimeout(hideProgress, 800);
+      } catch (err) {
+        console.error(err);
+        progressText.textContent = 'Erro: ' + (err.message || err);
+        textOutput.value = 'Erro na transcrição: ' + (err.message || err);
+      } finally {
+        if (url) URL.revokeObjectURL(url);
+      }
+
+      btnTranscribe.disabled = false;
+    });
+
+    function updateButtons() {
+      const hasText = textOutput.value.trim().length > 0;
+      copyBtn.disabled = !hasText;
+      downloadBtn.disabled = !hasText;
+    }
+
+    copyBtn.addEventListener('click', () => {
+      textOutput.select();
+      navigator.clipboard.writeText(textOutput.value);
+      copyBtn.textContent = '✓ Copiado!';
+      setTimeout(() => { copyBtn.innerHTML = '📋 Copiar'; }, 2000);
+    });
+
+    downloadBtn.addEventListener('click', () => {
+      const blob = new Blob([textOutput.value], { type: 'text/plain;charset=utf-8' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'transcricao-' + new Date().toISOString().slice(0, 10) + '.txt';
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+
+    clearBtn.addEventListener('click', () => {
+      textOutput.value = '';
+      updateButtons();
+    });
+
+    textOutput.addEventListener('input', updateButtons);
+  </script>
+</body>
+</html>

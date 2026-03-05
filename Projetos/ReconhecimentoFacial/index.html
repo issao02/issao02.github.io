@@ -182,7 +182,7 @@
       left: 50%;
       transform: translate(-50%, -50%);
       width: 70%;
-      aspect-ratio: 1;
+      aspect-ratio: 3/4;
       border: 3px solid var(--accent);
       border-radius: 50%;
       opacity: 0.6;
@@ -302,7 +302,7 @@
     <!-- Tela cadastrar -->
     <section class="screen" id="screenRegister">
       <h1>Cadastrar rosto</h1>
-      <p class="subtitle">Posicione seu rosto no círculo e aguarde a confirmação</p>
+      <p class="subtitle">Posicione seu rosto no círculo e clique em Capturar</p>
       <div class="video-wrap">
         <video id="videoRegister" autoplay playsinline muted></video>
         <canvas id="canvasRegister"></canvas>
@@ -310,6 +310,7 @@
       </div>
       <p class="status-text muted" id="statusRegister">Aguardando câmera...</p>
       <div class="btn-grid">
+        <button type="button" class="btn btn-primary" id="btnCapture">Capturar rosto</button>
         <button type="button" class="btn btn-secondary" id="btnBackRegister">Voltar</button>
       </div>
     </section>
@@ -317,7 +318,7 @@
     <!-- Tela desbloquear -->
     <section class="screen" id="screenUnlock">
       <h1>Desbloquear</h1>
-      <p class="subtitle">Posicione seu rosto para reconhecer</p>
+      <p class="subtitle">Posicione seu rosto e clique em Reconhecer</p>
       <div class="video-wrap">
         <video id="videoUnlock" autoplay playsinline muted></video>
         <canvas id="canvasUnlock"></canvas>
@@ -331,6 +332,7 @@
         <button type="button" class="btn btn-primary" id="btnLockAgain">Bloquear novamente</button>
       </div>
       <div class="btn-grid" id="unlockButtons">
+        <button type="button" class="btn btn-primary" id="btnRecognize">Reconhecer rosto</button>
         <button type="button" class="btn btn-secondary" id="btnBackUnlock">Voltar</button>
       </div>
     </section>
@@ -338,8 +340,8 @@
 
   <script>
     const STORAGE_KEY = 'facelock_descriptor';
-    const MODEL_URL = 'https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/model';
-    const MATCH_THRESHOLD = 0.55;
+    const MODEL_URL = 'https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@0.22.2/weights';
+    const MATCH_THRESHOLD = 0.6;
 
     let modelsLoaded = false;
     let isUnlocked = false;
@@ -388,6 +390,7 @@
       modelsLoaded = true;
     }
 
+
     async function startCamera(video) {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -408,70 +411,124 @@
       }
     }
 
+    let registerStream = null;
+    let registerCaptured = false;
+
     // --- Cadastrar ---
     document.getElementById('btnRegister').addEventListener('click', async () => {
       showScreen('register');
+      registerCaptured = false;
+      document.getElementById('btnCapture').textContent = 'Capturar rosto';
       statusRegister.textContent = 'Carregando modelos...';
       statusRegister.className = 'status-text muted';
+      overlayRegister.classList.remove('ready');
 
       try {
         await loadModels();
-        const stream = await startCamera(videoRegister);
-        statusRegister.textContent = 'Posicione seu rosto no círculo';
-        overlayRegister.classList.remove('ready');
-
-        const detectAndCapture = async () => {
-          if (!modelsLoaded || !videoRegister.srcObject) return;
-
-          const detection = await faceapi
-            .detectSingleFace(videoRegister, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 }))
-            .withFaceLandmarks()
-            .withFaceDescriptor();
-
-          if (detection) {
-            overlayRegister.classList.add('ready');
-            statusRegister.textContent = 'Rosto detectado! Capturando em 2s...';
-            statusRegister.className = 'status-text';
-
-            await new Promise(r => setTimeout(r, 2000));
-
-            const descriptor = Array.from(detection.descriptor);
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(descriptor));
-            statusRegister.textContent = 'Rosto cadastrado com sucesso!';
-            statusRegister.className = 'status-text success';
-
-            stopCamera(stream);
-            videoRegister.srcObject = null;
-            setTimeout(() => {
-              showScreen('home');
-              updateNoFaceMsg();
-            }, 1500);
-            return;
-          } else {
-            overlayRegister.classList.remove('ready');
-            statusRegister.textContent = 'Posicione seu rosto no círculo';
-          }
-
-          requestAnimationFrame(detectAndCapture);
-        };
-
-        videoRegister.onloadedmetadata = () => {
-          videoRegister.play();
-          detectAndCapture();
-        };
+        registerStream = await startCamera(videoRegister);
+        statusRegister.textContent = 'Posicione seu rosto e clique em Capturar';
       } catch (err) {
         statusRegister.textContent = err.message || 'Erro ao iniciar câmera';
         statusRegister.className = 'status-text error';
       }
     });
 
+    async function detectFaceFromVideo(video, canvas) {
+      const maxSize = 320;
+      let w = video.videoWidth, h = video.videoHeight;
+      if (w > maxSize) {
+        h = (h * maxSize) / w;
+        w = maxSize;
+      }
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(video, 0, 0, w, h);
+
+      const opts = new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.2 });
+      return faceapi
+        .detectSingleFace(canvas, opts)
+        .withFaceLandmarks()
+        .withFaceDescriptor();
+    }
+
+    document.getElementById('btnCapture').addEventListener('click', async () => {
+      if (registerCaptured) {
+        overlayRegister.classList.remove('ready');
+        statusRegister.textContent = 'Reiniciando câmera...';
+        statusRegister.className = 'status-text muted';
+        if (registerStream) {
+          stopCamera(registerStream);
+          videoRegister.srcObject = null;
+          registerStream = null;
+        }
+        try {
+          registerStream = await startCamera(videoRegister);
+          registerCaptured = false;
+          document.getElementById('btnCapture').textContent = 'Capturar rosto';
+          statusRegister.textContent = 'Posicione seu rosto e clique em Capturar';
+        } catch (err) {
+          statusRegister.textContent = err.message || 'Erro ao reiniciar câmera';
+          statusRegister.className = 'status-text error';
+        }
+        return;
+      }
+
+      if (!videoRegister.srcObject || videoRegister.videoWidth === 0) {
+        statusRegister.textContent = 'Aguarde a câmera carregar...';
+        return;
+      }
+
+      statusRegister.textContent = 'Detectando rosto...';
+      statusRegister.className = 'status-text muted';
+
+      try {
+        const timeout = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('timeout')), 8000)
+        );
+        const detection = await Promise.race([
+          detectFaceFromVideo(videoRegister, canvasRegister),
+          timeout
+        ]);
+
+        if (detection) {
+          overlayRegister.classList.add('ready');
+          statusRegister.textContent = 'Rosto cadastrado com sucesso!';
+          statusRegister.className = 'status-text success';
+
+          const descriptor = Array.from(detection.descriptor);
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(descriptor));
+
+          if (registerStream) {
+            stopCamera(registerStream);
+            videoRegister.srcObject = null;
+          }
+          registerCaptured = true;
+          document.getElementById('btnCapture').textContent = 'Nova captura';
+          updateNoFaceMsg();
+        } else {
+          statusRegister.textContent = 'Rosto não detectado. Aproxime-se, ilumine bem e tente novamente.';
+          statusRegister.className = 'status-text error';
+        }
+      } catch (e) {
+        console.error(e);
+        statusRegister.textContent = e.message === 'timeout'
+          ? 'Demorou demais. Tente novamente com boa iluminação.'
+          : 'Erro na detecção. Tente novamente.';
+        statusRegister.className = 'status-text error';
+      }
+    });
+
     document.getElementById('btnBackRegister').addEventListener('click', () => {
-      if (videoRegister.srcObject) {
-        stopCamera(videoRegister.srcObject);
+      if (registerStream) {
+        stopCamera(registerStream);
         videoRegister.srcObject = null;
+        registerStream = null;
       }
       showScreen('home');
     });
+
+    let unlockStream = null;
 
     // --- Desbloquear ---
     document.getElementById('btnUnlock').addEventListener('click', async () => {
@@ -489,63 +546,73 @@
 
       try {
         await loadModels();
-        const stream = await startCamera(videoUnlock);
-        statusUnlock.textContent = 'Posicione seu rosto para reconhecer';
+        unlockStream = await startCamera(videoUnlock);
+        statusUnlock.textContent = 'Posicione seu rosto e clique em Reconhecer';
         overlayUnlock.classList.remove('ready');
-
-        const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
-        const labeledDescriptors = new faceapi.LabeledFaceDescriptors('user', [new Float32Array(stored)]);
-        const matcher = new faceapi.FaceMatcher(labeledDescriptors, MATCH_THRESHOLD);
-
-        const detectAndMatch = async () => {
-          if (isUnlocked || !videoUnlock.srcObject) return;
-
-          const detection = await faceapi
-            .detectSingleFace(videoUnlock, new faceapi.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 }))
-            .withFaceLandmarks()
-            .withFaceDescriptor();
-
-          if (detection) {
-            overlayUnlock.classList.add('ready');
-            const match = matcher.findBestMatch(detection.descriptor);
-
-            if (match.distance < MATCH_THRESHOLD) {
-              isUnlocked = true;
-              statusUnlock.textContent = 'Reconhecido!';
-              statusUnlock.className = 'status-text success';
-
-              stopCamera(stream);
-              videoUnlock.srcObject = null;
-
-              unlockButtons.style.display = 'none';
-              unlockedContent.classList.add('visible');
-            } else {
-              statusUnlock.textContent = 'Rosto não reconhecido. Tente novamente.';
-              statusUnlock.className = 'status-text error';
-            }
-          } else {
-            overlayUnlock.classList.remove('ready');
-            statusUnlock.textContent = 'Posicione seu rosto para reconhecer';
-            statusUnlock.className = 'status-text muted';
-          }
-
-          if (!isUnlocked) requestAnimationFrame(detectAndMatch);
-        };
-
-        videoUnlock.onloadedmetadata = () => {
-          videoUnlock.play();
-          detectAndMatch();
-        };
       } catch (err) {
         statusUnlock.textContent = err.message || 'Erro ao iniciar câmera';
         statusUnlock.className = 'status-text error';
       }
     });
 
+    document.getElementById('btnRecognize').addEventListener('click', async () => {
+      if (!videoUnlock.srcObject || videoUnlock.videoWidth === 0) {
+        statusUnlock.textContent = 'Aguarde a câmera carregar...';
+        return;
+      }
+
+      statusUnlock.textContent = 'Reconhecendo...';
+      statusUnlock.className = 'status-text muted';
+
+      try {
+        const timeout = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('timeout')), 8000)
+        );
+        const detection = await Promise.race([
+          detectFaceFromVideo(videoUnlock, canvasUnlock),
+          timeout
+        ]);
+
+        if (detection) {
+          const stored = JSON.parse(localStorage.getItem(STORAGE_KEY));
+          const labeledDescriptors = new faceapi.LabeledFaceDescriptors('user', [new Float32Array(stored)]);
+          const matcher = new faceapi.FaceMatcher(labeledDescriptors, MATCH_THRESHOLD);
+          const match = matcher.findBestMatch(detection.descriptor);
+
+          if (match.distance < MATCH_THRESHOLD) {
+            isUnlocked = true;
+            overlayUnlock.classList.add('ready');
+            statusUnlock.textContent = 'Reconhecido!';
+            statusUnlock.className = 'status-text success';
+
+            if (unlockStream) {
+              stopCamera(unlockStream);
+              videoUnlock.srcObject = null;
+            }
+            unlockButtons.style.display = 'none';
+            unlockedContent.classList.add('visible');
+          } else {
+            statusUnlock.textContent = 'Rosto não reconhecido. Tente novamente.';
+            statusUnlock.className = 'status-text error';
+          }
+        } else {
+          statusUnlock.textContent = 'Rosto não detectado. Aproxime-se e tente novamente.';
+          statusUnlock.className = 'status-text error';
+        }
+      } catch (e) {
+        console.error(e);
+        statusUnlock.textContent = e.message === 'timeout'
+          ? 'Demorou demais. Tente novamente com boa iluminação.'
+          : 'Erro na detecção. Tente novamente.';
+        statusUnlock.className = 'status-text error';
+      }
+    });
+
     document.getElementById('btnBackUnlock').addEventListener('click', () => {
-      if (videoUnlock.srcObject) {
-        stopCamera(videoUnlock.srcObject);
+      if (unlockStream) {
+        stopCamera(unlockStream);
         videoUnlock.srcObject = null;
+        unlockStream = null;
       }
       isUnlocked = true;
       showScreen('home');
