@@ -1,9 +1,14 @@
 {
   "notas": [
     {
+      "arquivo": "nova-nota.txt",
+      "titulo": "Nova nota",
+      "atualizado": "2026-06-14T01:39:39.887Z"
+    },
+    {
       "arquivo": "bem-vindo.txt",
       "titulo": "Bem-vindo",
-      "atualizado": "2025-06-13T12:00:00Z"
+      "atualizado": "2026-06-14T01:38:33.382Z"
     }
   ]
 }
