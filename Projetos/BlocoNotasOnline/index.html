@@ -347,6 +347,75 @@
       z-index: 10;
     }
 
+    .info-banner a {
+      color: var(--accent-hover);
+      cursor: pointer;
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      width: 100%;
+      max-width: 440px;
+    }
+
+    .modal h3 { font-size: 1.1rem; margin-bottom: 0.6rem; }
+
+    .modal p {
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      line-height: 1.5;
+      margin-bottom: 0.85rem;
+    }
+
+    .modal label {
+      display: block;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-bottom: 0.35rem;
+    }
+
+    .modal input {
+      width: 100%;
+      padding: 0.6rem 0.8rem;
+      background: var(--bg-input);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      outline: none;
+      margin-bottom: 1rem;
+    }
+
+    .modal input:focus { border-color: var(--accent); }
+
+    .modal-actions {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: flex-end;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
     .toggle-sidebar {
       display: none;
     }
@@ -390,11 +459,12 @@
         <span id="statusText">Carregando...</span>
       </div>
       <button class="btn btn-icon toggle-sidebar" id="btnToggleSidebar" title="Lista de notas">📋</button>
+      <button class="btn btn-icon" id="btnConfig" title="Configurar token GitHub">⚙️</button>
     </div>
   </header>
 
   <div class="info-banner">
-    10 blocos fixos no site (<code>nota-01.txt</code> a <code>nota-10.txt</code>). Auto-save no navegador — sem token. Use <strong>Baixar .txt</strong> para exportar.
+    Auto-save no navegador. Para gravar no GitHub, configure o <a id="linkConfigToken">token</a> e use <strong>Atualizar repositório</strong>.
   </div>
 
   <div class="layout">
@@ -402,6 +472,8 @@
       <div class="editor-toolbar">
         <input type="text" class="note-title-input" id="noteTitle" placeholder="Título da nota" maxlength="80">
         <span class="note-filename" id="noteFilename"></span>
+        <button class="btn btn-primary" id="btnPushRepo" title="Enviar nota atual ao repositório GitHub">☁️ Atualizar repositório</button>
+        <button class="btn" id="btnPushAll" title="Enviar todas as 10 notas ao repositório">☁️ Todas</button>
         <button class="btn" id="btnExport" title="Baixar esta nota como .txt">⬇️ Baixar .txt</button>
         <button class="btn btn-danger" id="btnReset" title="Restaurar conteúdo original do repositório">↺ Restaurar</button>
       </div>
@@ -419,9 +491,28 @@
     </aside>
   </div>
 
+  <div class="modal-overlay" id="modalConfig">
+    <div class="modal">
+      <h3>Token do GitHub</h3>
+      <p>Necessário para enviar notas ao repositório <strong>issao02.github.io</strong>. Crie um token com permissão <code>repo</code> (classic) ou <code>Contents: Read and write</code> (fine-grained).</p>
+      <label for="githubToken">Personal Access Token</label>
+      <input type="password" id="githubToken" placeholder="ghp_..." autocomplete="off">
+      <div class="modal-actions">
+        <button class="btn" id="btnCloseModal">Cancelar</button>
+        <button class="btn btn-primary" id="btnSaveToken">Salvar</button>
+      </div>
+    </div>
+  </div>
+
   <script>
+    const REPO_OWNER = 'issao02';
+    const REPO_NAME = 'issao02.github.io';
+    const BRANCH = 'main';
+    const NOTAS_DIR = 'Projetos/BlocoNotasOnline/notas';
+    const TOKEN_KEY = 'bloco-notas-github-token';
     const CONTEUDO_KEY = 'bloco-notas-conteudos-v2';
     const AUTOSAVE_DELAY = 600;
+    const API_BASE = 'https://api.github.com';
 
     let notas = [];
     let notaAtual = null;
@@ -430,6 +521,9 @@
     let autoSaveTimer = null;
     let salvando = false;
     let filaSalvar = false;
+    let enviandoRepo = false;
+    let shasCache = {};
+    let ultimoErro = '';
 
     const el = {
       statusDot: document.getElementById('statusDot'),
@@ -439,15 +533,33 @@
       noteContent: document.getElementById('noteContent'),
       notesList: document.getElementById('notesList'),
       searchNotes: document.getElementById('searchNotes'),
+      btnPushRepo: document.getElementById('btnPushRepo'),
+      btnPushAll: document.getElementById('btnPushAll'),
       btnExport: document.getElementById('btnExport'),
       btnReset: document.getElementById('btnReset'),
+      btnConfig: document.getElementById('btnConfig'),
       btnToggleSidebar: document.getElementById('btnToggleSidebar'),
+      linkConfigToken: document.getElementById('linkConfigToken'),
+      modalConfig: document.getElementById('modalConfig'),
+      githubToken: document.getElementById('githubToken'),
+      btnCloseModal: document.getElementById('btnCloseModal'),
+      btnSaveToken: document.getElementById('btnSaveToken'),
       sidebar: document.getElementById('sidebar')
     };
+
+    function getToken() {
+      return (localStorage.getItem(TOKEN_KEY) || '').trim();
+    }
 
     function setStatus(estado, texto) {
       el.statusDot.className = 'status-dot ' + estado;
       el.statusText.textContent = texto;
+      el.statusText.title = ultimoErro || '';
+    }
+
+    function setBotoesRepo(desabilitado) {
+      el.btnPushRepo.disabled = desabilitado;
+      el.btnPushAll.disabled = desabilitado;
     }
 
     function formatarData(iso) {
@@ -492,6 +604,178 @@
       const res = await fetch('notas/' + encodeURIComponent(arquivo) + '?t=' + Date.now());
       if (!res.ok) throw new Error('Arquivo não encontrado');
       return res.text();
+    }
+
+    function notasPath(arquivo) {
+      return NOTAS_DIR + '/' + arquivo;
+    }
+
+    function apiContentsPath(caminho) {
+      return '/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/' + encodeURIComponent(caminho);
+    }
+
+    function toBase64(texto) {
+      const bytes = new TextEncoder().encode(texto);
+      let bin = '';
+      for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+      return btoa(bin);
+    }
+
+    async function apiFetch(path, options = {}) {
+      const token = getToken();
+      if (!token) throw new Error('Token não configurado');
+
+      const res = await fetch(API_BASE + path, {
+        ...options,
+        headers: {
+          'Accept': 'application/vnd.github+json',
+          'X-GitHub-Api-Version': '2022-11-28',
+          'Authorization': 'Bearer ' + token,
+          ...(options.headers || {})
+        }
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        const msg = err.message || 'Erro na API GitHub (' + res.status + ')';
+        if (res.status === 401) throw new Error('Token inválido ou expirado');
+        throw new Error(msg);
+      }
+
+      if (res.status === 204) return null;
+      return res.json();
+    }
+
+    async function obterSha(caminho, forcar = false) {
+      if (!forcar && shasCache[caminho]) return shasCache[caminho];
+      try {
+        const data = await apiFetch(apiContentsPath(caminho) + '?ref=' + BRANCH);
+        shasCache[caminho] = data.sha;
+        return data.sha;
+      } catch {
+        return null;
+      }
+    }
+
+    async function salvarArquivoGithub(caminho, conteudo, mensagem, tentativa = 0) {
+      const sha = await obterSha(caminho, tentativa > 0);
+      const body = {
+        message: mensagem,
+        content: toBase64(conteudo),
+        branch: BRANCH
+      };
+      if (sha) body.sha = sha;
+
+      try {
+        const data = await apiFetch(apiContentsPath(caminho), {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        shasCache[caminho] = data.content.sha;
+      } catch (err) {
+        if (tentativa < 2 && /sha/i.test(err.message)) {
+          delete shasCache[caminho];
+          return salvarArquivoGithub(caminho, conteudo, mensagem, tentativa + 1);
+        }
+        throw err;
+      }
+    }
+
+    function montarListaParaRepo() {
+      const locais = carregarConteudosLocal();
+      return {
+        notas: notas.map(n => ({
+          arquivo: n.arquivo,
+          titulo: locais[n.arquivo]?.titulo || n.titulo,
+          atualizado: locais[n.arquivo]?.atualizado || null
+        }))
+      };
+    }
+
+    async function salvarListaJsonNoRepo() {
+      const conteudo = JSON.stringify(montarListaParaRepo(), null, 2) + '\n';
+      await salvarArquivoGithub(NOTAS_DIR + '/lista.json', conteudo, 'Atualizar lista de notas');
+    }
+
+    function obterConteudoParaEnvio(arquivo) {
+      if (arquivo === notaAtual) {
+        return {
+          titulo: el.noteTitle.value.trim() || 'Sem título',
+          conteudo: el.noteContent.value
+        };
+      }
+      const local = obterNotaLocal(arquivo);
+      if (local) return { titulo: local.titulo, conteudo: local.conteudo };
+      return null;
+    }
+
+    async function enviarNotaAoRepo(arquivo, titulo, conteudo) {
+      await salvarArquivoGithub(
+        notasPath(arquivo),
+        conteudo,
+        'Atualizar nota: ' + titulo
+      );
+    }
+
+    function abrirModalConfig() {
+      el.githubToken.value = getToken();
+      el.modalConfig.classList.add('open');
+    }
+
+    function fecharModalConfig() {
+      el.modalConfig.classList.remove('open');
+    }
+
+    async function forcarAtualizacaoRepositorio(todas = false) {
+      if (!getToken()) {
+        setStatus('offline', 'Configure o token');
+        abrirModalConfig();
+        return;
+      }
+
+      if (enviandoRepo) return;
+
+      if (notaAtual && (el.noteContent.value !== conteudoOriginal || el.noteTitle.value.trim() !== tituloOriginal)) {
+        clearTimeout(autoSaveTimer);
+        await executarAutoSave();
+      }
+
+      enviandoRepo = true;
+      setBotoesRepo(true);
+      setStatus('saving', todas ? 'Enviando todas as notas...' : 'Enviando ao repositório...');
+      ultimoErro = '';
+
+      try {
+        const alvos = todas ? notas.map(n => n.arquivo) : (notaAtual ? [notaAtual] : []);
+        if (alvos.length === 0) throw new Error('Nenhuma nota selecionada');
+
+        for (const arquivo of alvos) {
+          let titulo, conteudo;
+          const dados = obterConteudoParaEnvio(arquivo);
+
+          if (dados) {
+            titulo = dados.titulo;
+            conteudo = dados.conteudo;
+          } else {
+            titulo = notas.find(n => n.arquivo === arquivo)?.titulo || arquivo.replace('.txt', '');
+            conteudo = await fetchArquivoRepo(arquivo);
+          }
+
+          await enviarNotaAoRepo(arquivo, titulo, conteudo);
+        }
+
+        await salvarListaJsonNoRepo();
+        ultimoErro = '';
+        setStatus('saved', todas ? 'Todas as notas enviadas ao GitHub' : 'Repositório atualizado');
+      } catch (err) {
+        console.error(err);
+        ultimoErro = err.message;
+        setStatus('error', err.message.includes('Token') ? 'Token inválido — reconfigure' : 'Erro ao enviar');
+      } finally {
+        enviandoRepo = false;
+        setBotoesRepo(false);
+      }
     }
 
     async function carregarLista() {
@@ -669,8 +953,23 @@
     el.noteContent.addEventListener('input', agendarAutoSave);
     el.noteTitle.addEventListener('input', agendarAutoSave);
     el.searchNotes.addEventListener('input', () => renderizarLista(el.searchNotes.value));
+    el.btnPushRepo.addEventListener('click', () => forcarAtualizacaoRepositorio(false));
+    el.btnPushAll.addEventListener('click', () => forcarAtualizacaoRepositorio(true));
     el.btnExport.addEventListener('click', exportarNota);
     el.btnReset.addEventListener('click', restaurarNota);
+    el.btnConfig.addEventListener('click', abrirModalConfig);
+    el.linkConfigToken.addEventListener('click', (e) => { e.preventDefault(); abrirModalConfig(); });
+    el.btnCloseModal.addEventListener('click', fecharModalConfig);
+    el.btnSaveToken.addEventListener('click', () => {
+      const token = el.githubToken.value.trim();
+      if (token) localStorage.setItem(TOKEN_KEY, token);
+      else localStorage.removeItem(TOKEN_KEY);
+      fecharModalConfig();
+      setStatus('saved', token ? 'Token salvo' : 'Token removido');
+    });
+    el.modalConfig.addEventListener('click', (e) => {
+      if (e.target === el.modalConfig) fecharModalConfig();
+    });
     el.btnToggleSidebar.addEventListener('click', () => {
       el.sidebar.style.display = el.sidebar.style.display === 'none' ? '' : 'none';
     });
