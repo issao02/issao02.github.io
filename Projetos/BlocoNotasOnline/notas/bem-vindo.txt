@@ -1,0 +1,10 @@
+Bem-vindo ao Bloco de Notas Online!
+
+Este é seu primeiro bloco de notas. Edite livremente — o conteúdo é salvo automaticamente no repositório do site.
+
+Para salvar no GitHub, configure seu token pessoal clicando no ícone de engrenagem no canto superior direito.
+
+Dicas:
+- Crie novas notas com o botão "+ Nova nota"
+- Clique em uma nota na lista à direita para abrir
+- O auto-save acontece 1,5 segundo após você parar de digitar
