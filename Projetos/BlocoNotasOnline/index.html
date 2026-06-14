@@ -337,97 +337,14 @@
       font-size: 0.9rem;
     }
 
-    .token-banner {
-      display: none;
+    .info-banner {
       padding: 0.65rem 1.25rem;
-      background: rgba(245, 158, 11, 0.12);
-      border-bottom: 1px solid rgba(245, 158, 11, 0.3);
-      color: #fcd34d;
+      background: rgba(99, 102, 241, 0.1);
+      border-bottom: 1px solid rgba(99, 102, 241, 0.25);
+      color: var(--text-muted);
       font-size: 0.88rem;
       position: relative;
       z-index: 10;
-    }
-
-    .token-banner.visible { display: block; }
-
-    .token-banner a {
-      color: #fde68a;
-      cursor: pointer;
-      text-decoration: underline;
-    }
-
-    .modal-overlay {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.65);
-      z-index: 100;
-      align-items: center;
-      justify-content: center;
-      padding: 1rem;
-    }
-
-    .modal-overlay.open { display: flex; }
-
-    .modal {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 1.5rem;
-      width: 100%;
-      max-width: 480px;
-      max-height: 90vh;
-      overflow-y: auto;
-    }
-
-    .modal h3 {
-      font-size: 1.15rem;
-      margin-bottom: 0.75rem;
-    }
-
-    .modal p {
-      color: var(--text-muted);
-      font-size: 0.9rem;
-      line-height: 1.55;
-      margin-bottom: 1rem;
-    }
-
-    .modal label {
-      display: block;
-      font-size: 0.85rem;
-      font-weight: 500;
-      margin-bottom: 0.4rem;
-      color: var(--text-muted);
-    }
-
-    .modal input[type="password"],
-    .modal input[type="text"] {
-      width: 100%;
-      padding: 0.65rem 0.85rem;
-      background: var(--bg-input);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      color: var(--text);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.88rem;
-      outline: none;
-      margin-bottom: 1rem;
-    }
-
-    .modal input:focus { border-color: var(--accent); }
-
-    .modal-actions {
-      display: flex;
-      gap: 0.5rem;
-      justify-content: flex-end;
-      margin-top: 0.5rem;
-    }
-
-    .modal ol {
-      margin: 0 0 1rem 1.25rem;
-      color: var(--text-muted);
-      font-size: 0.88rem;
-      line-height: 1.6;
     }
 
     .toggle-sidebar {
@@ -473,12 +390,11 @@
         <span id="statusText">Carregando...</span>
       </div>
       <button class="btn btn-icon toggle-sidebar" id="btnToggleSidebar" title="Lista de notas">📋</button>
-      <button class="btn btn-icon" id="btnConfig" title="Configurar token GitHub">⚙️</button>
     </div>
   </header>
 
-  <div class="token-banner" id="tokenBanner">
-    As notas são salvas automaticamente no navegador. Para gravar também no repositório GitHub, configure um <a id="linkConfigToken">token do GitHub</a>.
+  <div class="info-banner">
+    10 blocos fixos no site (<code>nota-01.txt</code> a <code>nota-10.txt</code>). Auto-save no navegador — sem token. Use <strong>Baixar .txt</strong> para exportar.
   </div>
 
   <div class="layout">
@@ -486,8 +402,8 @@
       <div class="editor-toolbar">
         <input type="text" class="note-title-input" id="noteTitle" placeholder="Título da nota" maxlength="80">
         <span class="note-filename" id="noteFilename"></span>
-        <button class="btn btn-primary" id="btnNewNote">+ Nova nota</button>
-        <button class="btn btn-danger" id="btnDeleteNote" title="Excluir nota">🗑️</button>
+        <button class="btn" id="btnExport" title="Baixar esta nota como .txt">⬇️ Baixar .txt</button>
+        <button class="btn btn-danger" id="btnReset" title="Restaurar conteúdo original do repositório">↺ Restaurar</button>
       </div>
       <div class="editor-area">
         <textarea class="editor-textarea" id="noteContent" placeholder="Comece a escrever... O conteúdo é salvo automaticamente."></textarea>
@@ -503,127 +419,45 @@
     </aside>
   </div>
 
-  <div class="modal-overlay" id="modalConfig">
-    <div class="modal">
-      <h3>Configurar GitHub Token</h3>
-      <p>Para salvar notas diretamente no repositório <strong>issao02.github.io</strong>, informe um Personal Access Token com permissão de escrita no repositório.</p>
-      <ol>
-        <li>Acesse GitHub → Settings → Developer settings → Personal access tokens</li>
-        <li>Crie um token (classic) com escopo <code>repo</code> ou fine-grained com acesso de escrita a este repositório</li>
-        <li>Cole o token abaixo — fica salvo apenas no seu navegador</li>
-      </ol>
-      <label for="githubToken">Token do GitHub</label>
-      <input type="password" id="githubToken" placeholder="ghp_..." autocomplete="off">
-      <div class="modal-actions">
-        <button class="btn" id="btnCloseModal">Cancelar</button>
-        <button class="btn btn-primary" id="btnSaveToken">Salvar token</button>
-      </div>
-    </div>
-  </div>
-
   <script>
-    const REPO_OWNER = 'issao02';
-    const REPO_NAME = 'issao02.github.io';
-    const BRANCH = 'main';
-    const NOTAS_DIR = 'Projetos/BlocoNotasOnline/notas';
-    const TOKEN_KEY = 'bloco-notas-github-token';
-    const LISTA_KEY = 'bloco-notas-lista';
-    const CONTEUDO_KEY = 'bloco-notas-conteudos';
-    const AUTOSAVE_DELAY = 800;
-
-    const API_BASE = 'https://api.github.com';
+    const CONTEUDO_KEY = 'bloco-notas-conteudos-v2';
+    const AUTOSAVE_DELAY = 600;
 
     let notas = [];
     let notaAtual = null;
     let conteudoOriginal = '';
     let tituloOriginal = '';
     let autoSaveTimer = null;
-    let syncTimer = null;
     let salvando = false;
     let filaSalvar = false;
-    let shasCache = {};
-    let ultimoErro = '';
 
     const el = {
       statusDot: document.getElementById('statusDot'),
       statusText: document.getElementById('statusText'),
-      tokenBanner: document.getElementById('tokenBanner'),
-      linkConfigToken: document.getElementById('linkConfigToken'),
       noteTitle: document.getElementById('noteTitle'),
       noteFilename: document.getElementById('noteFilename'),
       noteContent: document.getElementById('noteContent'),
       notesList: document.getElementById('notesList'),
       searchNotes: document.getElementById('searchNotes'),
-      btnNewNote: document.getElementById('btnNewNote'),
-      btnDeleteNote: document.getElementById('btnDeleteNote'),
-      btnConfig: document.getElementById('btnConfig'),
+      btnExport: document.getElementById('btnExport'),
+      btnReset: document.getElementById('btnReset'),
       btnToggleSidebar: document.getElementById('btnToggleSidebar'),
-      modalConfig: document.getElementById('modalConfig'),
-      githubToken: document.getElementById('githubToken'),
-      btnCloseModal: document.getElementById('btnCloseModal'),
-      btnSaveToken: document.getElementById('btnSaveToken'),
       sidebar: document.getElementById('sidebar')
     };
-
-    function getToken() {
-      return (localStorage.getItem(TOKEN_KEY) || '').trim();
-    }
 
     function setStatus(estado, texto) {
       el.statusDot.className = 'status-dot ' + estado;
       el.statusText.textContent = texto;
-      el.statusText.title = ultimoErro || '';
-    }
-
-    function atualizarBannerToken() {
-      const temToken = !!getToken();
-      el.tokenBanner.classList.toggle('visible', !temToken);
-    }
-
-    function slugify(texto) {
-      return texto
-        .toLowerCase()
-        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-z0-9]+/g, '-')
-        .replace(/^-+|-+$/g, '')
-        .slice(0, 50) || 'nota';
-    }
-
-    function gerarNomeArquivo(titulo) {
-      const base = slugify(titulo);
-      const existentes = new Set(notas.map(n => n.arquivo));
-      let nome = base + '.txt';
-      let i = 1;
-      while (existentes.has(nome)) {
-        nome = base + '-' + i + '.txt';
-        i++;
-      }
-      return nome;
     }
 
     function formatarData(iso) {
-      if (!iso) return '';
+      if (!iso) return 'Sem edições';
       try {
         const d = new Date(iso);
         return d.toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
       } catch {
-        return '';
+        return 'Sem edições';
       }
-    }
-
-    function notasPath(arquivo) {
-      return NOTAS_DIR + '/' + arquivo;
-    }
-
-    function apiContentsPath(caminho) {
-      return '/repos/' + REPO_OWNER + '/' + REPO_NAME + '/contents/' + encodeURIComponent(caminho);
-    }
-
-    function toBase64(texto) {
-      const bytes = new TextEncoder().encode(texto);
-      let bin = '';
-      for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
-      return btoa(bin);
     }
 
     function carregarConteudosLocal() {
@@ -638,68 +472,45 @@
       localStorage.setItem(CONTEUDO_KEY, JSON.stringify(mapa));
     }
 
-    function carregarListaLocal() {
-      try {
-        return JSON.parse(localStorage.getItem(LISTA_KEY) || '[]');
-      } catch {
-        return [];
-      }
+    function salvarNotaLocal(arquivo, titulo, conteudo) {
+      const mapa = carregarConteudosLocal();
+      mapa[arquivo] = { titulo, conteudo, atualizado: new Date().toISOString() };
+      salvarConteudosLocal(mapa);
     }
 
-    function salvarListaLocal() {
-      localStorage.setItem(LISTA_KEY, JSON.stringify(notas));
+    function obterNotaLocal(arquivo) {
+      return carregarConteudosLocal()[arquivo] || null;
     }
 
-    function mesclarListas(local, remota) {
-      const mapa = new Map();
-      remota.forEach(n => mapa.set(n.arquivo, n));
-      local.forEach(n => {
-        const existente = mapa.get(n.arquivo);
-        if (!existente || new Date(n.atualizado) > new Date(existente.atualizado)) {
-          mapa.set(n.arquivo, n);
-        }
-      });
-      return Array.from(mapa.values()).sort((a, b) => new Date(b.atualizado) - new Date(a.atualizado));
+    function removerNotaLocal(arquivo) {
+      const mapa = carregarConteudosLocal();
+      delete mapa[arquivo];
+      salvarConteudosLocal(mapa);
     }
 
-    async function apiFetch(path, options = {}) {
-      const token = getToken();
-      const headers = {
-        'Accept': 'application/vnd.github+json',
-        'X-GitHub-Api-Version': '2022-11-28',
-        ...(options.headers || {})
-      };
-      if (token) headers['Authorization'] = 'Bearer ' + token;
-
-      const res = await fetch(API_BASE + path, { ...options, headers });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.message || 'Erro na API GitHub (' + res.status + ')');
-      }
-      if (res.status === 204) return null;
-      return res.json();
-    }
-
-    async function fetchArquivoLocal(arquivo) {
-      const url = 'notas/' + encodeURIComponent(arquivo) + '?t=' + Date.now();
-      const res = await fetch(url);
+    async function fetchArquivoRepo(arquivo) {
+      const res = await fetch('notas/' + encodeURIComponent(arquivo) + '?t=' + Date.now());
       if (!res.ok) throw new Error('Arquivo não encontrado');
       return res.text();
     }
 
     async function carregarLista() {
-      let remota = [];
       try {
         const res = await fetch('notas/lista.json?t=' + Date.now());
-        if (res.ok) {
-          const data = await res.json();
-          remota = data.notas || [];
-        }
-      } catch { /* offline ou arquivo ausente */ }
-
-      const local = carregarListaLocal();
-      notas = mesclarListas(local, remota);
-      salvarListaLocal();
+        if (!res.ok) throw new Error('lista.json não encontrado');
+        const data = await res.json();
+        const locais = carregarConteudosLocal();
+        notas = (data.notas || []).map(n => {
+          const local = locais[n.arquivo];
+          return {
+            arquivo: n.arquivo,
+            titulo: local?.titulo || n.titulo || n.arquivo.replace('.txt', ''),
+            atualizado: local?.atualizado || null
+          };
+        });
+      } catch {
+        notas = [];
+      }
       renderizarLista();
     }
 
@@ -712,14 +523,14 @@
       });
 
       if (filtradas.length === 0) {
-        el.notesList.innerHTML = '<div class="notes-empty">Nenhuma nota encontrada.<br>Crie uma nova nota!</div>';
+        el.notesList.innerHTML = '<div class="notes-empty">Nenhuma nota encontrada.</div>';
         return;
       }
 
       el.notesList.innerHTML = filtradas.map(n => `
         <div class="note-item${notaAtual === n.arquivo ? ' active' : ''}" data-arquivo="${n.arquivo}">
-          <span class="note-item-title">${escaparHtml(n.titulo || n.arquivo)}</span>
-          <span class="note-item-meta">${formatarData(n.atualizado)}</span>
+          <span class="note-item-title">${escaparHtml(n.titulo)}</span>
+          <span class="note-item-meta">${n.arquivo} · ${formatarData(n.atualizado)}</span>
         </div>
       `).join('');
 
@@ -734,100 +545,13 @@
       return d.innerHTML;
     }
 
-    async function obterSha(caminho, forcar = false) {
-      if (!forcar && shasCache[caminho]) return shasCache[caminho];
-      try {
-        const data = await apiFetch(apiContentsPath(caminho) + '?ref=' + BRANCH);
-        shasCache[caminho] = data.sha;
-        return data.sha;
-      } catch {
-        return null;
+    function atualizarMetaNota(arquivo, titulo) {
+      const idx = notas.findIndex(n => n.arquivo === arquivo);
+      const local = obterNotaLocal(arquivo);
+      if (idx >= 0) {
+        notas[idx].titulo = titulo;
+        notas[idx].atualizado = local?.atualizado || notas[idx].atualizado;
       }
-    }
-
-    async function salvarArquivoGithub(caminho, conteudo, mensagem, tentativa = 0) {
-      const token = getToken();
-      if (!token) return false;
-
-      const sha = await obterSha(caminho, tentativa > 0);
-      const body = {
-        message: mensagem,
-        content: toBase64(conteudo),
-        branch: BRANCH
-      };
-      if (sha) body.sha = sha;
-
-      try {
-        const data = await apiFetch(apiContentsPath(caminho), {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body)
-        });
-        shasCache[caminho] = data.content.sha;
-        return true;
-      } catch (err) {
-        if (tentativa < 2 && /sha/i.test(err.message)) {
-          delete shasCache[caminho];
-          return salvarArquivoGithub(caminho, conteudo, mensagem, tentativa + 1);
-        }
-        throw err;
-      }
-    }
-
-    async function excluirArquivoGithub(caminho, mensagem) {
-      const sha = await obterSha(caminho, true);
-      if (!sha) return;
-
-      await apiFetch(apiContentsPath(caminho), {
-        method: 'DELETE',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: mensagem, sha, branch: BRANCH })
-      });
-
-      delete shasCache[caminho];
-    }
-
-    async function salvarListaJson() {
-      const conteudo = JSON.stringify({ notas }, null, 2) + '\n';
-      return salvarArquivoGithub(NOTAS_DIR + '/lista.json', conteudo, 'Atualizar lista de notas');
-    }
-
-    function salvarNotaLocal(arquivo, titulo, conteudo) {
-      const mapa = carregarConteudosLocal();
-      mapa[arquivo] = { titulo, conteudo, atualizado: new Date().toISOString() };
-      salvarConteudosLocal(mapa);
-    }
-
-    function obterNotaLocal(arquivo) {
-      const mapa = carregarConteudosLocal();
-      return mapa[arquivo] || null;
-    }
-
-    function removerNotaLocal(arquivo) {
-      const mapa = carregarConteudosLocal();
-      delete mapa[arquivo];
-      salvarConteudosLocal(mapa);
-    }
-
-    async function sincronizarComGithub(arquivo, titulo, conteudo) {
-      if (!getToken()) return;
-
-      try {
-        setStatus('saving', 'Sincronizando com GitHub...');
-        await salvarArquivoGithub(notasPath(arquivo), conteudo, 'Atualizar nota: ' + titulo);
-        await salvarListaJson();
-        setStatus('saved', 'Salvo no repositório');
-        ultimoErro = '';
-      } catch (err) {
-        console.error(err);
-        ultimoErro = err.message;
-        setStatus('error', 'Salvo local — erro no GitHub');
-      }
-    }
-
-    function agendarSincronizacaoGithub(arquivo, titulo, conteudo) {
-      clearTimeout(syncTimer);
-      syncTimer = setTimeout(() => sincronizarComGithub(arquivo, titulo, conteudo), 2000);
     }
 
     async function executarAutoSave() {
@@ -838,28 +562,18 @@
 
       const titulo = el.noteTitle.value.trim() || 'Sem título';
       const conteudo = el.noteContent.value;
-
       if (titulo === tituloOriginal && conteudo === conteudoOriginal) return;
 
       salvando = true;
       setStatus('saving', 'Salvando...');
 
       try {
-        const agora = new Date().toISOString();
-        const idx = notas.findIndex(n => n.arquivo === notaAtual);
-        if (idx >= 0) {
-          notas[idx].titulo = titulo;
-          notas[idx].atualizado = agora;
-        }
-
         salvarNotaLocal(notaAtual, titulo, conteudo);
-        salvarListaLocal();
         conteudoOriginal = conteudo;
         tituloOriginal = titulo;
+        atualizarMetaNota(notaAtual, titulo);
         renderizarLista(el.searchNotes.value);
-        setStatus('saved', getToken() ? 'Salvo — sincronizando...' : 'Salvo localmente');
-
-        agendarSincronizacaoGithub(notaAtual, titulo, conteudo);
+        setStatus('saved', 'Salvo automaticamente');
       } catch (err) {
         console.error(err);
         setStatus('error', 'Erro ao salvar');
@@ -881,7 +595,6 @@
     async function abrirNota(arquivo) {
       if (notaAtual && (el.noteContent.value !== conteudoOriginal || el.noteTitle.value.trim() !== tituloOriginal)) {
         clearTimeout(autoSaveTimer);
-        clearTimeout(syncTimer);
         await executarAutoSave();
       }
 
@@ -896,26 +609,18 @@
       renderizarLista(el.searchNotes.value);
 
       try {
-        let conteudo = '';
-        const localMaisRecente = local && meta && new Date(local.atualizado) >= new Date(meta.atualizado);
-        const soLocal = local && !meta;
-
-        if (localMaisRecente || soLocal) {
+        let conteudo;
+        if (local) {
           conteudo = local.conteudo;
           el.noteTitle.value = local.titulo;
         } else {
-          try {
-            conteudo = await fetchArquivoLocal(arquivo);
-          } catch {
-            conteudo = local?.conteudo || '';
-            if (local?.titulo) el.noteTitle.value = local.titulo;
-          }
+          conteudo = await fetchArquivoRepo(arquivo);
         }
 
         el.noteContent.value = conteudo;
         conteudoOriginal = conteudo;
         tituloOriginal = el.noteTitle.value.trim() || 'Sem título';
-        setStatus('saved', 'Nota carregada');
+        setStatus('saved', local ? 'Nota carregada (salva localmente)' : 'Nota carregada do repositório');
       } catch (err) {
         el.noteContent.value = local?.conteudo || '';
         setStatus('error', 'Erro ao carregar nota');
@@ -925,121 +630,61 @@
       }
     }
 
-    async function criarNovaNota() {
-      if (notaAtual) {
-        clearTimeout(autoSaveTimer);
-        clearTimeout(syncTimer);
-        await executarAutoSave();
-      }
-
-      const titulo = 'Nova nota';
-      const arquivo = gerarNomeArquivo(titulo);
-      const agora = new Date().toISOString();
-
-      notas.unshift({ arquivo, titulo, atualizado: agora });
-      notaAtual = arquivo;
-      conteudoOriginal = '';
-      tituloOriginal = titulo;
-
-      el.noteTitle.value = titulo;
-      el.noteContent.value = '';
-      el.noteFilename.textContent = arquivo;
-      salvarNotaLocal(arquivo, titulo, '');
-      salvarListaLocal();
-      renderizarLista(el.searchNotes.value);
-      setStatus('saved', getToken() ? 'Nova nota — sincronizando...' : 'Nova nota criada');
-
-      agendarSincronizacaoGithub(arquivo, titulo, '');
-      el.noteContent.focus();
+    function exportarNota() {
+      if (!notaAtual) return;
+      const titulo = el.noteTitle.value.trim() || notaAtual.replace('.txt', '');
+      const conteudo = el.noteContent.value;
+      const blob = new Blob([conteudo], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = notaAtual;
+      a.click();
+      URL.revokeObjectURL(url);
+      setStatus('saved', 'Arquivo baixado');
     }
 
-    async function excluirNota() {
+    async function restaurarNota() {
       if (!notaAtual) return;
-      const meta = notas.find(n => n.arquivo === notaAtual);
-      const nome = meta?.titulo || notaAtual;
-      if (!confirm('Excluir a nota "' + nome + '"? Esta ação não pode ser desfeita.')) return;
-
-      const arquivoExcluido = notaAtual;
-      notas = notas.filter(n => n.arquivo !== arquivoExcluido);
-      notaAtual = null;
-      conteudoOriginal = '';
-      tituloOriginal = '';
-
-      el.noteTitle.value = '';
-      el.noteContent.value = '';
-      el.noteFilename.textContent = '';
-      renderizarLista(el.searchNotes.value);
-
-      removerNotaLocal(arquivoExcluido);
-      salvarListaLocal();
-
-      setStatus('saving', 'Excluindo...');
+      if (!confirm('Restaurar o conteúdo original desta nota do repositório? Suas edições locais serão perdidas.')) return;
 
       try {
-        if (getToken()) {
-          await excluirArquivoGithub(notasPath(arquivoExcluido), 'Excluir nota: ' + nome);
-          await salvarListaJson();
-        }
-        setStatus('saved', 'Nota excluída');
+        const conteudo = await fetchArquivoRepo(notaAtual);
+        const meta = notas.find(n => n.arquivo === notaAtual);
+        const titulo = meta?.titulo || notaAtual.replace('.txt', '');
 
-        if (notas.length > 0) {
-          await abrirNota(notas[0].arquivo);
-        }
+        removerNotaLocal(notaAtual);
+        el.noteContent.value = conteudo;
+        el.noteTitle.value = titulo;
+        conteudoOriginal = conteudo;
+        tituloOriginal = titulo;
+        atualizarMetaNota(notaAtual, titulo);
+        renderizarLista(el.searchNotes.value);
+        setStatus('saved', 'Restaurado do repositório');
       } catch (err) {
-        console.error(err);
-        setStatus('error', 'Erro ao excluir');
+        setStatus('error', 'Erro ao restaurar');
       }
-    }
-
-    function abrirModalConfig() {
-      el.githubToken.value = getToken();
-      el.modalConfig.classList.add('open');
-    }
-
-    function fecharModalConfig() {
-      el.modalConfig.classList.remove('open');
     }
 
     el.noteContent.addEventListener('input', agendarAutoSave);
     el.noteTitle.addEventListener('input', agendarAutoSave);
     el.searchNotes.addEventListener('input', () => renderizarLista(el.searchNotes.value));
-    el.btnNewNote.addEventListener('click', criarNovaNota);
-    el.btnDeleteNote.addEventListener('click', excluirNota);
-    el.btnConfig.addEventListener('click', abrirModalConfig);
-    el.linkConfigToken.addEventListener('click', (e) => { e.preventDefault(); abrirModalConfig(); });
-    el.btnCloseModal.addEventListener('click', fecharModalConfig);
-    el.btnSaveToken.addEventListener('click', () => {
-      const token = el.githubToken.value.trim();
-      if (token) localStorage.setItem(TOKEN_KEY, token);
-      else localStorage.removeItem(TOKEN_KEY);
-      atualizarBannerToken();
-      fecharModalConfig();
-      setStatus('saved', token ? 'Token configurado' : 'Token removido');
-    });
-    el.modalConfig.addEventListener('click', (e) => {
-      if (e.target === el.modalConfig) fecharModalConfig();
-    });
+    el.btnExport.addEventListener('click', exportarNota);
+    el.btnReset.addEventListener('click', restaurarNota);
     el.btnToggleSidebar.addEventListener('click', () => {
       el.sidebar.style.display = el.sidebar.style.display === 'none' ? '' : 'none';
     });
 
     window.addEventListener('beforeunload', () => {
       if (notaAtual && (el.noteContent.value !== conteudoOriginal || el.noteTitle.value.trim() !== tituloOriginal)) {
-        const titulo = el.noteTitle.value.trim() || 'Sem título';
-        salvarNotaLocal(notaAtual, titulo, el.noteContent.value);
-        salvarListaLocal();
+        salvarNotaLocal(notaAtual, el.noteTitle.value.trim() || 'Sem título', el.noteContent.value);
       }
     });
 
     async function init() {
-      atualizarBannerToken();
       await carregarLista();
-
-      if (notas.length > 0) {
-        await abrirNota(notas[0].arquivo);
-      } else {
-        setStatus('saved', 'Pronto — crie uma nota');
-      }
+      if (notas.length > 0) await abrirNota(notas[0].arquivo);
+      else setStatus('saved', 'Nenhuma nota disponível');
     }
 
     init();
