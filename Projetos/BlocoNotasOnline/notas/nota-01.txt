@@ -1,6 +1,0 @@
-Bem-vindo ao Bloco de Notas Online!
-
-Esta é a Nota 1. Escreva o que quiser — o conteúdo é salvo automaticamente no seu navegador.
-
-Você tem 10 blocos de notas fixos (nota-01.txt até nota-10.txt). Clique na lista à direita para alternar entre eles.
-aaaaaaaaaaaaaaaaaaaa
